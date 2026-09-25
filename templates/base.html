@@ -184,6 +184,70 @@
                 padding-top: 90px;
             }
         }
+
+        /* --- Custom Language Selector --- */
+        .lang-selector-container {
+            position: absolute;
+            right: 1.5rem;
+            top: 14px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 50px;
+            padding: 6px 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .lang-selector-container:hover {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.25));
+            border-color: rgba(16, 185, 129, 0.5);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+        .lang-icon {
+            color: #34D399;
+            font-size: 1.35rem;
+            margin-right: 8px;
+        }
+        #custom_lang_select {
+            background: transparent;
+            color: #F3F4F6;
+            border: none;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            padding-right: 18px;
+        }
+        #custom_lang_select option {
+            background: #1e293b;
+            color: #fff;
+            font-weight: 500;
+        }
+        .lang-selector-container::after {
+            content: '\f0d7';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: #34D399;
+            font-size: 0.9rem;
+            position: absolute;
+            right: 14px;
+            pointer-events: none;
+        }
+
+        /* Hide Google Translate Default Elements & Pop-ups */
+        #google_translate_element { display: none !important; }
+        .goog-te-banner-frame.skiptranslate { display: none !important; }
+        iframe.skiptranslate { display: none !important; }
+        .goog-tooltip { display: none !important; }
+        .goog-tooltip:hover { display: none !important; }
+        .goog-text-highlight { background-color: transparent !important; border: none !important; box-shadow: none !important; }
+        body { top: 0 !important; }
     </style>
 </head>
 <body>
@@ -192,11 +256,23 @@
     <nav class="krishi-navbar" id="mainNavbar">
         <!-- Language strip -->
         <div class="navbar-top-bar">
-            <div class="navbar-lang-list">
-                <button class="lang-btn active"><span class="lang-full">हिन्दी</span><span class="lang-short">HI</span></button>
-                <span class="lang-divider">|</span>
-                <button class="lang-btn"><span class="lang-full">English</span><span class="lang-short">EN</span></button>
+            <div class="lang-selector-container notranslate" translate="no">
+                <i class="fa-solid fa-language lang-icon"></i>
+                <select id="custom_lang_select" class="notranslate" onchange="doCustomTranslation(this.value)">
+                    <option value="hi">हिन्दी (Hindi)</option>
+                    <option value="en">English</option>
+                    <option value="ne">Garhwali/Kumaoni (Nepali)</option>
+                    <option value="sa">संस्कृत (Sanskrit)</option>
+                    <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+                    <option value="gu">ગુજરાતી (Gujarati)</option>
+                    <option value="mr">मराठी (Marathi)</option>
+                    <option value="bn">বাংলা (Bengali)</option>
+                    <option value="ta">தமிழ் (Tamil)</option>
+                    <option value="te">తెలుగు (Telugu)</option>
+                    <option value="ur">اردو (Urdu)</option>
+                </select>
             </div>
+            <div id="google_translate_element"></div>
         </div>
 
         <div class="navbar-inner">
@@ -321,56 +397,36 @@
                 });
             }
 
-        // ── Language Switcher ──
-        const langBtns = document.querySelectorAll('.lang-btn');
-        // Restore saved language on load
-        const savedLang = localStorage.getItem('krishiLang') || 'hi';
-        applyLanguage(savedLang);
-
-        langBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                langBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                const lang = btn.querySelector('.lang-short').textContent.trim().toLowerCase();
-                localStorage.setItem('krishiLang', lang);
-                applyLanguage(lang);
-            });
-        });
-
-        function applyLanguage(lang) {
-            // Mark active button
-            langBtns.forEach(btn => {
-                const code = btn.querySelector('.lang-short').textContent.trim().toLowerCase();
-                if (code === lang) btn.classList.add('active');
-                else btn.classList.remove('active');
-            });
-
-            const translations = {
-                hi: {
-                      'डैशबोर्ड': 'डैशबोर्ड', 'रोग पहचान': 'रोग पहचान',
-                    'कीट': 'कीट', 'मिट्टी': 'मिट्टी', 'मौसम': 'मौसम',
-                    'मंडी भाव': 'मंडी भाव', 'योजनाएं': 'योजनाएं', 'जैविक': 'जैविक',
-                    'प्रोफाइल': 'प्रोफाइल', 'लॉगआउट': 'लॉगआउट'
-                },
-                en: {
-                     'डैशबोर्ड': 'Dashboard', 'रोग पहचान': 'Disease',
-                    'कीट': 'Pest', 'मिट्टी': 'Soil', 'मौसम': 'Weather',
-                    'मंडी भाव': 'Market', 'योजनाएं': 'Schemes', 'जैविक': 'Organic',
-                    'प्रोफाइल': 'Profile', 'लॉगआउट': 'Logout'
-                }
-            };
-
-            const map = translations[lang] || translations['hi'];
-
-            // Translate nav-link spans
-            document.querySelectorAll('.nav-link span').forEach(span => {
-                const hi = span.getAttribute('data-hi') || span.textContent.trim();
-                span.setAttribute('data-hi', hi);
-                span.textContent = map[hi] || hi;
-            });
-        }
+        // Custom JS removed, replaced by Google Translate
     });
     </script>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'hi',
+                includedLanguages: 'hi,en,sa,ne,bn,te,mr,ta,ur,gu,kn,ml,pa',
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+        
+        function doCustomTranslation(langCode) {
+            var select = document.querySelector(".goog-te-combo");
+            if (select) {
+                select.value = langCode;
+                select.dispatchEvent(new Event("change"));
+            }
+        }
+        
+        // Sync custom dropdown with current selected language on load
+        setTimeout(() => {
+            var select = document.querySelector(".goog-te-combo");
+            var customSelect = document.getElementById("custom_lang_select");
+            if (select && select.value && customSelect) {
+                customSelect.value = select.value;
+            }
+        }, 1500);
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
     <script src="{{ url_for('static', filename='js/global.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>

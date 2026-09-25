@@ -167,8 +167,14 @@ def validate_image_for_mode(filepath, mode):
         if not is_bright_ok:
             return False, f"Invalid brightness: {bright_msg}. Please upload a clear image."
             
-        # Mode specific checks - Let the AI model handle the validation via confidence scores.
-        # The AI model will return < 70% confidence for walls, chairs, boys, etc.
+        # Mode specific checks
+        if mode == 'disease' and not is_valid_leaf_image(img):
+            return False, "Invalid image. Please upload a clear picture of a crop leaf."
+        elif mode == 'pest' and not is_valid_pest_image(img):
+            return False, "Invalid image. Please upload a clear picture of a pest or infected plant."
+        elif mode == 'soil' and not is_valid_soil_image(img):
+            return False, "Invalid image. Please upload a clear picture of soil."
+            
         return True, None
     except Exception as e:
         return False, f"Error validating image: {str(e)}"

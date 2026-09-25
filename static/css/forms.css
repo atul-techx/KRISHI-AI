@@ -264,6 +264,7 @@
     border-radius: var(--radius-full);
     font-weight: 700;
     font-size: 1.05rem;
+    color: #1F2937; /* Ensure text is visible against light background */
 }
 .soil-info-grid {
     display: grid;
