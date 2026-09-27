@@ -43,8 +43,19 @@ from backend.services.pest_detection_service import predict_pest
 from backend.services.soil_analysis_service import predict_soil
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'super_secret_krishi_key_2026'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///krishi.db'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'super_secret_krishi_key_2026')
+
+# Support PostgreSQL from DATABASE_URL with SQLite fallback
+_db_uri = os.getenv('DATABASE_URL_SYNC') or os.getenv('DATABASE_URL')
+if _db_uri:
+    if _db_uri.startswith('postgres://'):
+        _db_uri = _db_uri.replace('postgres://', 'postgresql://', 1)
+    if '+asyncpg' in _db_uri:
+        _db_uri = _db_uri.replace('+asyncpg', '')
+    app.config['SQLALCHEMY_DATABASE_URI'] = _db_uri
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///krishi.db'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
