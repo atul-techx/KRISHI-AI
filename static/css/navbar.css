@@ -346,3 +346,89 @@
         display: flex;
     }
 }
+
+/* ==========================================================================
+   Mobile Bottom Navigation — Fixed App Bar on Mobile, Completely Hidden on Desktop
+   ========================================================================== */
+.mobile-bottom-nav {
+    display: none !important;
+}
+
+@media (max-width: 899px) {
+    .mobile-bottom-nav {
+        display: flex !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 62px;
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        align-items: stretch;
+        justify-content: space-around;
+        z-index: 990;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    [data-theme="light"] .mobile-bottom-nav {
+        background: rgba(255, 255, 255, 0.96);
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+    }
+
+    .mobile-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        color: #94A3B8;
+        font-size: 0.68rem;
+        font-weight: 600;
+        text-decoration: none;
+        padding: 0.35rem 0;
+        position: relative;
+        transition: all 0.2s ease;
+    }
+
+    [data-theme="light"] .mobile-nav-item {
+        color: #64748B;
+    }
+
+    .mobile-nav-item i {
+        font-size: 1.15rem;
+        transition: transform 0.2s ease;
+    }
+
+    .mobile-nav-item:hover,
+    .mobile-nav-item.active {
+        color: #10B981 !important;
+    }
+
+    [data-theme="light"] .mobile-nav-item:hover,
+    [data-theme="light"] .mobile-nav-item.active {
+        color: #059669 !important;
+    }
+
+    .mobile-nav-item.active i {
+        transform: translateY(-2px);
+    }
+
+    .mobile-nav-item.active::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        width: 32px;
+        height: 3px;
+        background: #10B981;
+        border-radius: 0 0 4px 4px;
+    }
+
+    [data-theme="light"] .mobile-nav-item.active::after {
+        background: #059669;
+    }
+}
+
