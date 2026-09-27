@@ -13,8 +13,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     nginx \
     supervisor \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
+    libgomp1 \
     libpq-dev \
     gcc \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
@@ -38,6 +39,7 @@ COPY --from=frontend-build /app/frontend/node_modules ./frontend/node_modules
 
 # Setup configurations
 COPY deploy/nginx.conf /etc/nginx/sites-available/default
+COPY deploy/nginx.conf /etc/nginx/sites-enabled/default
 COPY deploy/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Setup env variables for Next.js to reach FastAPI during runtime
