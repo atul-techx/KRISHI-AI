@@ -1,411 +1,1406 @@
 {% extends "base.html" %}
-{% block title %}Dashboard - Krishi AI{% endblock %}
+{% block title %}Krishi AI - किसान ऑपरेटिंग सिस्टम व फार्म हब{% endblock %}
+
 {% block extra_css %}
 <style>
-/* Dashboard reuses home card styles — inline below */
-.services-section { padding: 3rem 1.5rem 4rem; }
-.services-header { text-align: center; margin-bottom: 3rem; }
-.services-main-title {
-    font-size: clamp(1.6rem, 3.5vw, 2.5rem);
+  /* ──────────────────────────────────────────────────────────
+     COLOR TOKENS & DUAL-THEME ADAPTATION
+     Dark Mode (Inspired by Image 2 Farm OS)
+     Light Mode (Inspired by Image 1 Modern Agri-Tech Platform)
+     ────────────────────────────────────────────────────────── */
+  :root, [data-theme="dark"] {
+    --fhub-bg-main: #060B14;
+    --fhub-bg-card: rgba(15, 23, 42, 0.75);
+    --fhub-bg-card-hover: rgba(17, 30, 56, 0.90);
+    --fhub-bg-glass: rgba(15, 23, 42, 0.65);
+    --fhub-border: rgba(255, 255, 255, 0.08);
+    --fhub-border-hover: rgba(16, 185, 129, 0.40);
+    --fhub-text-main: #F8FAFC;
+    --fhub-text-muted: #94A3B8;
+    --fhub-emerald: #10B981;
+    --fhub-emerald-glow: rgba(16, 185, 129, 0.25);
+    --fhub-amber: #F59E0B;
+    --fhub-blue: #38BDF8;
+    --fhub-purple: #A855F7;
+    --fhub-hero-overlay: linear-gradient(180deg, rgba(6, 11, 20, 0.4) 0%, rgba(6, 11, 20, 0.95) 100%);
+  }
+
+  [data-theme="light"] {
+    --fhub-bg-main: #F4F8F5;
+    --fhub-bg-card: #FFFFFF;
+    --fhub-bg-card-hover: #F8FCF9;
+    --fhub-bg-glass: rgba(255, 255, 255, 0.9);
+    --fhub-border: #E2E8F0;
+    --fhub-border-hover: rgba(16, 185, 129, 0.55);
+    --fhub-text-main: #0F172A;
+    --fhub-text-muted: #64748B;
+    --fhub-emerald: #059669;
+    --fhub-emerald-glow: rgba(5, 150, 105, 0.15);
+    --fhub-amber: #D97706;
+    --fhub-blue: #0284C7;
+    --fhub-purple: #7C3AED;
+    --fhub-hero-overlay: linear-gradient(180deg, rgba(244, 248, 245, 0.45) 0%, rgba(244, 248, 245, 0.96) 100%);
+  }
+
+  .fhub-wrapper {
+    max-width: 1380px;
+    margin: 0 auto;
+    padding: 0.5rem 1rem 4rem 1rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ──────────────────────────────────────────────────────────
+     HERO SECTION (Lush Crop Backdrop + Bold Headline)
+     ────────────────────────────────────────────────────────── */
+  .fhub-hero-wrap {
+    position: relative;
+    border-radius: 28px;
+    overflow: hidden;
+    margin-bottom: 2.25rem;
+    background-image: url('{{ url_for("static", filename="login-bg/bg1.jpg") }}');
+    background-size: cover;
+    background-position: center 30%;
+    border: 1px solid var(--fhub-border);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+  }
+
+  .fhub-hero-mask {
+    background: var(--fhub-hero-overlay);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    padding: 3.5rem 2.5rem 3rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+  }
+
+  @media (max-width: 768px) {
+    .fhub-hero-mask {
+      padding: 2.5rem 1.25rem 2rem 1.25rem;
+    }
+  }
+
+  .fhub-pill-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    background: rgba(16, 185, 129, 0.16);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    color: var(--fhub-emerald);
+    padding: 0.4rem 1.15rem;
+    border-radius: 9999px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 4px 14px var(--fhub-emerald-glow);
+  }
+
+  .fhub-pill-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--fhub-emerald);
+    animation: fhubPulse 1.8s infinite;
+  }
+
+  @keyframes fhubPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.4); }
+  }
+
+  .fhub-hero-title {
+    font-size: clamp(2rem, 4.2vw, 3.4rem);
+    font-weight: 850;
+    color: var(--fhub-text-main);
+    line-height: 1.18;
+    max-width: 980px;
+    margin-bottom: 1rem;
+    letter-spacing: -0.8px;
+  }
+
+  .fhub-hero-title em {
+    font-style: normal;
+    color: var(--fhub-emerald);
+    position: relative;
+  }
+
+  .fhub-hero-sub {
+    font-size: clamp(0.95rem, 1.8vw, 1.15rem);
+    color: var(--fhub-text-muted);
+    max-width: 780px;
+    line-height: 1.65;
+    margin-bottom: 2rem;
+  }
+
+  .fhub-hero-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 2.5rem;
+  }
+
+  .fhub-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: #FFFFFF !important;
+    border: none;
+    border-radius: 14px;
+    padding: 0.85rem 1.75rem;
+    font-size: 0.98rem;
+    font-weight: 750;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+    transition: all 0.25s ease;
+  }
+
+  .fhub-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(16, 185, 129, 0.55);
+  }
+
+  .fhub-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--fhub-bg-glass);
+    color: var(--fhub-text-main) !important;
+    border: 1px solid var(--fhub-border);
+    border-radius: 14px;
+    padding: 0.85rem 1.5rem;
+    font-size: 0.96rem;
+    font-weight: 650;
+    text-decoration: none;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: all 0.25s ease;
+  }
+
+  .fhub-btn-secondary:hover {
+    border-color: var(--fhub-emerald);
+    transform: translateY(-2px);
+  }
+
+  /* Floating Impact Stat Badges (Hero Bottom) */
+  .fhub-hero-stats {
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    max-width: 900px;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  [data-theme="light"] .fhub-hero-stats {
+    border-top-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .fhub-hero-stat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(10px);
+    padding: 0.55rem 1.1rem;
+    border-radius: 14px;
+    border: 1px solid var(--fhub-border);
+  }
+
+  [data-theme="light"] .fhub-hero-stat-pill {
+    background: #FFFFFF;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  }
+
+  .fhub-stat-num {
+    font-size: 1.15rem;
     font-weight: 800;
-    background: linear-gradient(to right, #ffffff 30%, #9CA3AF);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 0.75rem;
+    color: var(--fhub-emerald);
+  }
+
+  .fhub-stat-txt {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--fhub-text-muted);
+  }
+
+  /* ──────────────────────────────────────────────────────────
+     DIGITAL TWIN & LIVE TELEMETRY DASHBOARD (Image 2)
+     ────────────────────────────────────────────────────────── */
+  .fhub-twin-card {
+    background: var(--fhub-bg-card);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--fhub-border);
+    border-radius: 22px;
+    padding: 1.5rem 1.75rem;
+    margin-bottom: 2.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .fhub-twin-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--fhub-border);
+  }
+
+  .fhub-twin-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--fhub-text-main);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .fhub-farmer-tag {
+    font-size: 0.82rem;
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--fhub-emerald);
+    padding: 0.35rem 0.85rem;
+    border-radius: 30px;
+    font-weight: 700;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+  }
+
+  .fhub-twin-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+  }
+
+  @media (max-width: 1100px) {
+    .fhub-twin-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 680px) {
+    .fhub-twin-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 440px) {
+    .fhub-twin-grid { grid-template-columns: 1fr; }
+  }
+
+  .fhub-telemetry-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--fhub-border);
+    border-radius: 16px;
+    padding: 1rem;
+    transition: all 0.25s ease;
+  }
+
+  [data-theme="light"] .fhub-telemetry-box {
+    background: #F8FAFC;
+  }
+
+  .fhub-telemetry-box:hover {
+    border-color: var(--fhub-border-hover);
+    transform: translateY(-2px);
+  }
+
+  .fhub-telem-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .telem-emerald { background: rgba(16, 185, 129, 0.15); color: #10B981; }
+  .telem-amber { background: rgba(245, 158, 11, 0.15); color: #F59E0B; }
+  .telem-blue { background: rgba(56, 189, 248, 0.15); color: #38BDF8; }
+  .telem-purple { background: rgba(168, 85, 247, 0.15); color: #C084FC; }
+  .telem-rose { background: rgba(244, 63, 94, 0.15); color: #FB7185; }
+
+  .fhub-telem-val {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--fhub-text-main);
+    line-height: 1.2;
+    margin-bottom: 0.2rem;
+  }
+
+  .fhub-telem-lbl {
+    font-size: 0.74rem;
+    color: var(--fhub-text-muted);
+    font-weight: 600;
+  }
+
+  /* ──────────────────────────────────────────────────────────
+     INTERACTIVE QUICK ASK AI BAR
+     ────────────────────────────────────────────────────────── */
+  .fhub-ask-bar {
+    background: var(--fhub-bg-card);
+    border: 1px solid var(--fhub-border);
+    border-radius: 20px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2.75rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  .fhub-ask-input-wrap {
+    flex: 1;
+    min-width: 280px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--fhub-border);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+  }
+
+  [data-theme="light"] .fhub-ask-input-wrap {
+    background: #F8FAFC;
+    border-color: #CBD5E1;
+  }
+
+  .fhub-ask-input-wrap input {
+    background: transparent;
+    border: none;
+    outline: none;
+    width: 100%;
+    color: var(--fhub-text-main);
+    font-size: 0.95rem;
+  }
+
+  .fhub-ask-prompts {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .fhub-quick-chip {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--fhub-border);
+    border-radius: 20px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.76rem;
+    color: var(--fhub-text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  [data-theme="light"] .fhub-quick-chip {
+    background: #F1F5F9;
+  }
+
+  .fhub-quick-chip:hover {
+    color: var(--fhub-emerald);
+    border-color: var(--fhub-emerald);
+    transform: translateY(-1px);
+  }
+
+  /* ──────────────────────────────────────────────────────────
+     SECTION HEADER
+     ────────────────────────────────────────────────────────── */
+  .fhub-sec-header {
+    text-align: center;
+    margin-bottom: 2.25rem;
+  }
+
+  .fhub-sec-badge {
+    display: inline-block;
+    color: var(--fhub-emerald);
+    font-size: 0.82rem;
+    font-weight: 750;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.4rem;
+  }
+
+  .fhub-sec-title {
+    font-size: clamp(1.6rem, 3.2vw, 2.4rem);
+    font-weight: 850;
+    color: var(--fhub-text-main);
     letter-spacing: -0.5px;
-}
-.services-main-sub { color: rgba(255,255,255,0.5); font-size: 1rem; line-height: 1.7; }
+    margin-bottom: 0.5rem;
+  }
 
-/* stats bar */
-.dash-stats { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 1rem; margin: 0 1.5rem 2rem; }
-.dash-stat { background: rgba(17,24,39,0.6); border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 1.1rem 1.25rem; display:flex; align-items:center; gap: 0.85rem; }
-.dash-stat-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.3rem; flex-shrink:0; }
-.dash-stat-label { font-size:0.72rem; color:#9CA3AF; display:block; }
-.dash-stat-value { font-size:1.25rem; font-weight:800; color:#fff; display:block; line-height:1.2; }
-.dash-stat-sub { font-size:0.7rem; display:block; margin-top:1px; }
+  .fhub-sec-sub {
+    font-size: 0.96rem;
+    color: var(--fhub-text-muted);
+    max-width: 650px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
 
-/* Cards */
-.premium-cards-grid{
-    display:grid;
-    grid-template-columns:repeat(4, minmax(320px, 380px));
-    justify-content:center;
-    gap:1.4rem;
-    align-items:start;
-}
-@media(max-width:1199px){.premium-cards-grid{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:599px){.premium-cards-grid{grid-template-columns:1fr;}}
+  /* ──────────────────────────────────────────────────────────
+     SERVICES & TOOLS GRID (8 Rich Cards)
+     ────────────────────────────────────────────────────────── */
+  .fhub-tools-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.4rem;
+    margin-bottom: 3.5rem;
+  }
 
-.pcard { position:relative; display:flex; flex-direction:column; border-radius:20px; overflow:hidden; text-decoration:none; color:#fff; border:1px solid rgba(255,255,255,0.10); transition:transform 0.35s cubic-bezier(0.4,0,0.2,1),box-shadow 0.35s,border-color 0.35s; cursor:pointer; }
-.pcard:hover { transform:translateY(-10px) scale(1.015); }
-.pcard--disease{background:linear-gradient(160deg,#0c2218,#0a1a10);} .pcard--disease:hover{box-shadow:0 20px 60px rgba(16,185,129,0.30);border-color:rgba(16,185,129,0.45);}
-.pcard--soil{background:linear-gradient(160deg,#1e1105,#120d02);} .pcard--soil:hover{box-shadow:0 20px 60px rgba(217,119,6,0.30);border-color:rgba(217,119,6,0.45);}
-.pcard--pest{background:linear-gradient(160deg,#081a0a,#060e08);} .pcard--pest:hover{box-shadow:0 20px 60px rgba(34,197,94,0.30);border-color:rgba(34,197,94,0.45);}
-.pcard--weather{background:linear-gradient(160deg,#060e1e,#04090f);} .pcard--weather:hover{box-shadow:0 20px 60px rgba(59,130,246,0.30);border-color:rgba(59,130,246,0.45);}
-.pcard--market{background:linear-gradient(160deg,#1a0d02,#110802);} .pcard--market:hover{box-shadow:0 20px 60px rgba(249,115,22,0.30);border-color:rgba(249,115,22,0.45);}
-.pcard--schemes{background:linear-gradient(160deg,#02131a,#020e10);} .pcard--schemes:hover{box-shadow:0 20px 60px rgba(6,182,212,0.30);border-color:rgba(6,182,212,0.45);}
-.pcard--voice{background:linear-gradient(160deg,#130b1e,#0d0814);} .pcard--voice:hover{box-shadow:0 20px 60px rgba(139,92,246,0.30);border-color:rgba(139,92,246,0.45);}
-.pcard--organic{background:linear-gradient(160deg,#061a10,#04100b);} .pcard--organic:hover{box-shadow:0 20px 60px rgba(16,185,129,0.30);border-color:rgba(16,185,129,0.45);}
+  @media (max-width: 1200px) {
+    .fhub-tools-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .fhub-tools-grid { grid-template-columns: 1fr; }
+  }
 
-.pcard__corner-badge { position:absolute; top:14px; right:14px; z-index:20; background:linear-gradient(135deg,#10B981,#059669); color:#fff; font-size:0.65rem; font-weight:800; letter-spacing:0.5px; padding:0.28rem 0.6rem; border-radius:30px; text-transform:uppercase; box-shadow:0 4px 14px rgba(16,185,129,0.45); }
-.pcard__corner-badge--soil{background:linear-gradient(135deg,#D97706,#B45309);box-shadow:0 4px 14px rgba(217,119,6,0.45);}
-.pcard__corner-badge--pest{background:linear-gradient(135deg,#22C55E,#16A34A);box-shadow:0 4px 14px rgba(34,197,94,0.45);}
-.pcard__corner-badge--voice{background:linear-gradient(135deg,#9333EA,#7C3AED);box-shadow:0 4px 14px rgba(139,92,246,0.45);}
-.pcard__corner-badge--organic{background:linear-gradient(135deg,#10B981,#059669);box-shadow:0 4px 14px rgba(16,185,129,0.45);}
+  .fhub-tool-card {
+    background: var(--fhub-bg-card);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--fhub-border);
+    border-radius: 20px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: var(--fhub-text-main);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  }
 
-.pcard__img-wrap { width:100%; height:370px; overflow:hidden; flex-shrink:0; background:rgba(0,0,0,0.25); }
-.pcard__img { width:100%; height:100%; object-fit:cover; display:block; transition:transform 0.55s cubic-bezier(0.4,0,0.2,1); }
-.pcard:hover .pcard__img { transform:scale(1.08); }
-.pcard__img-wrap--svg { display:flex; align-items:center; justify-content:center; }
-.pcard__svg { width:100%; height:100%; transition:transform 0.55s; }
-.pcard:hover .pcard__svg { transform:scale(1.06); }
+  .fhub-tool-card:hover {
+    transform: translateY(-8px) scale(1.015);
+    border-color: var(--fhub-border-hover);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.25);
+  }
 
-.pcard__body { display:flex; flex-direction:column; flex:1;   padding:0.8rem 1rem; }
-.pcard__title { font-size:1.18rem; font-weight:800; color:#fff; margin-bottom:0.55rem; line-height:1.3; letter-spacing:-0.2px; }
-.pcard__desc { font-size:0.84rem; color:rgba(255,255,255,0.60); line-height:1.65; flex:1; margin-bottom:0; line-height: 1.45; margin-top:auto}
-.pcard__footer { display:flex; align-items:center; justify-content:space-between; gap:0.75rem; }
-.pcard__btn { display:inline-flex; align-items:center; gap:0.5rem; padding:0.6rem 1rem; border-radius:10px; font-size:0.8rem; font-weight:700; transition:all 0.3s; background:rgba(16,185,129,0.12); color:#10B981; border:1px solid rgba(16,185,129,0.25); }
-.pcard__btn i { transition:transform 0.3s; }
-.pcard:hover .pcard__btn i { transform:translateX(4px); }
-.pcard:hover .pcard__btn { background:rgba(16,185,129,0.22); border-color:rgba(16,185,129,0.5); }
-.pcard__btn--soil{background:rgba(217,119,6,0.12);color:#F59E0B;border-color:rgba(217,119,6,0.25);}
-.pcard:hover .pcard__btn--soil{background:rgba(217,119,6,0.22);border-color:rgba(217,119,6,0.5);}
-.pcard__btn--pest{background:rgba(34,197,94,0.12);color:#22C55E;border-color:rgba(34,197,94,0.25);}
-.pcard:hover .pcard__btn--pest{background:rgba(34,197,94,0.22);border-color:rgba(34,197,94,0.5);}
-.pcard__btn--weather{background:rgba(59,130,246,0.12);color:#60A5FA;border-color:rgba(59,130,246,0.25);}
-.pcard:hover .pcard__btn--weather{background:rgba(59,130,246,0.22);border-color:rgba(59,130,246,0.5);}
-.pcard__btn--market{background:rgba(249,115,22,0.12);color:#FB923C;border-color:rgba(249,115,22,0.25);}
-.pcard:hover .pcard__btn--market{background:rgba(249,115,22,0.22);border-color:rgba(249,115,22,0.5);}
-.pcard__btn--schemes{background:rgba(6,182,212,0.12);color:#22D3EE;border-color:rgba(6,182,212,0.25);}
-.pcard:hover .pcard__btn--schemes{background:rgba(6,182,212,0.22);border-color:rgba(6,182,212,0.5);}
-.pcard__btn--voice{background:rgba(139,92,246,0.12);color:#A78BFA;border-color:rgba(139,92,246,0.25);}
-.pcard:hover .pcard__btn--voice{background:rgba(139,92,246,0.22);border-color:rgba(139,92,246,0.5);}
-.pcard__btn--organic{background:rgba(16,185,129,0.12);color:#34D399;border-color:rgba(16,185,129,0.25);}
-.pcard:hover .pcard__btn--organic{background:rgba(16,185,129,0.22);border-color:rgba(16,185,129,0.5);}
+  .fhub-tool-thumb-wrap {
+    width: 100%;
+    height: 190px;
+    overflow: hidden;
+    position: relative;
+    background: rgba(0, 0, 0, 0.3);
+  }
 
-.pcard__icon { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.95rem; flex-shrink:0; transition:transform 0.3s; background:rgba(16,185,129,0.12); color:#10B981; border:1px solid rgba(16,185,129,0.20); }
-.pcard:hover .pcard__icon { transform:rotate(15deg) scale(1.1); }
-.pcard__icon--soil{background:rgba(217,119,6,0.12);color:#F59E0B;border-color:rgba(217,119,6,0.20);}
-.pcard__icon--pest{background:rgba(34,197,94,0.12);color:#22C55E;border-color:rgba(34,197,94,0.20);}
-.pcard__icon--weather{background:rgba(59,130,246,0.12);color:#60A5FA;border-color:rgba(59,130,246,0.20);}
-.pcard__icon--market{background:rgba(249,115,22,0.12);color:#FB923C;border-color:rgba(249,115,22,0.20);}
-.pcard__icon--schemes{background:rgba(6,182,212,0.12);color:#22D3EE;border-color:rgba(6,182,212,0.20);}
-.pcard__icon--voice{background:rgba(139,92,246,0.12);color:#A78BFA;border-color:rgba(139,92,246,0.20);}
-.pcard__icon--organic{background:rgba(16,185,129,0.12);color:#34D399;border-color:rgba(16,185,129,0.20);}
+  .fhub-tool-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.5s ease;
+  }
+
+  .fhub-tool-card:hover .fhub-tool-img {
+    transform: scale(1.08);
+  }
+
+  .fhub-tool-tag {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #FFFFFF;
+    font-size: 0.68rem;
+    font-weight: 750;
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .fhub-tool-body {
+    padding: 1.25rem 1.35rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .fhub-tool-header-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .fhub-tool-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+  }
+
+  .fhub-tool-title {
+    font-size: 1.12rem;
+    font-weight: 800;
+    color: var(--fhub-text-main);
+    line-height: 1.3;
+    margin: 0;
+  }
+
+  .fhub-tool-desc {
+    font-size: 0.84rem;
+    color: var(--fhub-text-muted);
+    line-height: 1.55;
+    flex: 1;
+    margin-bottom: 1.15rem;
+  }
+
+  .fhub-tool-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--fhub-border);
+  }
+
+  .fhub-tool-link-txt {
+    font-size: 0.84rem;
+    font-weight: 750;
+    color: var(--fhub-emerald);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .fhub-tool-link-txt i {
+    transition: transform 0.25s ease;
+  }
+
+  .fhub-tool-card:hover .fhub-tool-link-txt i {
+    transform: translateX(4px);
+  }
+
+  /* ──────────────────────────────────────────────────────────
+     3-STEP HOW IT WORKS (Image 1)
+     ────────────────────────────────────────────────────────── */
+  .fhub-steps-card {
+    background: var(--fhub-bg-card);
+    border: 1px solid var(--fhub-border);
+    border-radius: 24px;
+    padding: 2.75rem 2rem;
+    margin-bottom: 3.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .fhub-steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    position: relative;
+  }
+
+  @media (max-width: 850px) {
+    .fhub-steps-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+  }
+
+  .fhub-step-item {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid var(--fhub-border);
+    border-radius: 18px;
+    padding: 1.75rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  [data-theme="light"] .fhub-step-item {
+    background: #FFFFFF;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  }
+
+  .fhub-step-item:hover {
+    border-color: var(--fhub-emerald);
+    transform: translateY(-4px);
+  }
+
+  .fhub-step-num {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: #FFFFFF;
+    font-size: 1.15rem;
+    font-weight: 850;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  }
+
+  .fhub-step-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--fhub-text-main);
+    margin-bottom: 0.5rem;
+  }
+
+  .fhub-step-desc {
+    font-size: 0.86rem;
+    color: var(--fhub-text-muted);
+    line-height: 1.55;
+  }
+
+  /* ──────────────────────────────────────────────────────────
+     THE NUMBERS SPEAK FOR THEMSELVES (Image 1 & 2 Impact)
+     ────────────────────────────────────────────────────────── */
+  .fhub-impact-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    align-items: center;
+    background: var(--fhub-bg-card);
+    border: 1px solid var(--fhub-border);
+    border-radius: 24px;
+    padding: 2.75rem;
+    margin-bottom: 3.5rem;
+  }
+
+  @media (max-width: 950px) {
+    .fhub-impact-wrap { grid-template-columns: 1fr; padding: 2rem 1.5rem; }
+  }
+
+  .fhub-impact-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 1.75rem;
+  }
+
+  @media (max-width: 500px) {
+    .fhub-impact-stats-grid { grid-template-columns: 1fr; }
+  }
+
+  .fhub-impact-stat-cell {
+    border-left: 3px solid var(--fhub-emerald);
+    padding-left: 1rem;
+  }
+
+  .fhub-impact-big-val {
+    font-size: 2.2rem;
+    font-weight: 850;
+    color: var(--fhub-emerald);
+    line-height: 1.1;
+    margin-bottom: 0.3rem;
+  }
+
+  .fhub-impact-lbl {
+    font-size: 0.84rem;
+    color: var(--fhub-text-muted);
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .fhub-impact-visual {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--fhub-border);
+    height: 380px;
+  }
+
+  .fhub-impact-visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .fhub-impact-overlay-badge {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 0.9rem 1.15rem;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  /* ──────────────────────────────────────────────────────────
+     FARMER TESTIMONIALS (Image 1)
+     ────────────────────────────────────────────────────────── */
+  .fhub-testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.4rem;
+    margin-bottom: 3.5rem;
+  }
+
+  @media (max-width: 950px) {
+    .fhub-testimonials-grid { grid-template-columns: 1fr; }
+  }
+
+  .fhub-test-card {
+    background: var(--fhub-bg-card);
+    border: 1px solid var(--fhub-border);
+    border-radius: 20px;
+    padding: 1.6rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.25s ease;
+  }
+
+  .fhub-test-card:hover {
+    border-color: var(--fhub-emerald);
+    transform: translateY(-3px);
+  }
+
+  .fhub-stars {
+    color: #F59E0B;
+    font-size: 0.9rem;
+    margin-bottom: 0.85rem;
+    letter-spacing: 2px;
+  }
+
+  .fhub-test-quote {
+    font-size: 0.9rem;
+    color: var(--fhub-text-main);
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+    font-style: italic;
+  }
+
+  .fhub-test-author {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--fhub-border);
+  }
+
+  .fhub-author-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(16, 185, 129, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+  }
+
+  .fhub-author-name {
+    font-size: 0.9rem;
+    font-weight: 750;
+    color: var(--fhub-text-main);
+  }
+
+  .fhub-author-loc {
+    font-size: 0.76rem;
+    color: var(--fhub-text-muted);
+  }
+
+  /* ──────────────────────────────────────────────────────────
+     READY TO TRANSFORM YOUR FARM (CTA Banner)
+     ────────────────────────────────────────────────────────── */
+  .fhub-cta-banner {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.88), rgba(5, 150, 105, 0.95));
+    border-radius: 24px;
+    padding: 3.25rem 2rem;
+    text-align: center;
+    color: #FFFFFF;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 16px 40px rgba(16, 185, 129, 0.35);
+  }
+
+  .fhub-cta-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.35rem 0.95rem;
+    border-radius: 30px;
+    font-size: 0.8rem;
+    font-weight: 750;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 0.85rem;
+  }
+
+  .fhub-cta-title {
+    font-size: clamp(1.8rem, 3.5vw, 2.7rem);
+    font-weight: 850;
+    margin-bottom: 0.85rem;
+    line-height: 1.2;
+  }
+
+  .fhub-cta-sub {
+    font-size: 1rem;
+    opacity: 0.92;
+    max-width: 650px;
+    margin: 0 auto 1.85rem auto;
+    line-height: 1.6;
+  }
+
+  .fhub-cta-btns {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-cta-gold {
+    background: #F59E0B;
+    color: #0F172A !important;
+    font-weight: 800;
+    padding: 0.85rem 1.75rem;
+    border-radius: 12px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
+    transition: all 0.2s ease;
+  }
+
+  .btn-cta-gold:hover {
+    transform: translateY(-2px);
+    background: #D97706;
+    color: #FFFFFF !important;
+  }
+
+  .btn-cta-outline {
+    background: rgba(0, 0, 0, 0.25);
+    color: #FFFFFF !important;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    font-weight: 700;
+    padding: 0.85rem 1.65rem;
+    border-radius: 12px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+  }
+
+  .btn-cta-outline:hover {
+    background: rgba(0, 0, 0, 0.45);
+    transform: translateY(-2px);
+  }
 </style>
 {% endblock %}
 
 {% block content %}
+<div class="fhub-wrapper">
 
-<!-- Stats bar -->
-<div class="dash-stats">
-    <div class="dash-stat">
-        <div class="dash-stat-icon" style="background:rgba(16,185,129,0.1);color:#10B981;"><i class="fa-solid fa-seedling"></i></div>
-        <div>
-            <span class="dash-stat-label">फसल स्वास्थ्य</span>
-            <span class="dash-stat-value">Good</span>
-            <span class="dash-stat-sub" style="color:#10B981;">85% healthy</span>
+  <!-- ══════════════════════════════════════════════════════════
+       1. HERO SECTION (Lush Crop Field + AI Farm OS)
+       ══════════════════════════════════════════════════════════ -->
+  <section class="fhub-hero-wrap">
+    <div class="fhub-hero-mask">
+      <!-- Pill Badge -->
+      <div class="fhub-pill-tag">
+        <span class="fhub-pill-dot"></span>
+        <span>भारत का अग्रणी AI & IoT संचालित फार्म ऑपरेटिंग सिस्टम</span>
+      </div>
+
+      <!-- Main Headline -->
+      <h1 class="fhub-hero-title">
+        स्मार्ट खेती, संपूर्ण समाधान — <em>KrishiAI Runs The Whole Farm.</em>
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="fhub-hero-sub">
+        नमस्ते <strong>{{ user_name }}</strong> जी! आपके खेत के लिए 8+ समर्पित AI टूल्स सक्रिय हैं: फसल रोग व कीट डायग्नोसिस, लाइव वेदर रडार, सटीक मंडी भाव और सीधे साथी किसानों से P2P मशीनरी शेयरिंग।
+      </p>
+
+      <!-- Action Buttons -->
+      <div class="fhub-hero-actions">
+        <a href="#toolsGrid" class="fhub-btn-primary">
+          <i class="fa-solid fa-shapes"></i>
+          <span>सभी कृषि टूल्स देखें</span>
+        </a>
+        <a href="{{ url_for('disease') }}" class="fhub-btn-secondary">
+          <i class="fa-solid fa-camera-retro" style="color:var(--fhub-emerald);"></i>
+          <span>फसल फोटो स्कैन करें</span>
+        </a>
+        <a href="{{ url_for('voice') }}" class="fhub-btn-secondary">
+          <i class="fa-solid fa-microphone-lines" style="color:var(--fhub-purple);"></i>
+          <span>वॉइस असिस्टेंट (बोलकर पूछें)</span>
+        </a>
+      </div>
+
+      <!-- Hero Impact Badges -->
+      <div class="fhub-hero-stats">
+        <div class="fhub-hero-stat-pill">
+          <span class="fhub-stat-num">1,500+</span>
+          <span class="fhub-stat-txt">सक्रिय किसान</span>
         </div>
+        <div class="fhub-hero-stat-pill">
+          <span class="fhub-stat-num">+38%</span>
+          <span class="fhub-stat-txt">औसत उपज वृद्धि</span>
+        </div>
+        <div class="fhub-hero-stat-pill">
+          <span class="fhub-stat-num">600+</span>
+          <span class="fhub-stat-txt">गाँव व कस्बों में सक्रिय</span>
+        </div>
+        <div class="fhub-hero-stat-pill">
+          <span class="fhub-stat-num">99.2%</span>
+          <span class="fhub-stat-txt">AI निदान सटीकता</span>
+        </div>
+      </div>
     </div>
-    <a href="{{ url_for('weather') }}" class="dash-stat dash-stat-weather" style="text-decoration:none; color:inherit; cursor:pointer;" title="लाइव मौसम एवं वर्षा राडार देखें">
-        <div class="dash-stat-icon" id="dashWeatherIcon" style="background:rgba(56,189,248,0.12);color:#38BDF8;"><i class="fa-solid fa-cloud-sun"></i></div>
-        <div>
-            <span class="dash-stat-label" id="dashWeatherCity"><i class="fa-solid fa-location-dot" style="font-size:0.75rem; color:#38BDF8;"></i> मौसम ({{ user_district or 'Bareilly' }})</span>
-            <span class="dash-stat-value" id="dashWeatherTemp">--°C</span>
-            <span class="dash-stat-sub" id="dashWeatherCond" style="color:#38BDF8;">लाइव मौसम लोड हो रहा है...</span>
-        </div>
-    </a>
-    <div class="dash-stat">
-        <div class="dash-stat-icon" style="background:rgba(59,130,246,0.1);color:#3B82F6;"><i class="fa-solid fa-rupee-sign"></i></div>
-        <div>
-            <span class="dash-stat-label">मंडी भाव (गेहूं)</span>
-            <span class="dash-stat-value">₹2,150</span>
-            <span class="dash-stat-sub" style="color:#10B981;">↑ +3%</span>
-        </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       2. FARM DIGITAL TWIN & REAL-TIME TELEMETRY (Image 2)
+       ══════════════════════════════════════════════════════════ -->
+  <section class="fhub-twin-card">
+    <div class="fhub-twin-head">
+      <div class="fhub-twin-title">
+        <i class="fa-solid fa-satellite-dish" style="color:var(--fhub-emerald);"></i>
+        <span>लाइव फार्म डिजिटल ट्विन (Farm Digital Twin Telemetry)</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:0.65rem; flex-wrap:wrap;">
+        <span class="fhub-farmer-tag">
+          <i class="fa-solid fa-location-dot"></i> {{ user_district }}, {{ user_state }}
+        </span>
+        {% if user_crops %}
+        <span style="font-size:0.78rem; color:var(--fhub-text-muted); font-weight:600;">
+          मुख्य फसलें: {{ user_crops }}
+        </span>
+        {% endif %}
+      </div>
     </div>
-    <div class="dash-stat">
-        <div class="dash-stat-icon" style="background:rgba(239,68,68,0.1);color:#EF4444;"><i class="fa-solid fa-triangle-exclamation"></i></div>
-        <div>
-            <span class="dash-stat-label">अलर्ट</span>
-            <span class="dash-stat-value">2 New</span>
-            <span class="dash-stat-sub" style="color:#EF4444;">Pest warning nearby</span>
-        </div>
+
+    <!-- 5 Live Telemetry Indicators -->
+    <div class="fhub-twin-grid">
+      <!-- 1: NDVI Health -->
+      <div class="fhub-telemetry-box">
+        <div class="fhub-telem-icon telem-emerald"><i class="fa-solid fa-seedling"></i></div>
+        <div class="fhub-telem-val">0.85 NDVI</div>
+        <div class="fhub-telem-lbl">फसल स्वास्थ्य (स्वस्थ व हरी-भरी)</div>
+      </div>
+
+      <!-- 2: Soil Moisture -->
+      <div class="fhub-telemetry-box">
+        <div class="fhub-telem-icon telem-blue"><i class="fa-solid fa-droplet"></i></div>
+        <div class="fhub-telem-val">24% SM</div>
+        <div class="fhub-telem-lbl">मृदा नमी (आदर्श सिंचाई स्तर)</div>
+      </div>
+
+      <!-- 3: Weather Radar -->
+      <div class="fhub-telemetry-box">
+        <div class="fhub-telem-icon telem-amber"><i class="fa-solid fa-cloud-sun"></i></div>
+        <div class="fhub-telem-val">28°C · साफ़</div>
+        <div class="fhub-telem-lbl">बारिश: 15% (स्प्रे हेतु उपयुक्त)</div>
+      </div>
+
+      <!-- 4: Mandi Trend -->
+      <div class="fhub-telemetry-box">
+        <div class="fhub-telem-icon telem-purple"><i class="fa-solid fa-arrow-trend-up"></i></div>
+        <div class="fhub-telem-val">₹2,425 / Q</div>
+        <div class="fhub-telem-lbl">गेहूं भाव (+₹40 उछाल)</div>
+      </div>
+
+      <!-- 5: Machinery Share Hub -->
+      <div class="fhub-telemetry-box">
+        <div class="fhub-telem-icon telem-rose"><i class="fa-solid fa-tractor"></i></div>
+        <div class="fhub-telem-val">9 उपकरण</div>
+        <div class="fhub-telem-lbl">5 किमी दायरे में बुकिंग हेतु तैयार</div>
+      </div>
     </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       3. INTERACTIVE AI ASK PROMPT BAR
+       ══════════════════════════════════════════════════════════ -->
+  <div class="fhub-ask-bar">
+    <div style="display:flex; align-items:center; gap:0.6rem;">
+      <div style="width:36px; height:36px; border-radius:10px; background:linear-gradient(135deg,#10B981,#059669); color:#fff; display:flex; align-items:center; justify-content:center; font-size:1rem;">
+        <i class="fa-solid fa-robot"></i>
+      </div>
+      <div>
+        <div style="font-size:0.92rem; font-weight:750; color:var(--fhub-text-main);">कृषि AI सलाहकार से पूछें</div>
+        <div style="font-size:0.75rem; color:var(--fhub-text-muted);">24/7 स्थानीय भाषा में सहायता</div>
+      </div>
+    </div>
+
+    <div class="fhub-ask-input-wrap">
+      <i class="fa-solid fa-magnifying-glass" style="color:#64748B;"></i>
+      <input type="text" id="quickAiInput" placeholder="उदा. गेहूं में पीला रतुआ कैसे रोकें? या आज बरेली मंडी का भाव क्या है?" onkeydown="if(event.key==='Enter') goToChatbot()">
+      <button type="button" onclick="goToChatbot()" style="background:var(--fhub-emerald); color:#fff; border:none; border-radius:8px; padding:0.4rem 0.85rem; font-size:0.82rem; font-weight:700; cursor:pointer;">
+        पूछें <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+
+    <div class="fhub-ask-prompts">
+      <a href="{{ url_for('chatbot') }}?q=सरसों में एफिड कीट की रोकथाम" class="fhub-quick-chip">सरसों में कीट रोकथाम</a>
+      <a href="{{ url_for('chatbot') }}?q=धान में यूरिया कब डालना चाहिए" class="fhub-quick-chip">धान खाद शेड्यूल</a>
+      <a href="{{ url_for('market') }}" class="fhub-quick-chip">आज का मंडी भाव</a>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       4. EVERYTHING A MODERN FARMER NEEDS (Core Services Grid)
+       ══════════════════════════════════════════════════════════ -->
+  <section id="toolsGrid">
+    <div class="fhub-sec-header">
+      <span class="fhub-sec-badge">कृषि सेवाएं व AI टूल्स</span>
+      <h2 class="fhub-sec-title">Everything a Modern Farmer Needs</h2>
+      <p class="fhub-sec-sub">एक ही क्लिक में अपने खेत की सेहत, मौसम, मंडी भाव और साथी किसानों से मशीनरी शेयरिंग तक सब कुछ नियंत्रित करें।</p>
+    </div>
+
+    <div class="fhub-tools-grid">
+
+      <!-- 1. Disease Detection -->
+      <a href="{{ url_for('disease') }}" class="fhub-tool-card">
+        <div class="fhub-tool-thumb-wrap">
+          <img src="{{ url_for('static', filename='img/crop_disease.png') }}" alt="Crop Disease" class="fhub-tool-img">
+          <span class="fhub-tool-tag" style="background:#064E3B; border-color:#059669; color:#6EE7B7;">AI डायग्नोसिस</span>
+        </div>
+        <div class="fhub-tool-body">
+          <div class="fhub-tool-header-row">
+            <div class="fhub-tool-avatar telem-emerald"><i class="fa-solid fa-microscope"></i></div>
+            <h3 class="fhub-tool-title">फसल रोग पहचान</h3>
+          </div>
+          <p class="fhub-tool-desc">पत्ती की फोटो अपलोड करें और सेकंडों में रोग का सटीक नाम, लक्षण व तुरंत उपचार दवा की जानकारी पाएं।</p>
+          <div class="fhub-tool-foot">
+            <span class="fhub-tool-link-txt">जांच शुरू करें <i class="fa-solid fa-arrow-right"></i></span>
+            <span style="font-size:0.75rem; color:#10B981; font-weight:700;">98.4% सटीक</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 2. Pest Detection -->
+      <a href="{{ url_for('pest') }}" class="fhub-tool-card">
+        <div class="fhub-tool-thumb-wrap">
+          <img src="{{ url_for('static', filename='img/pest_detection.png') }}" alt="Pest Detection" class="fhub-tool-img">
+          <span class="fhub-tool-tag" style="background:#14532D; border-color:#16A34A; color:#86EFAC;">कीट रोकथाम</span>
+        </div>
+        <div class="fhub-tool-body">
+          <div class="fhub-tool-header-row">
+            <div class="fhub-tool-avatar telem-emerald"><i class="fa-solid fa-bug"></i></div>
+            <h3 class="fhub-tool-title">कीट पहचान व स्प्रे</h3>
+          </div>
+          <p class="fhub-tool-desc">फसल को नुकसान पहुँचाने वाले कीटों की पहचान करें और बिना पौधे को नुकसान पहुँचाए जैविक व रासायनिक समाधान पाएं।</p>
+          <div class="fhub-tool-foot">
+            <span class="fhub-tool-link-txt">कीट स्कैन करें <i class="fa-solid fa-arrow-right"></i></span>
+            <span style="font-size:0.75rem; color:#22C55E; font-weight:700;">जैविक स्प्रे गाइड</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 3. Soil Analysis -->
+      <a href="{{ url_for('soil') }}" class="fhub-tool-card">
+        <div class="fhub-tool-thumb-wrap">
+          <img src="{{ url_for('static', filename='img/soil_analysis.png') }}" alt="Soil Analysis" class="fhub-tool-img">
+          <span class="fhub-tool-tag" style="background:#78350F; border-color:#D97706; color:#FDE68A;">NPK उर्वरक</span>
+        </div>
+        <div class="fhub-tool-body">
+          <div class="fhub-tool-header-row">
+            <div class="fhub-tool-avatar telem-amber"><i class="fa-solid fa-flask"></i></div>
+            <h3 class="fhub-tool-title">मृदा जांच व खाद</h3>
+          </div>
+          <p class="fhub-tool-desc">नाइट्रोजन, फास्फोरस, पोटाश व pH मान डालकर जानें कि आपके खेत के लिए सबसे लाभप्रद फसल व खाद की सही मात्रा क्या है।</p>
+          <div class="fhub-tool-foot">
+            <span class="fhub-tool-link-txt" style="color:var(--fhub-amber);">खाद रिपोर्ट देखें <i class="fa-solid fa-arrow-right"></i></span>
+            <span style="font-size:0.75rem; color:#F59E0B; font-weight:700;">कम लागत</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 4. Weather & Doppler Radar -->
+      <a href="{{ url_for('weather') }}" class="fhub-tool-card">
+        <div class="fhub-tool-thumb-wrap">
+          <img src="{{ url_for('static', filename='img/weather_forecast.png') }}" alt="Weather Radar" class="fhub-tool-img">
+          <span class="fhub-tool-tag" style="background:#1E3A8A; border-color:#3B82F6; color:#93C5FD;">लाइव डोपलर</span>
+        </div>
+        <div class="fhub-tool-body">
+          <div class="fhub-tool-header-row">
+            <div class="fhub-tool-avatar telem-blue"><i class="fa-solid fa-cloud-sun-rain"></i></div>
+            <h3 class="fhub-tool-title">मौसम व वर्षा रडार</h3>
+          </div>
+          <p class="fhub-tool-desc">7 दिनों का सटीक मौसम, बारिश का रियल-टाइम मैप और छिड़काव व बुवाई का सबसे अनुकूल समय (Spray Window)।</p>
+          <div class="fhub-tool-foot">
+            <span class="fhub-tool-link-txt" style="color:var(--fhub-blue);">मौसम नक्शा देखें <i class="fa-solid fa-arrow-right"></i></span>
+            <span style="font-size:0.75rem; color:#38BDF8; font-weight:700;">घंटेवार अलर्ट</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 5. Rent Machinery P2P Hub -->
+      <a href="{{ url_for('machinery') }}" class="fhub-tool-card">
+        <div class="fhub-tool-thumb-wrap">
+          <img src="{{ url_for('static', filename='login-bg/bg4.jpg') }}" alt="Farm Machinery" class="fhub-tool-img">
+          <span class="fhub-tool-tag" style="background:#881337; border-color:#E11D48; color:#FDA4AF;">P2P शेयरिंग</span>
+        </div>
+        <div class="fhub-tool-body">
+          <div class="fhub-tool-header-row">
+            <div class="fhub-tool-avatar telem-rose"><i class="fa-solid fa-tractor"></i></div>
+            <h3 class="fhub-tool-title">कृषि यंत्र व मशीनरी हब</h3>
+          </div>
+          <p class="fhub-tool-desc">ट्रैक्टर, ड्रोन, रोटावेटर, थ्रेशर साथी किसानों से सीधे व्हाट्सएप पर 1-क्लिक में किराए पर लें या अपनी मशीन लिस्ट करें।</p>
+          <div class="fhub-tool-foot">
+            <span class="fhub-tool-link-txt" style="color:#F43F5E;">मशीनरी खोजें <i class="fa-solid fa-arrow-right"></i></span>
+            <span style="font-size:0.75rem; color:#FB7185; font-weight:700;">₹150/दिन से शुरू</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 6. Mandi Prices -->
+      <a href="{{ url_for('market') }}" class="fhub-tool-card">
+        <div class="fhub-tool-thumb-wrap">
+          <img src="{{ url_for('static', filename='img/mandi_price.png') }}" alt="Mandi Bhav" class="fhub-tool-img">
+          <span class="fhub-tool-tag" style="background:#7C2D12; border-color:#EA580C; color:#FDBA74;">सरकारी एपीआई</span>
+        </div>
+        <div class="fhub-tool-body">
+          <div class="fhub-tool-header-row">
+            <div class="fhub-tool-avatar telem-amber"><i class="fa-solid fa-store"></i></div>
+            <h3 class="fhub-tool-title">लाइव मंडी भाव</h3>
+          </div>
+          <p class="fhub-tool-desc">अपने जिले व पूरे प्रदेश की प्रमुख कृषि उपज मंडियों के दैनिक न्यूनतम, अधिकतम और मॉडल भाव सीधे देखें।</p>
+          <div class="fhub-tool-foot">
+            <span class="fhub-tool-link-txt" style="color:#F97316;">मंडी भाव देखें <i class="fa-solid fa-arrow-right"></i></span>
+            <span style="font-size:0.75rem; color:#FB923C; font-weight:700;">दैनिक अपडेट</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 7. Government Schemes -->
+      <a href="{{ url_for('schemes') }}" class="fhub-tool-card">
+        <div class="fhub-tool-thumb-wrap">
+          <img src="{{ url_for('static', filename='img/government_schemes.png') }}" alt="Govt Schemes" class="fhub-tool-img">
+          <span class="fhub-tool-tag" style="background:#164E63; border-color:#0891B2; color:#A5F3FC;">सब्सिडी व ऋण</span>
+        </div>
+        <div class="fhub-tool-body">
+          <div class="fhub-tool-header-row">
+            <div class="fhub-tool-avatar telem-blue"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+            <h3 class="fhub-tool-title">सरकारी योजनाएं</h3>
+          </div>
+          <p class="fhub-tool-desc">PM किसान, किसान क्रेडिट कार्ड (KCC), सोलर पंप कुसुम योजना आदि की पात्रता जांचें और ऑनलाइन आवेदन करें।</p>
+          <div class="fhub-tool-foot">
+            <span class="fhub-tool-link-txt" style="color:#06B6D4;">योजनाएं देखें <i class="fa-solid fa-arrow-right"></i></span>
+            <span style="font-size:0.75rem; color:#22D3EE; font-weight:700;">सब्सिडी गाइड</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- 8. Organic Farming -->
+      <a href="{{ url_for('organic') }}" class="fhub-tool-card">
+        <div class="fhub-tool-thumb-wrap">
+          <img src="{{ url_for('static', filename='login-bg/bg3.jpg') }}" alt="Organic Farming" class="fhub-tool-img">
+          <span class="fhub-tool-tag" style="background:#064E3B; border-color:#059669; color:#6EE7B7;">जीवामृत व खाद</span>
+        </div>
+        <div class="fhub-tool-body">
+          <div class="fhub-tool-header-row">
+            <div class="fhub-tool-avatar telem-emerald"><i class="fa-solid fa-leaf"></i></div>
+            <h3 class="fhub-tool-title">जैविक व प्राकृतिक खेती</h3>
+          </div>
+          <p class="fhub-tool-desc">घर पर ही गोबर व गोमूत्र से जीवामृत, बीजामृत, पंचगव्य व जैविक कीटनाशक बनाने की प्रमाणित वैज्ञानिक विधि।</p>
+          <div class="fhub-tool-foot">
+            <span class="fhub-tool-link-txt">जैविक गाइड <i class="fa-solid fa-arrow-right"></i></span>
+            <span style="font-size:0.75rem; color:#34D399; font-weight:700;">शून्य बजट</span>
+          </div>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       5. 3-STEP HOW KRISHI AI WORKS (Image 1)
+       ══════════════════════════════════════════════════════════ -->
+  <section class="fhub-steps-card">
+    <div class="fhub-sec-header">
+      <span class="fhub-sec-badge">सरल व तेज प्रक्रिया</span>
+      <h2 class="fhub-sec-title">How Krishi AI Works</h2>
+      <p class="fhub-sec-sub">केवल 3 आसान चरणों में अपनी फसल को सुरक्षित करें और अधिकतम मुनाफा कमाएं।</p>
+    </div>
+
+    <div class="fhub-steps-grid">
+      <!-- Step 1 -->
+      <div class="fhub-step-item">
+        <div class="fhub-step-num">01</div>
+        <div style="font-size:1.6rem; color:var(--fhub-emerald); margin-bottom:0.75rem;"><i class="fa-solid fa-camera"></i></div>
+        <h3 class="fhub-step-title">फसल फोटो लें या सेवा चुनें</h3>
+        <p class="fhub-step-desc">अपने फोन कैमरे से प्रभावित पत्ती की फोटो लें, या मृदा, मौसम, मशीनरी में से अपनी जरूरत का टूल चुनें।</p>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="fhub-step-item">
+        <div class="fhub-step-num">02</div>
+        <div style="font-size:1.6rem; color:var(--fhub-amber); margin-bottom:0.75rem;"><i class="fa-solid fa-brain"></i></div>
+        <h3 class="fhub-step-title">AI से तुरंत सटीक निदान पाएं</h3>
+        <p class="fhub-step-desc">हमारा ट्रेंड डीप लर्निंग मॉडल तुरंत स्थिति का विश्लेषण कर आपकी क्षेत्रीय भाषा में प्रामाणिक सलाह देता है।</p>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="fhub-step-item">
+        <div class="fhub-step-num">03</div>
+        <div style="font-size:1.6rem; color:#38BDF8; margin-bottom:0.75rem;"><i class="fa-solid fa-wheat-awn"></i></div>
+        <h3 class="fhub-step-title">उपज बढ़ाएं व लागत घटाएं</h3>
+        <p class="fhub-step-desc">सही समय पर सही उर्वरक व दवा का प्रयोग करें, कम किराए में मशीनरी लें और मंडी में सर्वोत्तम मूल्य पाएं।</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       6. THE NUMBERS SPEAK FOR THEMSELVES (Image 1 & 2 Impact)
+       ══════════════════════════════════════════════════════════ -->
+  <section class="fhub-impact-wrap">
+    <div>
+      <span class="fhub-sec-badge">प्रमाणित परिणाम</span>
+      <h2 class="fhub-sec-title" style="text-align:left; margin-bottom:0.75rem;">The Numbers Speak for Themselves</h2>
+      <p style="font-size:0.95rem; color:var(--fhub-text-muted); line-height:1.65;">
+        Krishi AI से जुड़े हजारों किसानों ने अपनी फसल की गुणवत्ता में सुधार किया है और अनावश्यक रासायनिक कीटनाशकों पर होने वाले भारी खर्च में भारी कमी लाई है।
+      </p>
+
+      <div class="fhub-impact-stats-grid">
+        <div class="fhub-impact-stat-cell">
+          <div class="fhub-impact-big-val">+38%</div>
+          <div class="fhub-impact-lbl">औसत फसल उपज में प्रमाणित वृद्धि</div>
+        </div>
+
+        <div class="fhub-impact-stat-cell">
+          <div class="fhub-impact-big-val">₹12,400</div>
+          <div class="fhub-impact-lbl">प्रति किसान मासिक अतिरिक्त बचत व आमदनी</div>
+        </div>
+
+        <div class="fhub-impact-stat-cell">
+          <div class="fhub-impact-big-val">-45%</div>
+          <div class="fhub-impact-lbl">अनावश्यक रासायनिक कीटनाशक व खाद के खर्च में कमी</div>
+        </div>
+
+        <div class="fhub-impact-stat-cell">
+          <div class="fhub-impact-big-val">99.2%</div>
+          <div class="fhub-impact-lbl">रोग पहचान व वेदर एडवाइजरी की सटीकता</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Photo Box -->
+    <div class="fhub-impact-visual">
+      <img src="{{ url_for('static', filename='login-bg/bg2.jpg') }}" alt="Farmer Field Harvest">
+      <div class="fhub-impact-overlay-badge">
+        <i class="fa-solid fa-circle-check" style="color:#10B981; font-size:1.5rem; flex-shrink:0;"></i>
+        <div>
+          <div style="font-size:0.88rem; font-weight:800;">100% भारतीय किसानों के लिए निर्मित</div>
+          <div style="font-size:0.74rem; color:#94A3B8;">ICAR शोध व कृषि विज्ञान केंद्र मानकों के अनुरूप</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       7. WHAT FARMERS ARE SAYING (Verified Reviews)
+       ══════════════════════════════════════════════════════════ -->
+  <section>
+    <div class="fhub-sec-header">
+      <span class="fhub-sec-badge">सच्चे अनुभव</span>
+      <h2 class="fhub-sec-title">What Farmers Are Saying</h2>
+      <p class="fhub-sec-sub">हमारे साथ जुड़े किसान भाइयों के वास्तविक अनुभव जो खेती में आधुनिक तकनीक का लाभ ले रहे हैं।</p>
+    </div>
+
+    <div class="fhub-testimonials-grid">
+      <!-- Review 1 -->
+      <div class="fhub-test-card">
+        <div class="fhub-stars">★★★★★</div>
+        <p class="fhub-test-quote">
+          "मेरी 4 एकड़ गेहूं की फसल में पत्तियां पीली पड़ रही थीं। Krishi AI पर फोटो डालते ही 30 सेकंड में पता चला कि यह पीला रतुआ है। बताई गई दवा छिड़कने से पूरी फसल बच गई!"
+        </p>
+        <div class="fhub-test-author">
+          <div class="fhub-author-avatar">👨‍🌾</div>
+          <div>
+            <div class="fhub-author-name">रामेश्वर सिंह पटेल</div>
+            <div class="fhub-author-loc">फरीदपुर, बरेली (उ.प्र.) · गेहूं किसान</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Review 2 -->
+      <div class="fhub-test-card">
+        <div class="fhub-stars">★★★★★</div>
+        <p class="fhub-test-quote">
+          "मशीनरी हब ने मेरी सबसे बड़ी मुश्किल हल कर दी। पहले बुवाई के समय रोटावेटर के लिए भटकना पड़ता था, अब सीधे साथी किसान से वाजिब किराए पर मशीन मिल जाती है।"
+        </p>
+        <div class="fhub-test-author">
+          <div class="fhub-author-avatar">🚜</div>
+          <div>
+            <div class="fhub-author-name">बलविंदर पाल</div>
+            <div class="fhub-author-loc">मीरगंज, बरेली (उ.प्र.) · गन्ना व धान</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Review 3 -->
+      <div class="fhub-test-card">
+        <div class="fhub-stars">★★★★★</div>
+        <p class="fhub-test-quote">
+          "लाइव वेदर रडार और मंडी भाव ने मुझे बहुत फायदा कराया। बारिश होने से पहले पता चल जाता है और जिस दिन मंडी में दाम तेज होता है उसी दिन फसल बेचता हूँ।"
+        </p>
+        <div class="fhub-test-author">
+          <div class="fhub-author-avatar">🌾</div>
+          <div>
+            <div class="fhub-author-name">सुरेश पाटिल</div>
+            <div class="fhub-author-loc">आंवला, बरेली (उ.प्र.) · सब्जी व दलहन</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════════
+       8. READY TO TRANSFORM YOUR FARM (CTA Banner)
+       ══════════════════════════════════════════════════════════ -->
+  <section class="fhub-cta-banner">
+    <span class="fhub-cta-badge">डिजिटल कृषि क्रांति</span>
+    <h2 class="fhub-cta-title">Ready to Transform Your Farm?</h2>
+    <p class="fhub-cta-sub">
+      आज ही अपने खेत को स्मार्ट बनाएं। फसल रोग से लेकर मंडी भाव तक, सब कुछ अपनी मुट्ठी में पाएं — पूरी तरह निःशुल्क।
+    </p>
+    <div class="fhub-cta-btns">
+      <a href="{{ url_for('disease') }}" class="btn-cta-gold">
+        <i class="fa-solid fa-leaf"></i>
+        <span>फसल जांच शुरू करें</span>
+      </a>
+      <a href="{{ url_for('voice') }}" class="btn-cta-outline">
+        <i class="fa-solid fa-microphone"></i>
+        <span>वॉइस असिस्टेंट से बात करें</span>
+      </a>
+      <a href="{{ url_for('machinery') }}" class="btn-cta-outline">
+        <i class="fa-solid fa-tractor"></i>
+        <span>मशीनरी हब देखें</span>
+      </a>
+    </div>
+  </section>
+
 </div>
-
-<!-- 8 Feature Cards -->
-<section class="services-section" style="padding-top:0;">
-    <div class="services-header fade-in-up">
-        <h2 class="services-main-title">स्मार्ट कृषि समाधान</h2>
-        <p class="services-main-sub">एआई-संचालित 8 शक्तिशाली उपकरण — बेहतर फसल, बेहतर जीवन</p>
-    </div>
-
-    <div class="premium-cards-grid">
-
-        <a href="{{ url_for('disease') }}" class="pcard pcard--disease fade-in-up">
-            <div class="pcard__corner-badge">AI</div>
-            <div class="pcard__img-wrap">
-                <img src="{{ url_for('static', filename='img/crop_disease.png') }}" alt="Crop Disease" class="pcard__img">
-            </div>
-            <div class="pcard__body">
-                <h3 class="pcard__title">फसल रोग पहचान</h3>
-                <p class="pcard__desc">पत्ती की फोटो अपलोड करें और तुरंत रोग निदान व उपचार सलाह पाएं।</p>
-                <div class="pcard__footer">
-                    <span class="pcard__btn">जांच करें <i class="fa-solid fa-arrow-right"></i></span>
-                    <span class="pcard__icon"><i class="fa-solid fa-leaf"></i></span>
-                </div>
-            </div>
-        </a>
-
-        <a href="{{ url_for('soil') }}" class="pcard pcard--soil fade-in-up delay-1">
-            <div class="pcard__corner-badge pcard__corner-badge--soil">Lab</div>
-            <div class="pcard__img-wrap">
-                <img src="{{ url_for('static', filename='img/soil_analysis.png') }}" alt="Soil Analysis" class="pcard__img">
-            </div>
-            <div class="pcard__body">
-                <h3 class="pcard__title">मृदा स्वास्थ्य जाँच</h3>
-                <p class="pcard__desc">मिट्टी के प्रकार, पोषक तत्व जानें और उर्वरक सिफारिशें पाएं।</p>
-                <div class="pcard__footer">
-                    <span class="pcard__btn pcard__btn--soil">जांच करें <i class="fa-solid fa-arrow-right"></i></span>
-                    <span class="pcard__icon pcard__icon--soil"><i class="fa-solid fa-flask"></i></span>
-                </div>
-            </div>
-        </a>
-
-        <a href="{{ url_for('pest') }}" class="pcard pcard--pest fade-in-up delay-2">
-            <div class="pcard__corner-badge pcard__corner-badge--pest">AI</div>
-            <div class="pcard__img-wrap">
-                <img src="{{ url_for('static', filename='img/pest_detection.png') }}" alt="Pest Detection" class="pcard__img">
-            </div>
-            <div class="pcard__body">
-                <h3 class="pcard__title">कीट पहचान</h3>
-                <p class="pcard__desc">कीट पहचानने के लिए फसल की फोटो अपलोड करें और एआई समाधान पाएं।</p>
-                <div class="pcard__footer">
-                    <span class="pcard__btn pcard__btn--pest">पहचानें <i class="fa-solid fa-arrow-right"></i></span>
-                    <span class="pcard__icon pcard__icon--pest"><i class="fa-solid fa-bug"></i></span>
-                </div>
-            </div>
-        </a>
-
-        <a href="{{ url_for('weather') }}" class="pcard pcard--weather fade-in-up delay-3">
-            <div class="pcard__img-wrap">
-                <img src="{{ url_for('static', filename='img/weather_forecast.png') }}" alt="Weather Forecast" class="pcard__img">
-            </div>
-            <div class="pcard__body">
-                <h3 class="pcard__title">मौसम पूर्वानुमान</h3>
-                <p class="pcard__desc">खेत के स्थान के लिए लाइव मौसम और 5 दिनों का पूर्वानुमान देखें।</p>
-                <div class="pcard__footer">
-                    <span class="pcard__btn pcard__btn--weather">मौसम देखें <i class="fa-solid fa-arrow-right"></i></span>
-                    <span class="pcard__icon pcard__icon--weather"><i class="fa-solid fa-location-dot"></i></span>
-                </div>
-            </div>
-        </a>
-
-        <a href="{{ url_for('market') }}" class="pcard pcard--market fade-in-up">
-            <div class="pcard__img-wrap">
-                <img src="{{ url_for('static', filename='img/mandi_price.png') }}" alt="Mandi Market" class="pcard__img">
-            </div>
-            <div class="pcard__body">
-                <h3 class="pcard__title">मंडी बाजार भाव</h3>
-                <p class="pcard__desc">रियल-टाइम मंडी भाव, MSP और मूल्य प्रवृत्ति ट्रैक करें।</p>
-                <div class="pcard__footer">
-                    <span class="pcard__btn pcard__btn--market">भाव देखें <i class="fa-solid fa-arrow-right"></i></span>
-                    <span class="pcard__icon pcard__icon--market"><i class="fa-solid fa-indian-rupee-sign"></i></span>
-                </div>
-            </div>
-        </a>
-
-        <a href="{{ url_for('schemes') }}" class="pcard pcard--schemes fade-in-up delay-1">
-            <div class="pcard__img-wrap">
-                <img src="{{ url_for('static', filename='img/government_schemes.png') }}" alt="Government Schemes" class="pcard__img">
-            </div>
-            <div class="pcard__body">
-                <h3 class="pcard__title">सरकारी योजनाएं</h3>
-                <p class="pcard__desc">PM-KISAN, KCC, PMFBY और अन्य सरकारी सब्सिडी योजनाएं देखें।</p>
-                <div class="pcard__footer">
-                    <span class="pcard__btn pcard__btn--schemes">योजनाएं देखें <i class="fa-solid fa-arrow-right"></i></span>
-                    <span class="pcard__icon pcard__icon--schemes"><i class="fa-solid fa-landmark"></i></span>
-                </div>
-            </div>
-        </a>
-
-        <a href="{{ url_for('voice') }}" class="pcard pcard--voice fade-in-up delay-2">
-            <div class="pcard__corner-badge pcard__corner-badge--voice">
-                <i class="fa-solid fa-microphone" style="font-size:0.6rem;"></i>
-            </div>
-            <div class="pcard__img-wrap pcard__img-wrap--svg">
-                <svg viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg" class="pcard__svg">
-                    <defs>
-                        <radialGradient id="vGd" cx="50%" cy="50%" r="50%">
-                            <stop offset="0%" stop-color="#9333ea" stop-opacity="0.35"/>
-                            <stop offset="100%" stop-color="#9333ea" stop-opacity="0"/>
-                        </radialGradient>
-                        <linearGradient id="mBd" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#c084fc"/><stop offset="100%" stop-color="#7c3aed"/>
-                        </linearGradient>
-                        <linearGradient id="mHd" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stop-color="#e879f9"/><stop offset="100%" stop-color="#9333ea"/>
-                        </linearGradient>
-                        <filter id="glw"><feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                        </filter>
-                    </defs>
-                    <ellipse cx="140" cy="110" rx="80" ry="75" fill="url(#vGd)"/>
-                    <path d="M55 80 Q40 110 55 140" stroke="#a855f7" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.7" filter="url(#glw)"/>
-                    <path d="M225 80 Q240 110 225 140" stroke="#a855f7" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.7" filter="url(#glw)"/>
-                    <rect x="130" y="148" width="20" height="30" rx="4" fill="url(#mBd)"/>
-                    <rect x="108" y="172" width="64" height="10" rx="5" fill="url(#mBd)"/>
-                    <rect x="114" y="50" width="52" height="100" rx="26" fill="url(#mHd)" filter="url(#glw)"/>
-                    <line x1="114" y1="85" x2="166" y2="85" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
-                    <line x1="114" y1="100" x2="166" y2="100" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
-                    <line x1="114" y1="115" x2="166" y2="115" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
-                </svg>
-            </div>
-            <div class="pcard__body">
-                <h3 class="pcard__title">ध्वनि सलाहकार</h3>
-                <p class="pcard__desc">हिंदी में बोलकर खेती के सवाल पूछें और तुरंत आवाज़ में जवाब पाएं।</p>
-                <div class="pcard__footer">
-                    <span class="pcard__btn pcard__btn--voice">बोलें <i class="fa-solid fa-arrow-right"></i></span>
-                    <span class="pcard__icon pcard__icon--voice"><i class="fa-solid fa-waveform-lines"></i></span>
-                </div>
-            </div>
-        </a>
-
-        <a href="{{ url_for('organic') }}" class="pcard pcard--organic fade-in-up delay-3">
-            <div class="pcard__corner-badge pcard__corner-badge--organic">
-                <i class="fa-solid fa-leaf" style="font-size:0.6rem;"></i>
-            </div>
-            <div class="pcard__img-wrap pcard__img-wrap--svg">
-                <svg viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg" class="pcard__svg">
-                    <defs>
-                        <radialGradient id="oGl" cx="50%" cy="60%" r="55%">
-                            <stop offset="0%" stop-color="#10b981" stop-opacity="0.4"/>
-                            <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
-                        </radialGradient>
-                        <linearGradient id="pGn" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#059669"/>
-                        </linearGradient>
-                        <filter id="pGw"><feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-                            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                        </filter>
-                    </defs>
-                    <ellipse cx="140" cy="130" rx="90" ry="70" fill="url(#oGl)"/>
-                    <ellipse cx="140" cy="145" rx="65" ry="18" fill="#78350f"/>
-                    <path d="M140 145 L140 70" stroke="url(#pGn)" stroke-width="7" stroke-linecap="round" filter="url(#pGw)"/>
-                    <path d="M140 95 Q95 55 112 108 Q126 108 140 95Z" fill="url(#pGn)" filter="url(#pGw)"/>
-                    <path d="M140 80 Q185 40 168 92 Q154 92 140 80Z" fill="url(#pGn)" filter="url(#pGw)"/>
-                    <circle cx="90" cy="100" r="3.5" fill="#34d399" opacity="0.8" filter="url(#pGw)"/>
-                    <circle cx="195" cy="85" r="2.5" fill="#6ee7b7" opacity="0.7" filter="url(#pGw)"/>
-                </svg>
-            </div>
-            <div class="pcard__body">
-                <h3 class="pcard__title">जैविक खेती संवर्धन</h3>
-                <p class="pcard__desc">प्रमाणन गाइड, जैविक खाद रेसिपी और बेहतर पैदावार के सर्वोत्तम तरीके।</p>
-                <div class="pcard__footer">
-                    <span class="pcard__btn pcard__btn--organic">सीखें <i class="fa-solid fa-arrow-right"></i></span>
-                    <span class="pcard__icon pcard__icon--organic"><i class="fa-solid fa-seedling"></i></span>
-                </div>
-            </div>
-        </a>
-
-        <a href="{{ url_for('machinery') }}" class="pcard pcard--machinery fade-in-up delay-2">
-            <div class="pcard__corner-badge" style="background:rgba(245,158,11,0.2); color:#F59E0B; border-color:rgba(245,158,11,0.3);">
-                <i class="fa-solid fa-tractor" style="font-size:0.65rem;"></i> P2P
-            </div>
-            <div class="pcard__img-wrap" style="display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, rgba(245,158,11,0.12), rgba(217,119,6,0.06)); min-height: 140px;">
-                <i class="fa-solid fa-tractor" style="font-size:3.5rem; color:#F59E0B; filter:drop-shadow(0 6px 14px rgba(245,158,11,0.3));"></i>
-            </div>
-            <div class="pcard__body">
-                <h3 class="pcard__title">कृषि यंत्र व मशीनरी हब</h3>
-                <p class="pcard__desc">ट्रैक्टर, रोटावेटर, स्प्रेयर व ड्रोन किराए पर लें या अपनी मशीनरी शेयर करें।</p>
-                <div class="pcard__footer">
-                    <span class="pcard__btn" style="background:rgba(245,158,11,0.12); color:#F59E0B; border:1px solid rgba(245,158,11,0.25);">किराए पर लें <i class="fa-solid fa-arrow-right"></i></span>
-                    <span class="pcard__icon" style="background:rgba(245,158,11,0.12); color:#F59E0B; border:1px solid rgba(245,158,11,0.25);"><i class="fa-solid fa-truck-ramp-box"></i></span>
-                </div>
-            </div>
-        </a>
-
-    </div>
-</section>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const tempEl = document.getElementById('dashWeatherTemp');
-    const condEl = document.getElementById('dashWeatherCond');
-    const cityEl = document.getElementById('dashWeatherCity');
-    const iconEl = document.getElementById('dashWeatherIcon');
-
-    // 1. Instant display from sessionStorage cache if available
-    try {
-        const cached = sessionStorage.getItem('krishi_live_weather');
-        if (cached) {
-            const d = JSON.parse(cached);
-            updateWeatherCard(d);
-        }
-    } catch(e){}
-
-    // 2. Fetch live accurate weather (AccuWeather backend proxy)
-    async function fetchLiveWeather(lat = '28.3670', lon = '79.4304') {
-        try {
-            const res = await fetch(`/api/weather/live?lat=${lat}&lon=${lon}`);
-            if (res.ok) {
-                const data = await res.json();
-                sessionStorage.setItem('krishi_live_weather', JSON.stringify(data));
-                updateWeatherCard(data);
-            }
-        } catch (err) {
-            console.warn("Live weather fetch error:", err);
-        }
-    }
-
-    function updateWeatherCard(data) {
-        const curr = data.current || {};
-        const temp = Math.round(curr.temperature_2m !== undefined ? curr.temperature_2m : 23);
-        if (tempEl) tempEl.textContent = `${temp}°C`;
-
-        const city = (data.location_name || 'Bareilly').split(',')[0];
-        if (cityEl) cityEl.innerHTML = `<i class="fa-solid fa-location-dot" style="font-size:0.75rem; color:#38BDF8;"></i> मौसम (${city})`;
-
-        const text = curr.weather_text || 'साफ मौसम';
-        const rain = curr.precipitation || 0;
-        let sub = text;
-        if (rain > 0) sub += ` • ${rain.toFixed(1)} mm बारिश`;
-        if (condEl) {
-            condEl.textContent = sub;
-            condEl.style.color = (rain > 0 || text.toLowerCase().includes('rain')) ? '#60A5FA' : '#F59E0B';
-        }
-
-        if (iconEl) {
-            const isRain = rain > 0 || text.toLowerCase().includes('rain') || text.toLowerCase().includes('shower');
-            const isCloud = text.toLowerCase().includes('cloud');
-            if (isRain) {
-                iconEl.innerHTML = `<i class="fa-solid fa-cloud-showers-heavy"></i>`;
-                iconEl.style.color = '#60A5FA';
-                iconEl.style.background = 'rgba(96,165,250,0.15)';
-            } else if (isCloud) {
-                iconEl.innerHTML = `<i class="fa-solid fa-cloud"></i>`;
-                iconEl.style.color = '#94A3B8';
-                iconEl.style.background = 'rgba(148,163,184,0.15)';
-            } else {
-                iconEl.innerHTML = `<i class="fa-solid fa-sun"></i>`;
-                iconEl.style.color = '#F59E0B';
-                iconEl.style.background = 'rgba(245,158,11,0.15)';
-            }
-        }
-    }
-
-    // Attempt browser GPS if available, else fetch default / profile district
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (pos) => fetchLiveWeather(pos.coords.latitude, pos.coords.longitude),
-            () => fetchLiveWeather('28.3670', '79.4304'),
-            { timeout: 5000 }
-        );
+  function goToChatbot() {
+    const input = document.getElementById('quickAiInput');
+    const val = (input ? input.value : '').trim();
+    if (val) {
+      window.location.href = "{{ url_for('chatbot') }}?q=" + encodeURIComponent(val);
     } else {
-        fetchLiveWeather('28.3670', '79.4304');
+      window.location.href = "{{ url_for('chatbot') }}";
     }
-});
+  }
 </script>
 {% endblock %}

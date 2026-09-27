@@ -307,12 +307,14 @@
 .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(4px, -4px); }
 
 /* Responsive Rules */
-@media (max-width: 1200px) {
-    .navbar-links span {
-        display: none; /* Icon-only compact bar */
-    }
+@media (max-width: 1280px) and (min-width: 901px) {
     .nav-link {
-        padding: 0.45rem 0.6rem;
+        padding: 0.38rem 0.55rem;
+        font-size: 0.78rem;
+        gap: 0.3rem;
+    }
+    .navbar-links {
+        gap: 0.18rem;
     }
 }
 

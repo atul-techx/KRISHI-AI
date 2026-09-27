@@ -316,9 +316,21 @@ def home():
 @login_required
 def dashboard():
     logger.info("Accessed Dashboard page")
+    user_name = getattr(current_user, 'name', '') or 'किसान मित्र'
     user_district = getattr(current_user, 'district', None) or 'Bareilly'
     user_state = getattr(current_user, 'state', None) or 'Uttar Pradesh'
-    return render_template('dashboard.html', user_district=user_district, user_state=user_state)
+    user_village = getattr(current_user, 'village', None) or ''
+    user_land = getattr(current_user, 'land_acres', None)
+    user_crops = getattr(current_user, 'crops', None) or 'गेहूं, धान, सरसों'
+    return render_template(
+        'dashboard.html',
+        user_name=user_name,
+        user_district=user_district,
+        user_state=user_state,
+        user_village=user_village,
+        user_land=user_land,
+        user_crops=user_crops
+    )
 
 @app.route('/disease', methods=['GET', 'POST'])
 @login_required
