@@ -57,6 +57,10 @@ else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///krishi.db'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 300
+}
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -70,7 +74,7 @@ class Farmer(UserMixin, db.Model):
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     mobile_no = db.Column(db.String(15), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
     
     # Profile Info
     village = db.Column(db.String(100), nullable=True)
