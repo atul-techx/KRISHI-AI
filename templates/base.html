@@ -361,7 +361,7 @@
     </nav>
 
     <!-- Floating AI Assistant Button -->
-    {% if current_user.is_authenticated %}
+    {% if current_user.is_authenticated and request.endpoint not in ['chatbot', 'voice'] %}
     <button class="floating-ai-btn" id="floatingAI" onclick="window.location='{{ url_for('chatbot') }}'">
         <div class="ai-pulse"></div>
         <img src="{{ url_for('static', filename='img/robot.jpg') }}" alt="AI" onerror="this.outerHTML='<i class=\'fa-solid fa-robot\'></i>'">

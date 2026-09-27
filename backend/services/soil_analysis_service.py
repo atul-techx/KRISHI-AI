@@ -277,23 +277,42 @@ def predict_soil(image_path):
         logger.error(f"Error in predict_soil local model: {e}. Falling back to Gemini.")
         
         try:
-            import google.generativeai as genai
-            import json, re
-            import os
             api_key = os.environ.get("GEMINI_API_KEY")
             if api_key and api_key != "your_gemini_api_key_here":
-                genai.configure(api_key=api_key)
-                model = genai.GenerativeModel('gemini-2.5-flash')
                 prompt = f"""You are an agricultural soil expert. Analyze the uploaded soil image.
 Return ONLY a valid JSON object (no markdown, no extra text) in this exact structure:
 {{"soil_type": "Soil type name (e.g., Alluvial, Black, Red, Clay, Sandy)", "soil_color": "Description of color", "soil_color_hex": "#HexCode", "ph": "pH range (e.g., 6.5-7.5)", "moisture": "Moisture level (e.g., Low, Medium, High)", "fertility": "Fertility level (e.g., Low, Medium, High)", "recommended_crops": ["Crop 1", "Crop 2", "Crop 3"], "fertilizer_advice": "Advice on fertilization"}}"""
                 with open(image_path, 'rb') as f:
                     image_bytes = f.read()
-                contents = [{'mime_type': 'image/jpeg', 'data': image_bytes}, prompt]
-                response = model.generate_content(contents)
-                json_match = re.search(r'\{.*\}', response.text.strip(), re.DOTALL)
-                if json_match:
-                    return json.loads(json_match.group())
+
+                resp_text = None
+                try:
+                    from google import genai
+                    from google.genai import types
+                    client = genai.Client(api_key=api_key)
+                    contents = [types.Part.from_bytes(data=image_bytes, mime_type='image/jpeg'), prompt]
+                    resp = client.models.generate_content(model='gemini-3.5-flash-lite', contents=contents)
+                    if resp and resp.text:
+                        resp_text = resp.text.strip()
+                except Exception as g_err:
+                    logger.warning(f"google.genai soil fallback failed: {g_err}")
+
+                if not resp_text:
+                    try:
+                        import google.generativeai as genai
+                        genai.configure(api_key=api_key)
+                        model = genai.GenerativeModel('gemini-3.5-flash-lite')
+                        contents = [{'mime_type': 'image/jpeg', 'data': image_bytes}, prompt]
+                        response = model.generate_content(contents)
+                        resp_text = response.text.strip()
+                    except Exception:
+                        pass
+
+                if resp_text:
+                    import json, re
+                    json_match = re.search(r'\{.*\}', resp_text, re.DOTALL)
+                    if json_match:
+                        return json.loads(json_match.group())
         except Exception as gemini_e:
             logger.error(f"Gemini fallback failed: {gemini_e}")
             

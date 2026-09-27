@@ -1,14 +1,15 @@
 {% extends "base.html" %}
 {% block title %}AI चैटबॉट - Krishi AI{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=7.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}?v=11.0">
 {% endblock %}
 {% block content %}
+<div class="chatbot-wrapper" style="padding: 0.5rem 1rem 1.5rem 1rem;">
 <div class="chat-layout">
     <!-- Sidebar for Chat History -->
     <aside class="chat-sidebar" id="chatSidebar">
         <div class="sidebar-header">
-            <h3>पुरानी चैट्स</h3>
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> पुरानी चैट्स</h3>
             <a href="{{ url_for('chatbot', new=1) }}" class="new-chat-btn"><i class="fa-solid fa-plus"></i> नई चैट</a>
         </div>
         <div class="session-list">
@@ -19,7 +20,7 @@
                 </a>
                 {% endfor %}
             {% else %}
-                <p class="no-history">अभी कोई चैट नहीं है।</p>
+                <p class="no-history"><i class="fa-regular fa-comments" style="display:block; font-size:1.6rem; margin-bottom:0.5rem; opacity:0.5;"></i>अभी कोई चैट नहीं है।</p>
             {% endif %}
         </div>
     </aside>
@@ -30,14 +31,14 @@
                 <i class="fa-solid fa-bars"></i>
             </button>
             <div class="chatbot-avatar">
-                <img src="{{ url_for('static', filename='img/robot.jpg') }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                <img src="{{ url_for('static', filename='img/robot.jpg') }}" alt="AI" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                 <div class="chatbot-online-dot"></div>
             </div>
             <div class="chatbot-title-info">
                 <h2>Krishi AI सहायक</h2>
                 <span class="chatbot-status"><i class="fa-solid fa-circle"></i> Online — हमेशा उपलब्ध</span>
             </div>
-            <button class="chatbot-clear-btn" id="clearChat" title="Clear current chat"><i class="fa-solid fa-trash"></i></button>
+            <button class="chatbot-clear-btn" id="clearChat" title="चैट साफ़ करें"><i class="fa-solid fa-trash-can"></i></button>
         </div>
 
         <!-- Chat Window -->
@@ -45,18 +46,18 @@
             {% if not chat_history %}
             <!-- Welcome Message (Only show if new chat) -->
             <div class="chat-bubble bot-bubble welcome-bubble">
-                <div class="bubble-avatar"><img src="{{ url_for('static', filename='img/robot.jpg') }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"></div>
+                <div class="bubble-avatar"><img src="{{ url_for('static', filename='img/robot.jpg') }}" alt="AI" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"></div>
                 <div class="bubble-content">
-                    <p>नमस्ते! 🌾 मैं आपका AI कृषि सहायक हूं।</p>
-                    <p>आप मुझसे पूछ सकते हैं:</p>
-                    <ul>
-                        <li>🌱 फसल रोग और इलाज</li>
-                        <li>💧 सिंचाई और खाद</li>
-                        <li>💰 मंडी भाव और बेचने की सलाह</li>
-                        <li>☁️ मौसम और खेती टिप्स</li>
-                        <li>📋 सरकारी योजनाएं</li>
+                    <p style="font-size: 1.05rem; font-weight: 700; color: #34D399 !important; margin-bottom: 0.5rem;">नमस्ते! 🌾 मैं आपका AI कृषि सहायक हूं।</p>
+                    <p style="color: #E2E8F0; margin-bottom: 0.6rem;">खेती-बाड़ी से जुड़े किसी भी सवाल के लिए आप मुझसे पूछ सकते हैं:</p>
+                    <ul style="display: flex; flex-direction: column; gap: 0.45rem; padding-left: 0.5rem; margin-bottom: 0.75rem;">
+                        <li>🌱 <strong style="color: #6EE7B7;">फसल रोग और इलाज:</strong> किसी भी फसल के लक्षण या बीमारी की जानकारी</li>
+                        <li>💧 <strong style="color: #6EE7B7;">सिंचाई और खाद:</strong> यूरिया, DAP और जैविक खाद का सही प्रयोग</li>
+                        <li>💰 <strong style="color: #6EE7B7;">मंडी भाव:</strong> अपनी नजदीकी मंडियों के ताजा दाम और सलाह</li>
+                        <li>☁️ <strong style="color: #6EE7B7;">मौसम और खेती टिप्स:</strong> आज और आने वाले दिनों की मौसम सलाह</li>
+                        <li>📋 <strong style="color: #6EE7B7;">सरकारी योजनाएं:</strong> PM-किसान, सब्सिडी और बीमा योजनाएं</li>
                     </ul>
-                    <p><em>आप कैमरे 📸 के बटन पर क्लिक करके फसल या कीड़ों की फोटो भी भेज सकते हैं!</em></p>
+                    <p style="color: #94A3B8; font-size: 0.85rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.5rem;"><em>📸 <strong>टिप:</strong> कैमरे के बटन पर क्लिक करके फसल या कीड़े की फोटो भेजें और तुरंत पहचान पाएं!</em></p>
                 </div>
                 <span class="bubble-time">अभी</span>
             </div>
@@ -120,6 +121,7 @@
         </div>
     </div>
 </div>
+</div>
 <!-- Global variable for session ID -->
 <script>
     window.ACTIVE_SESSION_ID = "{{ active_session.session_id if active_session else '' }}";
@@ -127,7 +129,7 @@
 </script>
 {% endblock %}
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/chatbot.js') }}?v=8.0"></script>
+<script src="{{ url_for('static', filename='js/chatbot.js') }}?v=11.0"></script>
 <script>
 function sendSuggestion(btn) {
     document.getElementById('chatInput').value = btn.textContent;

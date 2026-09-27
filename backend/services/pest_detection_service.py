@@ -106,23 +106,43 @@ def predict_pest(image_path, user_crop=""):
         logger.error(f"Error in predict_pest local model: {e}. Falling back to Gemini.")
         
         try:
-            import google.generativeai as genai
-            import json, re
             api_key = os.environ.get("GEMINI_API_KEY")
             if api_key and api_key != "your_gemini_api_key_here":
-                genai.configure(api_key=api_key)
-                model = genai.GenerativeModel('gemini-2.5-flash')
                 prompt = f"""You are an agricultural pest detection expert. Analyze the uploaded crop image for pest infestation.
 Crop: {user_crop or 'Not specified'}.
 Return ONLY a valid JSON object (no markdown, no extra text) in this exact structure:
 {{"disease": "Pest name in Hindi (English name)", "crop": "{user_crop}", "confidence": 87, "severity": "High", "cause": "Description of pest behavior and damage symptoms", "treatment": ["Control measure 1", "Control measure 2", "Control measure 3"], "prevention": "Prevention strategy"}}"""
                 with open(image_path, 'rb') as f:
                     image_bytes = f.read()
-                contents = [{'mime_type': 'image/jpeg', 'data': image_bytes}, prompt]
-                response = model.generate_content(contents)
-                json_match = re.search(r'\{.*\}', response.text.strip(), re.DOTALL)
-                if json_match:
-                    return json.loads(json_match.group())
+
+                resp_text = None
+                try:
+                    from google import genai
+                    from google.genai import types
+                    client = genai.Client(api_key=api_key)
+                    contents = [types.Part.from_bytes(data=image_bytes, mime_type='image/jpeg'), prompt]
+                    resp = client.models.generate_content(model='gemini-3.5-flash-lite', contents=contents)
+                    if resp and resp.text:
+                        resp_text = resp.text.strip()
+                except Exception as g_err:
+                    logger.warning(f"google.genai pest fallback failed: {g_err}")
+
+                if not resp_text:
+                    try:
+                        import google.generativeai as genai
+                        genai.configure(api_key=api_key)
+                        model = genai.GenerativeModel('gemini-3.5-flash-lite')
+                        contents = [{'mime_type': 'image/jpeg', 'data': image_bytes}, prompt]
+                        response = model.generate_content(contents)
+                        resp_text = response.text.strip()
+                    except Exception:
+                        pass
+
+                if resp_text:
+                    import json, re
+                    json_match = re.search(r'\{.*\}', resp_text, re.DOTALL)
+                    if json_match:
+                        return json.loads(json_match.group())
         except Exception as gemini_e:
             logger.error(f"Gemini fallback failed: {gemini_e}")
             

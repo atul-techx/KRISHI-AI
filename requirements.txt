@@ -9,3 +9,4 @@ Pillow
 requests
 google-generativeai
 python-dotenv
+gunicorn

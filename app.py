@@ -10,11 +10,16 @@ from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 load_dotenv()
 try:
-    import google.generativeai as genai
+    from google import genai
+    from google.genai import types as genai_types
     HAS_GENAI = True
 except Exception:
-    genai = None
-    HAS_GENAI = False
+    try:
+        import google.generativeai as genai
+        HAS_GENAI = True
+    except Exception:
+        genai = None
+        HAS_GENAI = False
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -116,20 +121,54 @@ def internal_server_error(e):
     logger.error(f"Internal server error: {e}")
     return "<h1>500 - Internal Server Error</h1>", 500
 
+def query_gemini_ai(prompt, image_bytes=None, mime_type='image/jpeg', system_instruction=None):
+    """Robust Gemini caller supporting google.genai and modern models."""
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not api_key or api_key == "your_gemini_api_key_here":
+        return None
+    # 1. Try modern google.genai client
+    try:
+        from google import genai
+        from google.genai import types
+        client = genai.Client(api_key=api_key)
+        contents = []
+        if image_bytes:
+            contents.append(types.Part.from_bytes(data=image_bytes, mime_type=mime_type))
+        contents.append(prompt)
+        config = types.GenerateContentConfig(system_instruction=system_instruction) if system_instruction else None
+        for m_name in ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash']:
+            try:
+                resp = client.models.generate_content(model=m_name, contents=contents, config=config)
+                if resp and resp.text:
+                    logger.info(f"Gemini response via {m_name}")
+                    return resp.text.strip()
+            except Exception as m_err:
+                logger.warning(f"Model {m_name} failed: {m_err}")
+                continue
+    except Exception as e:
+        logger.error(f"google.genai error: {e}")
+
+    # 2. Try legacy google-generativeai client
+    try:
+        import google.generativeai as leg_genai
+        leg_genai.configure(api_key=api_key)
+        for m_name in ['gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.8-flash']:
+            try:
+                model = leg_genai.GenerativeModel(m_name)
+                res = model.generate_content(prompt)
+                if res and res.text:
+                    return res.text.strip()
+            except Exception:
+                continue
+    except Exception as e:
+        logger.error(f"legacy google.generativeai error: {e}")
+
+    return None
+
 def _analyze_image_with_gemini(crop, symptoms, image_file, mode='disease'):
     """Call Gemini to analyze a crop image for disease or pest detection."""
     try:
         import json, re
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            logger.warning("GEMINI_API_KEY not set")
-            return None
-        if not HAS_GENAI:
-            logger.warning("google-generativeai not available")
-            return None
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-2.5-flash')
-
         if mode == 'pest':
             prompt = f"""You are an agricultural pest detection expert. Analyze the uploaded crop image for pest infestation.
 Crop: {crop}. User observed: {symptoms or 'None reported'}.
@@ -141,20 +180,17 @@ Crop: {crop}. Symptoms: {symptoms or 'Not specified'}.
 Return ONLY a valid JSON object (no markdown, no extra text) in this exact structure:
 {{"disease": "Disease name in Hindi (English name)", "crop": "{crop}", "confidence": 92, "severity": "Medium", "cause": "Cause of the disease", "treatment": ["Treatment step 1", "Treatment step 2", "Treatment step 3"], "prevention": "Prevention measures"}}"""
 
-        contents = [prompt]
+        image_bytes = None
+        mime = 'image/jpeg'
         if image_file and image_file.filename:
             image_bytes = image_file.read()
-            if image_bytes:
-                mime = image_file.content_type or 'image/jpeg'
-                contents = [{'mime_type': mime, 'data': image_bytes}, prompt]
+            mime = image_file.content_type or 'image/jpeg'
 
-        response = model.generate_content(contents)
-        text = response.text.strip()
-        # Extract JSON from markdown code blocks if present
-        json_match = re.search(r'\{.*\}', text, re.DOTALL)
-        if json_match:
-            data = json.loads(json_match.group())
-            return data
+        text = query_gemini_ai(prompt, image_bytes=image_bytes, mime_type=mime)
+        if text:
+            json_match = re.search(r'\{.*\}', text, re.DOTALL)
+            if json_match:
+                return json.loads(json_match.group())
     except Exception as e:
         logger.error(f"Gemini analysis error: {e}")
     return None
@@ -334,17 +370,74 @@ from datetime import datetime
 @login_required
 def weather():
     logger.info("Accessed Weather page")
-    weather_data = None
-    location_query = ""
+    user_district = getattr(current_user, 'district', None) or 'Bareilly'
+    user_state = getattr(current_user, 'state', None) or 'Uttar Pradesh'
+    return render_template('weather.html', user_district=user_district, user_state=user_state)
 
-    if request.method == 'POST':
-        location_query = request.form.get('location', '').strip()
-        if location_query:
-            weather_data = fetch_weather_data(location_query)
-            if not weather_data:
-                flash(f"'{location_query}' के लिए मौसम की जानकारी नहीं मिली।", 'danger')
+@app.route('/api/weather/detect-location')
+@login_required
+def api_weather_detect_location():
+    district = getattr(current_user, 'district', None)
+    state = getattr(current_user, 'state', None)
+    if district:
+        return jsonify({
+            "status": "success",
+            "city": district,
+            "region": state or "Uttar Pradesh",
+            "source": "profile"
+        })
+    try:
+        ip_res = requests.get('http://ip-api.com/json/', timeout=4)
+        if ip_res.status_code == 200:
+            data = ip_res.json()
+            if data.get('status') == 'success':
+                city_raw = data.get('city', 'Bareilly')
+                return jsonify({
+                    "status": "success",
+                    "city": "Bareilly" if "bareil" in city_raw.lower() else city_raw,
+                    "region": data.get('regionName', 'Uttar Pradesh'),
+                    "lat": data.get('lat', 28.3670),
+                    "lon": data.get('lon', 79.4304),
+                    "source": "ip"
+                })
+    except Exception as e:
+        logger.error(f"IP location detection error: {e}")
 
-    return render_template('weather.html', weather=weather_data, location=location_query)
+    return jsonify({
+        "status": "success",
+        "city": "Bareilly",
+        "region": "Uttar Pradesh",
+        "lat": 28.3670,
+        "lon": 79.4304,
+        "source": "default"
+    })
+
+@app.route('/api/weather/live')
+@login_required
+def api_weather_live():
+    lat = request.args.get('lat', '19.9975')
+    lon = request.args.get('lon', '73.7898')
+    try:
+        url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,dew_point_2m,wind_speed_10m&forecast_days=3&timezone=auto"
+        res = requests.get(url, timeout=8)
+        return jsonify(res.json()), res.status_code
+    except Exception as e:
+        logger.error(f"Live weather proxy error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/weather/geocode')
+@login_required
+def api_weather_geocode():
+    q = request.args.get('q', '').strip()
+    if not q:
+        return jsonify({"results": []})
+    try:
+        url = f"https://geocoding-api.open-meteo.com/v1/search?name={requests.utils.quote(q)}&count=1&language=en&format=json"
+        res = requests.get(url, timeout=8)
+        return jsonify(res.json()), res.status_code
+    except Exception as e:
+        logger.error(f"Geocoding proxy error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/weather/auto')
 @login_required
@@ -511,29 +604,17 @@ def chatbot_query():
     ai_response = None
     
     # Try Gemini first
-    gemini_key = os.environ.get("GEMINI_API_KEY", "")
-    if gemini_key and gemini_key != "your_gemini_api_key_here" and HAS_GENAI:
+    img_bytes = None
+    img_mime = 'image/jpeg'
+    if image_data:
         try:
-            genai.configure(api_key=gemini_key)
-            model = genai.GenerativeModel('gemini-2.5-flash')
-            prompt = f"{system_prompt}\nQuestion: {message}"
-            
-            contents = []
-            if image_data:
-                try:
-                    mime_type, base64_data = image_data.split(';base64,')
-                    mime_type = mime_type.replace('data:', '')
-                    image_bytes = base64.b64decode(base64_data)
-                    contents.append({'mime_type': mime_type, 'data': image_bytes})
-                except Exception as e:
-                    logger.error(f"Error decoding image data: {e}")
-            contents.append(prompt)
-            
-            response = model.generate_content(contents)
-            ai_response = response.text
-            logger.info("Chatbot response via Gemini API")
+            mime_type_part, base64_data = image_data.split(';base64,')
+            img_mime = mime_type_part.replace('data:', '')
+            img_bytes = base64.b64decode(base64_data)
         except Exception as e:
-            logger.error(f"Gemini API Error: {e}")
+            logger.error(f"Error decoding image data: {e}")
+
+    ai_response = query_gemini_ai(message or "Analyze this image", image_bytes=img_bytes, mime_type=img_mime, system_instruction=system_prompt)
     
     # Fallback to Groq API (free Llama model)
     if not ai_response:
@@ -622,19 +703,7 @@ def voice_query():
         return jsonify({'response': "कृपया अपना सवाल पूछें।"})
     
     system_prompt = "You are an agricultural voice assistant for Indian farmers. You were created by the 'Quanta Byte' team. If anyone asks who created you, who made you, or anything similar (like 'tumhe kisne banaya hai'), you must reply that you were created by the Quanta Byte team. Provide a direct, helpful, and concise spoken answer (1-2 sentences max) in the exact language requested (mostly Hindi or English). Do not use any markdown, bullet points, or special formatting since this will be read aloud by text-to-speech."
-    ai_response = None
-    
-    # Try Gemini first
-    gemini_key = os.environ.get("GEMINI_API_KEY", "")
-    if gemini_key and gemini_key != "your_gemini_api_key_here" and HAS_GENAI:
-        try:
-            genai.configure(api_key=gemini_key)
-            model = genai.GenerativeModel('gemini-2.5-flash')
-            prompt = f"{system_prompt}\nQuestion: {query}"
-            response = model.generate_content(prompt)
-            ai_response = response.text
-        except Exception as e:
-            logger.error(f"Voice Gemini API Error: {e}")
+    ai_response = query_gemini_ai(query, system_instruction=system_prompt)
     
     # Fallback to Groq API
     if not ai_response:
@@ -709,8 +778,8 @@ def api_market_live():
     district = request.args.get('district', '').strip()
     commodity = request.args.get('commodity', '').strip()
     
-    api_key = os.environ.get("DATA_GOV_API_KEY")
-    if not api_key:
+    api_key = os.environ.get("DATA_GOV_API_KEY") or os.environ.get("DATA_GOV_IN_API_KEY")
+    if not api_key or api_key.strip() == "your_data_gov_api_key_here":
         api_key = '579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b'
         
     resource_id = "9ef84268-d588-465a-a308-a864a43d0070"
@@ -792,11 +861,11 @@ def market():
     crop = request.args.get('crop', '').strip()
     state = request.args.get('state', '').strip()
     
-    api_key = os.environ.get("DATA_GOV_API_KEY")
+    api_key = os.environ.get("DATA_GOV_API_KEY") or os.environ.get("DATA_GOV_IN_API_KEY")
     prices = []
     last_updated = datetime.now().strftime("%I:%M %p")
     
-    if not api_key:
+    if not api_key or api_key.strip() == "your_data_gov_api_key_here":
         api_key = '579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b' # Use public key if none provided
     
     resource_id = "9ef84268-d588-465a-a308-a864a43d0070"
@@ -986,5 +1055,5 @@ def organic():
 # App Execution
 if __name__ == '__main__':
     logger.info("Starting the Flask application...")
-    # Running in debug mode for development; should be False in production
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
