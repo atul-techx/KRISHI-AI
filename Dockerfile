@@ -10,7 +10,6 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
     nginx \
     supervisor \
     libgl1 \
@@ -18,8 +17,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     libpq-dev \
     gcc \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Flask dependencies
@@ -33,9 +30,8 @@ RUN pip install --no-cache-dir -r backend_reqs.txt
 # Copy application files
 COPY . .
 
-# Copy built Next.js
-COPY --from=frontend-build /app/frontend/.next ./frontend/.next
-COPY --from=frontend-build /app/frontend/node_modules ./frontend/node_modules
+# Copy built Next.js static export (served directly by Nginx)
+COPY --from=frontend-build /app/frontend/out ./frontend/out
 
 # Setup configurations
 COPY deploy/nginx.conf /etc/nginx/sites-available/default
