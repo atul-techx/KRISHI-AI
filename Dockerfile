@@ -1,15 +1,11 @@
-FROM node:20-alpine AS frontend-build
-WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm install
-COPY frontend/ ./
-RUN npm run build
-
 FROM python:3.11-slim
 WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV CUDA_VISIBLE_DEVICES="-1"
+ENV TF_ENABLE_ONEDNN_OPTS="0"
+ENV TF_CPP_MIN_LOG_LEVEL="3"
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -20,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     libpq-dev \
     gcc \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Flask dependencies
@@ -33,9 +30,6 @@ RUN pip install --no-cache-dir -r backend_reqs.txt
 # Copy application files
 COPY . .
 
-# Copy built Next.js static export (served directly by Nginx)
-COPY --from=frontend-build /app/frontend/out ./frontend/out
-
 # Setup configurations
 COPY deploy/nginx.conf /etc/nginx/sites-available/default
 COPY deploy/nginx.conf /etc/nginx/sites-enabled/default
@@ -44,9 +38,6 @@ COPY deploy/entrypoint.sh /app/entrypoint.sh
 
 # Ensure proper execution permissions, linux line-endings, and upload directory
 RUN chmod +x /app/entrypoint.sh && sed -i 's/\r$//' /app/entrypoint.sh && mkdir -p /app/static/uploads/ai_images
-
-# Setup env variables for Next.js to reach FastAPI during runtime
-ENV NEXT_PUBLIC_API_URL=/api
 
 EXPOSE 80 10000 8080
 ENTRYPOINT ["/app/entrypoint.sh"]
