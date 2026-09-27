@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}मौसम एवं फसल रोग चेतावनी - Krishi AI{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+{% endblock %}
+
 {% block content %}
 <div class="wx-container">
 
@@ -269,6 +273,89 @@
 
       <div class="wx-daily-grid" id="dailyForecastGrid">
         <!-- Injected via JavaScript -->
+      </div>
+    </section>
+
+    <!-- 5. LIVE PRECIPITATION & RAIN RADAR MAP -->
+    <section class="wx-glass-card wx-radar-card fade-in-up" id="radarMapSection">
+      <div class="wx-section-heading radar-heading">
+        <div class="heading-left">
+          <div class="radar-live-badge">
+            <span class="live-blink-dot"></span>
+            <span>LIVE DOPPLER RADAR</span>
+          </div>
+          <div>
+            <h2 class="section-title">
+              <i class="fa-solid fa-map-location-dot" style="color: #38BDF8; margin-right: 0.5rem;"></i>
+              लाइव वर्षा राडार एवं वर्षा संभावना मैप
+            </h2>
+            <p class="section-desc">
+              रीयल-टाइम वर्षा ट्रैक, बादल की स्थिति एवं आपके क्षेत्र में बारिश की संभावना (Animated Rain Radar)
+            </p>
+          </div>
+        </div>
+
+        <!-- RADAR CONTROLS -->
+        <div class="radar-controls-toolbar">
+          <div class="radar-anim-btn-group">
+            <button type="button" class="radar-ctrl-btn" id="radarPlayPauseBtn" title="राडार एनीमेशन शुरू / रोकें">
+              <i class="fa-solid fa-play" id="radarPlayIcon"></i>
+              <span id="radarPlayText">एनीमेशन देखें</span>
+            </button>
+            <button type="button" class="radar-ctrl-btn" id="radarCenterMyLocBtn" title="मेरे खेत पर सेंटर करें">
+              <i class="fa-solid fa-location-crosshairs"></i>
+              <span>मेरा खेत</span>
+            </button>
+          </div>
+
+          <div class="radar-layer-toggles">
+            <button type="button" class="radar-layer-btn active-layer" id="btnLayerRadar" data-layer="radar">
+              <i class="fa-solid fa-cloud-showers-heavy"></i> बारिश (Rain)
+            </button>
+            <button type="button" class="radar-layer-btn" id="btnLayerSat" data-layer="satellite">
+              <i class="fa-solid fa-satellite"></i> बादल (Clouds)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAP WRAPPER -->
+      <div class="wx-map-wrapper">
+        <div id="weatherRadarMap" class="weather-radar-map-canvas"></div>
+
+        <!-- TIME SLIDER & TIMESTAMP OVERLAY -->
+        <div class="radar-time-overlay">
+          <div class="radar-time-info">
+            <span class="radar-time-label"><i class="fa-regular fa-clock"></i> राडार समय:</span>
+            <strong id="radarCurrentTimestamp">लाइव</strong>
+          </div>
+          <div class="radar-scrubber-track">
+            <input type="range" id="radarTimelineSlider" min="0" max="12" step="1" value="12" class="radar-range-slider">
+          </div>
+        </div>
+
+        <!-- RAIN INTENSITY LEGEND -->
+        <div class="radar-legend-card">
+          <div class="legend-title">वर्षा तीव्रता (Rainfall Intensity)</div>
+          <div class="legend-color-bar"></div>
+          <div class="legend-labels">
+            <span>हल्की (Light)</span>
+            <span>मध्यम (Moderate)</span>
+            <span>भारी (Heavy)</span>
+            <span>आंधी/तूफान (Extreme)</span>
+          </div>
+        </div>
+
+        <!-- RAIN CHANCE FLOATING STAT FOR SELECTED CITY -->
+        <div class="radar-stat-float" id="radarLocStatBadge">
+          <div class="stat-float-icon">
+            <i class="fa-solid fa-cloud-rain" style="color: #60A5FA;"></i>
+          </div>
+          <div class="stat-float-content">
+            <div class="stat-float-loc" id="radarMapLocName">Bareilly, UP</div>
+            <div class="stat-float-val">बारिश की संभावना: <strong id="radarMapRainProb">--%</strong></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1267,39 +1354,246 @@
   .wx-hero-icon-showcase { font-size: 4rem; padding-right: 0; margin-bottom: 0.5rem; }
   .wx-temp-val { font-size: 3.8rem; }
   .wx-metrics-strip { grid-template-columns: 1fr; }
-  .wx-risk-top { flex-direction: column; align-items: flex-start; }
+/* Live Radar Map Styles */
+.wx-radar-card {
+  padding: 1.5rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.radar-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.radar-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #F87171;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  margin-bottom: 0.4rem;
+}
+
+.live-blink-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #EF4444;
+  box-shadow: 0 0 8px #EF4444;
+  animation: pulse-dot 1.2s infinite;
+}
+
+.radar-controls-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.radar-anim-btn-group, .radar-layer-toggles {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 0.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.radar-ctrl-btn, .radar-layer-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: all 0.2s ease;
+}
+
+.radar-ctrl-btn:hover, .radar-layer-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+}
+
+.radar-layer-btn.active-layer {
+  background: #0284C7;
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+}
+
+.wx-map-wrapper {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.weather-radar-map-canvas {
+  width: 100%;
+  height: 100%;
+  background: #0B1120;
+}
+
+/* Time & Scrubber Overlay */
+.radar-time-overlay {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.radar-time-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 150px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.radar-time-info strong {
+  color: #38BDF8;
+}
+
+.radar-scrubber-track {
+  flex: 1;
+}
+
+.radar-range-slider {
+  width: 100%;
+  accent-color: #0284C7;
+  cursor: pointer;
+}
+
+/* Radar Legend */
+.radar-legend-card {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 0.6rem 0.9rem;
+  min-width: 220px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+.legend-title {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.legend-color-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #00B4D8 0%, #2ECC71 35%, #F39C12 70%, #E74C3C 90%, #9B59B6 100%);
+  margin-bottom: 0.3rem;
+}
+
+.legend-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.66rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Floating City Rain Stat */
+.radar-stat-float {
+  position: absolute;
+  top: 16px;
+  left: 60px;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 0.6rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.stat-float-icon {
+  font-size: 1.4rem;
+}
+
+.stat-float-loc {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+.stat-float-val {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.stat-float-val strong {
+  color: #38BDF8;
+}
+
+@media (max-width: 768px) {
+  .wx-map-wrapper { height: 380px; }
+  .radar-time-overlay { flex-direction: column; align-items: stretch; gap: 0.5rem; bottom: 10px; left: 10px; right: 10px; }
+  .radar-stat-float { left: 10px; top: auto; bottom: 95px; padding: 0.4rem 0.75rem; }
+  .radar-legend-card { display: none; }
 }
 </style>
 
+<!-- Leaflet.js Interactive Map Engine -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
 <!-- ============================================================
-     JAVASCRIPT LOGIC
+     JAVASCRIPT LOGIC: INSTANT WEATHER & INTERACTIVE RAIN RADAR
      ============================================================ -->
 <script>
 /**
  * KRISHI AI - AGRICULTURAL WEATHER & OUTBREAK WATCH ENGINE
- * Priority: Real GPS / Wi-Fi > User Saved City (Bareilly) > IP Geo > Bareilly Default
- * Fixed: Zero hardcoded Nashik, generous GPS acquire, Wi-Fi network fallback.
+ * WITH INTERACTIVE LIVE RAIN DOPPLER RADAR MAP
  */
 
 (function () {
   // Config
-  const CACHE_KEY = 'weather_cache';
-  const CACHE_TTL_MS = 30 * 60 * 1000; // 30 mins
-  const DEFAULT_CITY = 'Bareilly, Uttar Pradesh';
+  const CACHE_KEY = 'weather_cache_v5';
+  const CACHE_TTL_MS = 20 * 60 * 1000; // 20 mins
+  const DEFAULT_CITY = '{{ user_district or "Bareilly" }}, {{ user_state or "Uttar Pradesh" }}';
   const DEFAULT_LAT = 28.3670;
   const DEFAULT_LON = 79.4304;
-
-  // Purge any old stale Nashik cache immediately
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed.locationName && (parsed.locationName.toLowerCase().includes('nashik') || parsed.source === 'fallback')) {
-        console.warn('Purged outdated fallback cache from localStorage');
-        localStorage.removeItem(CACHE_KEY);
-      }
-    }
-  } catch (e) {}
 
   // DOM Elements
   const refreshWeatherBtn = document.getElementById('refreshWeatherBtn');
@@ -1311,7 +1605,6 @@
   const clearSearchBtn = document.getElementById('clearSearchBtn');
   const weatherStatusBadge = document.getElementById('weatherStatusBadge');
   const weatherStatusText = document.getElementById('weatherStatusText');
-  const weatherSkeleton = document.getElementById('weatherSkeleton');
   const weatherDashboardContent = document.getElementById('weatherDashboardContent');
   const gpsPermissionNotice = document.getElementById('gpsPermissionNotice');
 
@@ -1331,15 +1624,40 @@
   // Hourly & Outbreak elements
   const hourlyForecastStrip = document.getElementById('hourlyForecastStrip');
   const riskBadge = document.getElementById('riskBadge');
-  const riskBadgeText = document.getElementById('riskBadgeText');
   const riskScoreVal = document.getElementById('riskScoreVal');
   const riskMeterFill = document.getElementById('riskMeterFill');
   const riskFactorPills = document.getElementById('riskFactorPills');
   const actionAdviceBox = document.getElementById('actionAdviceBox');
   const dailyForecastGrid = document.getElementById('dailyForecastGrid');
 
+  // Radar Map Elements
+  const radarPlayPauseBtn = document.getElementById('radarPlayPauseBtn');
+  const radarPlayIcon = document.getElementById('radarPlayIcon');
+  const radarPlayText = document.getElementById('radarPlayText');
+  const radarCenterMyLocBtn = document.getElementById('radarCenterMyLocBtn');
+  const btnLayerRadar = document.getElementById('btnLayerRadar');
+  const btnLayerSat = document.getElementById('btnLayerSat');
+  const radarTimelineSlider = document.getElementById('radarTimelineSlider');
+  const radarCurrentTimestamp = document.getElementById('radarCurrentTimestamp');
+  const radarMapLocName = document.getElementById('radarMapLocName');
+  const radarMapRainProb = document.getElementById('radarMapRainProb');
+
   // State
   let isFetching = false;
+  let activeLat = DEFAULT_LAT;
+  let activeLon = DEFAULT_LON;
+  let activeCityName = DEFAULT_CITY;
+
+  // Radar Map State
+  let radarMap = null;
+  let farmMarker = null;
+  let radarTileLayers = [];
+  let radarFrames = [];
+  let currentFrameIdx = 0;
+  let radarAnimInterval = null;
+  let isPlayingRadar = false;
+  let activeRadarMode = 'radar'; // 'radar' or 'satellite'
+  let rainViewerHost = 'https://tilecache.rainviewer.com';
 
   // WMO Weather Code Mapper
   function mapWmoCode(code) {
@@ -1363,7 +1681,6 @@
     }
   }
 
-  // Toggle Loading State
   function setLoading(loading) {
     isFetching = loading;
     if (refreshBtnIcon) {
@@ -1378,15 +1695,10 @@
       const raw = localStorage.getItem(CACHE_KEY);
       if (!raw) return null;
       const data = JSON.parse(raw);
-      if (data.locationName && data.locationName.toLowerCase().includes('nashik')) {
-        return null;
-      }
-      if (Date.now() - data.timestamp < CACHE_TTL_MS) {
+      if (data && data.timestamp && (Date.now() - data.timestamp < CACHE_TTL_MS)) {
         return data;
       }
-    } catch (e) {
-      console.warn('Cache read error:', e);
-    }
+    } catch (e) {}
     return null;
   }
 
@@ -1401,9 +1713,7 @@
         data
       };
       localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
-    } catch (e) {
-      console.warn('Cache write error:', e);
-    }
+    } catch (e) {}
   }
 
   // Fetch Open-Meteo Weather with Fallback to Server Proxy
@@ -1414,7 +1724,7 @@
       if (!res.ok) throw new Error(`HTTP error ${res.status}`);
       return await res.json();
     } catch (err) {
-      console.warn('Direct Open-Meteo call failed, trying backend proxy...', err);
+      console.warn('Direct Open-Meteo failed, trying server proxy...', err);
       const proxyUrl = `/api/weather/live?lat=${lat}&lon=${lon}`;
       const proxyRes = await fetch(proxyUrl);
       if (!proxyRes.ok) throw new Error(`Proxy error ${proxyRes.status}`);
@@ -1427,22 +1737,24 @@
     const directUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=en&format=json`;
     try {
       const res = await fetch(directUrl);
-      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-      const json = await res.json();
-      if (json.results && json.results.length > 0) return json.results[0];
-    } catch (err) {
-      console.warn('Direct geocode failed, trying backend proxy...', err);
-      const proxyUrl = `/api/weather/geocode?q=${encodeURIComponent(cityName)}`;
-      const proxyRes = await fetch(proxyUrl);
-      if (proxyRes.ok) {
-        const json = await proxyRes.json();
+      if (res.ok) {
+        const json = await res.json();
         if (json.results && json.results.length > 0) return json.results[0];
       }
+    } catch (err) {
+      const proxyUrl = `/api/weather/geocode?q=${encodeURIComponent(cityName)}`;
+      try {
+        const proxyRes = await fetch(proxyUrl);
+        if (proxyRes.ok) {
+          const json = await proxyRes.json();
+          if (json.results && json.results.length > 0) return json.results[0];
+        }
+      } catch (e) {}
     }
     return null;
   }
 
-  // Reverse Geocode Coords (BigDataCloud or Nominatim)
+  // Reverse Geocode Coords
   async function reverseGeocodeCoords(lat, lon) {
     try {
       const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
@@ -1454,10 +1766,8 @@
         if (city && state && city !== state) return `${city}, ${state}`;
         if (city) return city;
       }
-    } catch (e) {
-      console.warn('Reverse geocode error:', e);
-    }
-    return `GPS (${lat.toFixed(2)}°, ${lon.toFixed(2)}°)`;
+    } catch (e) {}
+    return `खेत (${lat.toFixed(2)}°, ${lon.toFixed(2)}°)`;
   }
 
   // Dynamic Risk Score Calculation
@@ -1465,64 +1775,56 @@
     let score = 0;
     const factors = [];
 
-    // 1. Humidity >= 80% (+18 pts)
     const humidity = current.relative_humidity_2m || 0;
     if (humidity >= 80) {
       score += 18;
-      factors.push({ label: '💧 उच्च आर्द्रता (High Humidity ≥80%)', pts: 18, type: 'active' });
+      factors.push({ label: '💧 उच्च आर्द्रता (High Humidity ≥80%)', pts: 18 });
     }
 
-    // 2. Recent rain >= 2mm (+18 pts)
     const recentRain = Math.max(current.rain || 0, current.precipitation || 0);
     if (recentRain >= 2.0) {
       score += 18;
-      factors.push({ label: `🌧️ हालिया वर्षा (Recent Rain ${recentRain}mm ≥2mm)`, pts: 18, type: 'active' });
+      factors.push({ label: `🌧️ हालिया वर्षा (Recent Rain ${recentRain}mm ≥2mm)`, pts: 18 });
     }
 
-    // 3. Rain probability >= 60% in upcoming hours (+18 pts)
     let maxRainProb = 0;
     if (hourly && hourly.precipitation_probability && hourly.precipitation_probability.length > 0) {
       const nextFew = hourly.precipitation_probability.slice(0, 6);
       maxRainProb = Math.max(...nextFew);
       if (maxRainProb >= 60) {
         score += 18;
-        factors.push({ label: `☔ उच्च वर्षा संभावना (Rain Prob. ${maxRainProb}% ≥60%)`, pts: 18, type: 'active' });
+        factors.push({ label: `☔ उच्च वर्षा संभावना (Rain Prob. ${maxRainProb}% ≥60%)`, pts: 18 });
       }
     }
 
-    // 4. Extended wet hours (+15 pts)
     let wetHoursCount = 0;
     if (hourly && hourly.relative_humidity_2m) {
       for (let i = 0; i < Math.min(6, hourly.relative_humidity_2m.length); i++) {
         const hRh = hourly.relative_humidity_2m[i] || 0;
         const hRain = (hourly.precipitation && hourly.precipitation[i]) || 0;
-        if (hRh >= 78 || hRain > 0.1) {
-          wetHoursCount++;
-        }
+        if (hRh >= 78 || hRain > 0.1) wetHoursCount++;
       }
       if (wetHoursCount >= 3) {
         score += 15;
-        factors.push({ label: `🌿 पत्तों पर लगातार गीलापन (Extended Wet Hours ${wetHoursCount}h)`, pts: 15, type: 'active' });
+        factors.push({ label: `🌿 पत्तों पर लगातार गीलापन (Wet Hours ${wetHoursCount}h)`, pts: 15 });
       }
     }
 
-    // 5. Fungal weather window (18°C-30°C with humidity >= 75%) (+31 pts)
     const temp = current.temperature_2m || 0;
     if (temp >= 18 && temp <= 30 && humidity >= 75) {
       score += 31;
-      factors.push({ label: `🍄 फंगस प्रसार विंडो सक्रिय (Fungal Window 18-30°C + RH≥75%)`, pts: 31, type: 'active' });
+      factors.push({ label: `🍄 फंगस प्रसार विंडो सक्रिय (Fungal Window 18-30°C + RH≥75%)`, pts: 31 });
     }
 
     score = Math.min(100, Math.max(0, score));
-
     let tier = 'low';
     if (score >= 70) tier = 'high';
     else if (score >= 45) tier = 'watch';
 
-    return { score, tier, factors };
+    return { score, tier, factors, maxRainProb };
   }
 
-  // Render Dashboard
+  // Render Weather Dashboard
   function renderDashboard(locationName, lat, lon, source, data) {
     const current = data.current || {};
     const hourly = data.hourly || {};
@@ -1537,8 +1839,8 @@
       lastUpdatedTimestamp.textContent = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
     }
 
-    if (currentTemp) currentTemp.textContent = Math.round(current.temperature_2m !== undefined ? current.temperature_2m : 22);
-    if (feelsLikeTemp) feelsLikeTemp.textContent = `${Math.round(current.apparent_temperature !== undefined ? current.apparent_temperature : 24)}°C`;
+    if (currentTemp) currentTemp.textContent = Math.round(current.temperature_2m !== undefined ? current.temperature_2m : 24);
+    if (feelsLikeTemp) feelsLikeTemp.textContent = `${Math.round(current.apparent_temperature !== undefined ? current.apparent_temperature : 25)}°C`;
     if (currentHumidity) currentHumidity.textContent = `${current.relative_humidity_2m || 0}%`;
     if (currentRain) currentRain.textContent = `${(current.precipitation || 0).toFixed(1)} mm`;
     if (currentWind) currentWind.textContent = `${Math.round(current.wind_speed_10m || 0)} km/h`;
@@ -1588,7 +1890,7 @@
       hourlyForecastStrip.innerHTML = stripHtml;
     }
 
-    // Outbreak Watch Calculation
+    // Outbreak Risk Calculation
     const risk = calculateOutbreakRisk(current, hourly);
 
     if (riskScoreVal) riskScoreVal.textContent = risk.score;
@@ -1603,7 +1905,7 @@
       }
     }
 
-    if (riskBadge && riskBadgeText) {
+    if (riskBadge) {
       riskBadge.className = `risk-badge risk-${risk.tier}`;
       if (risk.tier === 'high') {
         riskBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span>HIGH RISK (गंभीर जोखिम)</span>`;
@@ -1614,10 +1916,9 @@
       }
     }
 
-    // Factor Pills
     if (riskFactorPills) {
       if (risk.factors.length === 0) {
-        riskFactorPills.innerHTML = `<span class="factor-pill factor-pill-safe"><i class="fa-solid fa-circle-check"></i> कोई गंभीर जोखिम कारक नहीं (सभी मौसम पैरामीटर सामान्य हैं)</span>`;
+        riskFactorPills.innerHTML = `<span class="factor-pill factor-pill-safe"><i class="fa-solid fa-circle-check"></i> कोई गंभीर जोखिम कारक नहीं (सभी मौसम पैरामीटर अनुकूल हैं)</span>`;
       } else {
         riskFactorPills.innerHTML = risk.factors.map(f => {
           const pillClass = (f.pts >= 25 || risk.tier === 'high') ? 'factor-pill-active' : 'factor-pill-warn';
@@ -1626,7 +1927,7 @@
       }
     }
 
-    // Action Advice
+    // Advice Box
     if (actionAdviceBox) {
       let adviceHtml = '';
       if (risk.tier === 'high') {
@@ -1638,15 +1939,11 @@
           <div class="advice-list">
             <div class="advice-item">
               <div class="advice-icon-wrap advice-icon-high"><i class="fa-solid fa-spray-can-sparkles"></i></div>
-              <div><strong>निवारक फफूंदनाशक स्प्रे:</strong> डाउनी मिल्ड्यू, अगेती/पछेती झुलसा (Blight) का अत्यधिक खतरा है। बारिश रुकते ही 'सिस्टेमिक' फंजीसाइड (Mancozeb या Azoxystrobin) का सुरक्षात्मक छिड़काव करें।</div>
+              <div><strong>निवारक फफूंदनाशक स्प्रे:</strong> डाउनी मिल्ड्यू, अगेती/पछेती झुलसा का अत्यधिक खतरा है। सिस्टेमिक फंजीसाइड (Mancozeb या Azoxystrobin) का सुरक्षात्मक छिड़काव करें।</div>
             </div>
             <div class="advice-item">
               <div class="advice-icon-wrap advice-icon-high"><i class="fa-solid fa-faucet-drip"></i></div>
-              <div><strong>सिंचाई पर रोक:</strong> खेत में नमी अत्यधिक है; तुरंत सिंचाई बंद करें और जलनिकासी की नालियां साफ रखें ताकि जड़ गलन न हो।</div>
-            </div>
-            <div class="advice-item">
-              <div class="advice-icon-wrap advice-icon-high"><i class="fa-solid fa-triangle-exclamation"></i></div>
-              <div><strong>संवेदनशील फसलें:</strong> टमाटर, आलू, धान, अंगूर, मिर्च और प्याज की पत्तियों के निचले हिस्से की प्रतिदिन जांच करें।</div>
+              <div><strong>सिंचाई पर रोक:</strong> खेत में नमी अत्यधिक है; तुरंत सिंचाई रोकें और जलनिकासी की नालियां साफ रखें।</div>
             </div>
           </div>
         `;
@@ -1663,11 +1960,7 @@
             </div>
             <div class="advice-item">
               <div class="advice-icon-wrap advice-icon-warn"><i class="fa-solid fa-leaf"></i></div>
-              <div><strong>जैविक/नीम सुरक्षा:</strong> रोग की शुरुआत रोकने हेतु 5ml नीम का तेल (Neem Oil 10,000 ppm) या ट्राइकोडर्मा का छिड़काव उपयोगी रहेगा।</div>
-            </div>
-            <div class="advice-item">
-              <div class="advice-icon-wrap advice-icon-warn"><i class="fa-solid fa-droplet-slash"></i></div>
-              <div><strong>संतुलित सिंचाई:</strong> केवल अत्यंत आवश्यकता होने पर सुबह के समय हल्की सिंचाई करें, शाम को पत्तों पर पानी न टिकने दें।</div>
+              <div><strong>जैविक/नीम सुरक्षा:</strong> रोग की शुरुआत रोकने हेतु नीम का तेल (Neem Oil 10,000 ppm) का छिड़काव उपयोगी रहेगा।</div>
             </div>
           </div>
         `;
@@ -1684,7 +1977,7 @@
             </div>
             <div class="advice-item">
               <div class="advice-icon-wrap advice-icon-safe"><i class="fa-solid fa-sun"></i></div>
-              <div><strong>सुरक्षित स्प्रे विंडो:</strong> कीटनाशक या पोषक तत्वों (Micronutrients) का सामान्य छिड़काव दोपहर पूर्व आसानी से किया जा सकता है।</div>
+              <div><strong>सुरक्षित स्प्रे विंडो:</strong> कीटनाशक या पोषक तत्वों का सामान्य छिड़काव दोपहर पूर्व किया जा सकता है।</div>
             </div>
           </div>
         `;
@@ -1748,34 +2041,34 @@
       }
       dailyForecastGrid.innerHTML = dailyHtml;
     }
+
+    // Sync Radar Map to this location
+    updateRadarLocation(lat, lon, locationName, risk.maxRainProb, current.precipitation || 0);
   }
 
-  // Master Loader for Given Coordinates
-  async function loadWeatherForCoordinates(lat, lon, knownName = null, source = 'gps', bypassCache = false) {
-    if (isFetching) return;
+  // Master Loader for Coordinates
+  async function loadWeatherForCoordinates(lat, lon, knownName = null, source = 'gps') {
+    activeLat = lat;
+    activeLon = lon;
     setLoading(true);
 
     try {
       let displayName = knownName;
       if (!displayName) {
-        setStatus('स्थान का नाम पहचाना जा रहा है...', true);
         displayName = await reverseGeocodeCoords(lat, lon);
       }
+      activeCityName = displayName;
 
       setStatus(`${displayName} का मौसम लोड हो रहा है...`, true);
 
       const weatherData = await fetchOpenMeteoForecast(lat, lon);
-
-      // Save to cache
       setCachedWeather(displayName, lat, lon, source, weatherData);
-
-      // Render
       renderDashboard(displayName, lat, lon, source, weatherData);
 
       const sourceHi = (source === 'gps') ? 'GPS लाइव' : (source === 'search' ? 'सर्च' : 'सक्रिय');
       setStatus(`🟢 ${displayName} (${sourceHi})`, true);
 
-      // Highlight matching quick pill if Bareilly
+      // Highlight quick pills if matching
       document.querySelectorAll('.quick-city-pill').forEach(btn => {
         if (displayName.toLowerCase().includes(btn.dataset.city.split(',')[0].toLowerCase())) {
           btn.classList.add('active-pill');
@@ -1785,101 +2078,234 @@
       });
     } catch (err) {
       console.error('Weather load error:', err);
-      setStatus(`⚠️ लोड करने में समस्या: ${err.message}`, false);
-
-      const cached = getCachedWeather();
-      if (cached) {
-        renderDashboard(cached.locationName, cached.lat, cached.lon, 'cached', cached.data);
-      }
+      setStatus(`⚠️ ${knownName || 'स्थान'} का डेटा लोड नहीं हुआ (${err.message})`, false);
     } finally {
       setLoading(false);
     }
   }
 
-  // Detect IP Location via backend
-  async function detectIpLocation() {
+  // ============================================================
+  // LIVE PRECIPITATION & RAIN RADAR MAP ENGINE (Leaflet + RainViewer)
+  // ============================================================
+  function initRadarMapEngine(initialLat, initialLon) {
+    if (radarMap || !window.L) return;
+
     try {
-      const res = await fetch('/api/weather/detect-location');
-      if (res.ok) {
-        const d = await res.json();
-        if (d && d.lat && d.lon) {
-          return {
-            lat: d.lat,
-            lon: d.lon,
-            name: `${d.city}, ${d.region}`
-          };
-        }
-      }
+      radarMap = L.map('weatherRadarMap', {
+        center: [initialLat, initialLon],
+        zoom: 8,
+        minZoom: 4,
+        maxZoom: 15,
+        zoomControl: true,
+        attributionControl: false
+      });
+
+      // Sleek CartoDB Dark Matter Base Tiles
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd',
+        maxZoom: 19
+      }).addTo(radarMap);
+
+      // Custom Glowing Farm Marker
+      const farmIcon = L.divIcon({
+        className: 'custom-farm-radar-marker',
+        html: `
+          <div style="position:relative; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">
+            <div style="position:absolute; width:100%; height:100%; border-radius:50%; background:rgba(56,189,248,0.35); animation:pulse-dot 1.5s infinite;"></div>
+            <div style="width:14px; height:14px; border-radius:50%; background:#38BDF8; border:2px solid #FFFFFF; box-shadow:0 0 10px #38BDF8;"></div>
+          </div>
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      farmMarker = L.marker([initialLat, initialLon], { icon: farmIcon }).addTo(radarMap);
+      farmMarker.bindPopup(`<b>🌾 आपका खेत / क्षेत्र</b><br>${activeCityName}`);
+
+      // Fetch RainViewer Live Radar Frames
+      fetchRainViewerFrames();
     } catch (e) {
-      console.warn('Backend IP detection error:', e);
+      console.warn('Radar map init error:', e);
     }
-    return { lat: DEFAULT_LAT, lon: DEFAULT_LON, name: DEFAULT_CITY };
   }
 
-  // Fallback to Bareilly
-  async function fallbackToBareilly(reason = '') {
-    console.warn(`Falling back to Bareilly/IP. Reason: ${reason}`);
-    setStatus(`Bareilly (डिफ़ॉल्ट) लोड हो रहा है...`, false);
-    const ipLoc = await detectIpLocation();
-    await loadWeatherForCoordinates(ipLoc.lat, ipLoc.lon, ipLoc.name, 'default');
-  }
+  async function fetchRainViewerFrames() {
+    try {
+      const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+      if (!res.ok) return;
+      const data = await res.json();
+      rainViewerHost = data.host || 'https://tilecache.rainviewer.com';
 
-  // Main Geolocation Controller (Handles Wi-Fi & GPS)
-  function initGeolocation(forceFresh = false) {
-    // If not forcing fresh, show cached data if valid
-    if (!forceFresh) {
-      const cached = getCachedWeather();
-      if (cached) {
-        renderDashboard(cached.locationName, cached.lat, cached.lon, 'cached', cached.data);
-        const minsAgo = Math.round((Date.now() - cached.timestamp) / 60000);
-        setStatus(`⚡ कैश्ड डेटा (${cached.locationName}, ${minsAgo}m पहले)`, true);
-        return;
+      // Collect past + nowcast frames
+      const past = (data.radar && data.radar.past) || [];
+      const nowcast = (data.radar && data.radar.nowcast) || [];
+      const sat = (data.satellite && data.satellite.infrared) || [];
+
+      radarFrames = (activeRadarMode === 'satellite') ? sat : [...past, ...nowcast];
+
+      if (radarFrames.length === 0) return;
+
+      if (radarTimelineSlider) {
+        radarTimelineSlider.max = radarFrames.length - 1;
+        radarTimelineSlider.value = past.length > 0 ? (past.length - 1) : (radarFrames.length - 1);
+        currentFrameIdx = parseInt(radarTimelineSlider.value);
       }
+
+      // Pre-create tile layers
+      clearRadarLayers();
+      radarTileLayers = radarFrames.map(frame => {
+        const url = (activeRadarMode === 'satellite')
+          ? `${rainViewerHost}${frame.path}/256/{z}/{x}/{y}/0/0_0.png`
+          : `${rainViewerHost}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`;
+
+        const layer = L.tileLayer(url, {
+          opacity: 0,
+          zIndex: 10
+        });
+        layer.addTo(radarMap);
+        return layer;
+      });
+
+      showRadarFrame(currentFrameIdx);
+    } catch (err) {
+      console.warn('RainViewer API error:', err);
+    }
+  }
+
+  function clearRadarLayers() {
+    radarTileLayers.forEach(l => {
+      if (radarMap.hasLayer(l)) radarMap.removeLayer(l);
+    });
+    radarTileLayers = [];
+  }
+
+  function showRadarFrame(index) {
+    if (!radarTileLayers || radarTileLayers.length === 0) return;
+    index = Math.max(0, Math.min(index, radarTileLayers.length - 1));
+
+    radarTileLayers.forEach((layer, i) => {
+      if (i === index) layer.setOpacity(0.78);
+      else layer.setOpacity(0);
+    });
+
+    currentFrameIdx = index;
+
+    if (radarTimelineSlider) radarTimelineSlider.value = index;
+
+    if (radarCurrentTimestamp && radarFrames[index]) {
+      const date = new Date(radarFrames[index].time * 1000);
+      const isLatest = index === radarTileLayers.length - 1;
+      radarCurrentTimestamp.textContent = `${date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })} ${isLatest ? '(लाइव)' : ''}`;
+    }
+  }
+
+  function startRadarAnimation() {
+    if (isPlayingRadar) return;
+    isPlayingRadar = true;
+    if (radarPlayIcon) radarPlayIcon.className = 'fa-solid fa-pause';
+    if (radarPlayText) radarPlayText.textContent = 'रोकें';
+
+    radarAnimInterval = setInterval(() => {
+      let nextIdx = currentFrameIdx + 1;
+      if (nextIdx >= radarTileLayers.length) nextIdx = 0;
+      showRadarFrame(nextIdx);
+    }, 650);
+  }
+
+  function stopRadarAnimation() {
+    if (!isPlayingRadar) return;
+    isPlayingRadar = false;
+    if (radarPlayIcon) radarPlayIcon.className = 'fa-solid fa-play';
+    if (radarPlayText) radarPlayText.textContent = 'एनीमेशन देखें';
+    if (radarAnimInterval) {
+      clearInterval(radarAnimInterval);
+      radarAnimInterval = null;
+    }
+  }
+
+  function updateRadarLocation(lat, lon, name, rainProb = 0, rainMm = 0) {
+    if (!radarMap) return;
+    radarMap.flyTo([lat, lon], 9, { duration: 1.2 });
+    if (farmMarker) {
+      farmMarker.setLatLng([lat, lon]);
+      farmMarker.setPopupContent(`
+        <div style="font-family:'Outfit',sans-serif; min-width:180px;">
+          <h4 style="margin:0 0 6px 0; color:#0284C7; font-size:1rem;">📍 ${name}</h4>
+          <div style="font-size:0.85rem; color:#334155; line-height:1.4;">
+            <div>☔ वर्षा संभावना: <b>${rainProb}%</b></div>
+            <div>🌧️ वर्तमान वर्षा: <b>${rainMm.toFixed(1)} mm</b></div>
+            <div style="margin-top:4px; color:${rainProb >= 40 ? '#DC2626' : '#16A34A'}; font-weight:700;">
+              ${rainProb >= 40 ? '⚠️ आज बारिश की संभावना - स्प्रे स्थगित रखें' : '✅ मौसम अनुकूल - सामान्य स्प्रे संभव'}
+            </div>
+          </div>
+        </div>
+      `);
     }
 
-    if (!navigator.geolocation) {
-      if (gpsPermissionNotice) gpsPermissionNotice.style.display = 'flex';
-      fallbackToBareilly('Geolocation not supported');
-      return;
+    if (radarMapLocName) radarMapLocName.textContent = name;
+    if (radarMapRainProb) {
+      radarMapRainProb.textContent = `${rainProb}%`;
+      radarMapRainProb.style.color = rainProb >= 50 ? '#60A5FA' : '#34D399';
     }
+  }
 
-    setStatus('📍 GPS लोकेशन प्राप्त की जा रही है...', true);
-    setLoading(true);
+  // Radar UI Events
+  if (radarPlayPauseBtn) {
+    radarPlayPauseBtn.addEventListener('click', () => {
+      if (isPlayingRadar) stopRadarAnimation();
+      else startRadarAnimation();
+    });
+  }
 
-    // Call Geolocation with enableHighAccuracy: false first
-    // Note: Windows laptops without dedicated GPS hardware FAIL or time out with enableHighAccuracy: true!
-    // enableHighAccuracy: false uses Wi-Fi/IP cell triangulation which resolves immediately in Bareilly!
+  if (radarCenterMyLocBtn) {
+    radarCenterMyLocBtn.addEventListener('click', () => {
+      if (radarMap) radarMap.flyTo([activeLat, activeLon], 10, { duration: 1 });
+    });
+  }
+
+  if (radarTimelineSlider) {
+    radarTimelineSlider.addEventListener('input', (e) => {
+      stopRadarAnimation();
+      showRadarFrame(parseInt(e.target.value));
+    });
+  }
+
+  if (btnLayerRadar && btnLayerSat) {
+    btnLayerRadar.addEventListener('click', () => {
+      if (activeRadarMode === 'radar') return;
+      activeRadarMode = 'radar';
+      btnLayerRadar.classList.add('active-layer');
+      btnLayerSat.classList.remove('active-layer');
+      stopRadarAnimation();
+      fetchRainViewerFrames();
+    });
+
+    btnLayerSat.addEventListener('click', () => {
+      if (activeRadarMode === 'satellite') return;
+      activeRadarMode = 'satellite';
+      btnLayerSat.classList.add('active-layer');
+      btnLayerRadar.classList.remove('active-layer');
+      stopRadarAnimation();
+      fetchRainViewerFrames();
+    });
+  }
+
+  // ============================================================
+  // BACKGROUND GPS ENRICHMENT (Non-blocking)
+  // ============================================================
+  function trySilentGps() {
+    if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
-        if (gpsPermissionNotice) gpsPermissionNotice.style.display = 'none';
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
-        console.log('GPS Coordinates acquired:', lat, lon);
-        await loadWeatherForCoordinates(lat, lon, null, 'gps', forceFresh);
+        console.log('GPS acquired in background:', lat, lon);
+        await loadWeatherForCoordinates(lat, lon, null, 'gps');
       },
       (err) => {
-        console.warn('First geolocation attempt failed, trying high accuracy...', err.message);
-        // Retry with high accuracy in case mobile device with GPS
-        navigator.geolocation.getCurrentPosition(
-          async (pos) => {
-            if (gpsPermissionNotice) gpsPermissionNotice.style.display = 'none';
-            await loadWeatherForCoordinates(pos.coords.latitude, pos.coords.longitude, null, 'gps', forceFresh);
-          },
-          async (finalErr) => {
-            console.warn('Final geolocation failed:', finalErr.message);
-            setLoading(false);
-            if (finalErr.code === 1) { // Permission Denied
-              if (gpsPermissionNotice) gpsPermissionNotice.style.display = 'flex';
-              setStatus('⚠️ लोकेशन अनुमति बंद है - Bareilly लोड किया गया', false);
-            } else {
-              setStatus('⚠️ GPS सिग्नल नहीं मिला - Bareilly लोड किया गया', false);
-            }
-            await fallbackToBareilly(finalErr.message);
-          },
-          { timeout: 7000, enableHighAccuracy: true, maximumAge: 0 }
-        );
+        console.log('Silent GPS bypassed (using default city):', err.message);
       },
-      { timeout: 7000, enableHighAccuracy: false, maximumAge: forceFresh ? 0 : 30000 }
+      { timeout: 6000, enableHighAccuracy: false, maximumAge: 60000 }
     );
   }
 
@@ -1901,7 +2327,7 @@
 
       const name = `${geo.name}${geo.admin1 ? ', ' + geo.admin1 : ''}`;
       if (locationSearchInput) locationSearchInput.value = name;
-      await loadWeatherForCoordinates(geo.latitude, geo.longitude, name, 'search', true);
+      await loadWeatherForCoordinates(geo.latitude, geo.longitude, name, 'search');
     } catch (e) {
       console.error('Search error:', e);
       setStatus(`खोज में त्रुटि: ${e.message}`, false);
@@ -1912,17 +2338,32 @@
   // Event Listeners
   if (refreshWeatherBtn) {
     refreshWeatherBtn.addEventListener('click', () => {
-      console.log('Refreshing weather...');
       localStorage.removeItem(CACHE_KEY);
-      initGeolocation(true);
+      loadWeatherForCoordinates(activeLat, activeLon, activeCityName, 'refresh');
     });
   }
 
   if (gpsWeatherBtn) {
     gpsWeatherBtn.addEventListener('click', () => {
-      console.log('My location clicked...');
-      localStorage.removeItem(CACHE_KEY);
-      initGeolocation(true);
+      setStatus('📍 GPS लोकेशन प्राप्त की जा रही है...', true);
+      setLoading(true);
+      if (!navigator.geolocation) {
+        setStatus('⚠️ आपके डिवाइस में GPS समर्थित नहीं है', false);
+        setLoading(false);
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          if (gpsPermissionNotice) gpsPermissionNotice.style.display = 'none';
+          await loadWeatherForCoordinates(pos.coords.latitude, pos.coords.longitude, null, 'gps');
+        },
+        (err) => {
+          setLoading(false);
+          setStatus('⚠️ GPS सिग्नल नहीं मिला या अनुमति अस्वीकृत है', false);
+          if (gpsPermissionNotice) gpsPermissionNotice.style.display = 'flex';
+        },
+        { timeout: 8000, enableHighAccuracy: true, maximumAge: 0 }
+      );
     });
   }
 
@@ -1937,7 +2378,7 @@
       btn.classList.add('active-pill');
 
       if (locationSearchInput) locationSearchInput.value = city;
-      loadWeatherForCoordinates(lat, lon, city, 'saved', true);
+      loadWeatherForCoordinates(lat, lon, city, 'saved');
     });
   });
 
@@ -1980,13 +2421,34 @@
     });
   }
 
-  // Auto initialize on load
-  document.addEventListener('DOMContentLoaded', () => {
-    initGeolocation(false);
-  });
+  // ============================================================
+  // FAST AUTO-INITIALIZE ON PAGE LOAD
+  // ============================================================
+  let hasInitialized = false;
+  function startWeatherApp() {
+    if (hasInitialized) return;
+    hasInitialized = true;
 
-  if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    initGeolocation(false);
+    // 1. Initialize Interactive Rain Radar Map immediately
+    initRadarMapEngine(DEFAULT_LAT, DEFAULT_LON);
+
+    // 2. Load cached weather if valid, else immediately load Default City (Bareilly / District)
+    const cached = getCachedWeather();
+    if (cached) {
+      renderDashboard(cached.locationName, cached.lat, cached.lon, 'cached', cached.data);
+      setStatus(`⚡ कैश्ड डेटा (${cached.locationName})`, true);
+    } else {
+      loadWeatherForCoordinates(DEFAULT_LAT, DEFAULT_LON, DEFAULT_CITY, 'default');
+    }
+
+    // 3. Silently request GPS in background without blocking screen
+    trySilentGps();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startWeatherApp);
+  } else {
+    startWeatherApp();
   }
 })();
 </script>

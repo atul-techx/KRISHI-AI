@@ -390,17 +390,17 @@ def weather():
     return render_template('weather.html', user_district=user_district, user_state=user_state)
 
 @app.route('/api/weather/detect-location')
-@login_required
 def api_weather_detect_location():
-    district = getattr(current_user, 'district', None)
-    state = getattr(current_user, 'state', None)
-    if district:
-        return jsonify({
-            "status": "success",
-            "city": district,
-            "region": state or "Uttar Pradesh",
-            "source": "profile"
-        })
+    if current_user.is_authenticated:
+        district = getattr(current_user, 'district', None)
+        state = getattr(current_user, 'state', None)
+        if district:
+            return jsonify({
+                "status": "success",
+                "city": district,
+                "region": state or "Uttar Pradesh",
+                "source": "profile"
+            })
     try:
         ip_res = requests.get('http://ip-api.com/json/', timeout=4)
         if ip_res.status_code == 200:
@@ -428,10 +428,9 @@ def api_weather_detect_location():
     })
 
 @app.route('/api/weather/live')
-@login_required
 def api_weather_live():
-    lat = request.args.get('lat', '19.9975')
-    lon = request.args.get('lon', '73.7898')
+    lat = request.args.get('lat', '28.3670')
+    lon = request.args.get('lon', '79.4304')
     try:
         url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,dew_point_2m,wind_speed_10m&forecast_days=3&timezone=auto"
         res = requests.get(url, timeout=8)
@@ -441,7 +440,6 @@ def api_weather_live():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/weather/geocode')
-@login_required
 def api_weather_geocode():
     q = request.args.get('q', '').strip()
     if not q:
