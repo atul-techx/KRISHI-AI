@@ -1,161 +1,562 @@
 {% extends "base.html" %}
-{% block title %}कीट पहचान - Krishi AI{% endblock %}
+{% block title %}कीट एवं कीट-रोग पहचान (YOLO Video AI) - Krishi AI{% endblock %}
+
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}?v=3.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}?v=3.2">
+<style>
+    :root, [data-theme="dark"] {
+        --pest-card-bg: rgba(18, 24, 38, 0.85);
+        --pest-border: rgba(255, 255, 255, 0.08);
+        --pest-tile-bg: rgba(3, 7, 18, 0.45);
+        --pest-tile-border: rgba(255, 255, 255, 0.06);
+        --pest-text-main: #F8FAFC;
+        --pest-text-sub: #CBD5E1;
+        --pest-text-muted: #94A3B8;
+        --pest-green: #10B981;
+        --pest-amber: #F59E0B;
+        --pest-blue: #38BDF8;
+    }
+
+    [data-theme="light"] {
+        --pest-card-bg: #FFFFFF;
+        --pest-border: #E2E8F0;
+        --pest-tile-bg: #F8FAFC;
+        --pest-tile-border: #E2E8F0;
+        --pest-text-main: #0F172A;
+        --pest-text-sub: #334155;
+        --pest-text-muted: #64748B;
+        --pest-green: #059669;
+        --pest-amber: #D97706;
+        --pest-blue: #2563EB;
+    }
+
+    .pest-mode-tabs {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+    }
+    .pest-mode-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 0.92rem;
+        border: 1px solid var(--pest-border);
+        background: var(--pest-tile-bg);
+        color: var(--pest-text-sub);
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+    .pest-mode-btn.active {
+        background: linear-gradient(135deg, #059669, #10B981);
+        color: #FFFFFF !important;
+        border-color: #059669;
+        box-shadow: 0 4px 14px rgba(5, 150, 105, 0.25);
+    }
+
+    .pest-dropzone {
+        border: 2px dashed #059669;
+        border-radius: 16px;
+        padding: 2.5rem 1.5rem;
+        text-align: center;
+        background: var(--pest-tile-bg);
+        transition: all 0.25s ease;
+        position: relative;
+        cursor: pointer;
+    }
+    .pest-dropzone.drag-over {
+        border-color: #10B981;
+        background: rgba(16, 185, 129, 0.08);
+        transform: scale(1.01);
+    }
+
+    .pest-drop-icon {
+        width: 76px;
+        height: 76px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.08));
+        color: #059669;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.2rem;
+        margin: 0 auto 1rem auto;
+    }
+
+    .pest-media-preview-wrap {
+        width: 100%;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid var(--pest-border);
+        position: relative;
+        background: #000;
+        display: none;
+    }
+    .pest-media-preview-wrap video,
+    .pest-media-preview-wrap img {
+        width: 100%;
+        max-height: 380px;
+        object-fit: contain;
+        display: block;
+    }
+    .pest-remove-media-btn {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        background: rgba(220, 38, 38, 0.9);
+        color: #fff;
+        border: none;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        z-index: 10;
+        transition: transform 0.2s ease;
+    }
+    .pest-remove-media-btn:hover {
+        transform: scale(1.1);
+        background: #DC2626;
+    }
+
+    .pest-stat-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.4rem 0.85rem;
+        border-radius: 50px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        border: 1px solid var(--pest-border);
+        background: var(--pest-tile-bg);
+        color: var(--pest-text-main);
+    }
+    .pest-stat-chip i {
+        color: #059669;
+    }
+
+    .pest-count-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+    .pest-count-card {
+        background: var(--pest-tile-bg);
+        border: 1px solid var(--pest-tile-border);
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+    .pest-count-label {
+        font-size: 0.78rem;
+        color: var(--pest-text-muted);
+        font-weight: 600;
+    }
+    .pest-count-val {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #059669;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="krishi-container upload-page-wrap" style="padding-bottom: 4rem;">
 
+    <!-- Header Section -->
     <div class="page-header fade-in-up">
-        <h1 class="page-title" style="color:#22C55E;"><i class="fa-solid fa-bug"></i> कीट एवं रोग नियंत्रण</h1>
-        <p class="page-sub">कीट या फसल नुकसान की फोटो लें और Model से पाएं जैविक व रासायनिक समाधान।</p>
+        <h1 class="page-title" style="color:#059669;"><i class="fa-solid fa-bug"></i> कीट एवं कीट-रोग पहचान (YOLO AI)</h1>
+        <p class="page-sub">खेत में कीट या फसल नुकसान का <strong>वीडियो (Video)</strong> या <strong>फोटो</strong> अपलोड करें — YOLO मॉडल तुरंत कीटों की पहचान व नियंत्रण उपाय बताएगा।</p>
     </div>
 
     <div class="upload-layout">
-        <!-- Upload Card -->
-        <div class="krishi-card upload-card fade-in-up" style="border-left: 3px solid #22C55E;">
+
+        <!-- 1. Upload Form Card -->
+        <div class="krishi-card upload-card fade-in-up" style="border-left: 4px solid #059669; padding: 1.5rem;">
+            
+            <!-- Mode Switch Tabs -->
+            <div class="pest-mode-tabs">
+                <button type="button" class="pest-mode-btn active" id="tabVideo" onclick="switchUploadMode('video')">
+                    <i class="fa-solid fa-video"></i> वीडियो अपलोड (Video Mode)
+                </button>
+                <button type="button" class="pest-mode-btn" id="tabImage" onclick="switchUploadMode('image')">
+                    <i class="fa-solid fa-camera"></i> फोटो अपलोड (Photo Mode)
+                </button>
+            </div>
+
             <form method="POST" action="{{ url_for('pest') }}" enctype="multipart/form-data" id="pestForm">
 
-                <!-- Drag Drop Zone -->
-                <div class="drop-zone" id="dropZone" style="border-color:rgba(34,197,94,0.3);">
-                    <div class="drop-inner" id="dropInner">
-                        <div class="drop-icon" style="color:#22C55E;"><i class="fa-solid fa-cloud-arrow-up"></i></div>
-                        <h3>कीट की Photo यहाँ डालें</h3>
-                        <p>जैसे: टिड्डी, इल्ली, कीट नुकसान</p>
-                        <label for="pestImage" class="btn-krishi-primary upload-btn" style="background:linear-gradient(135deg,#22C55E,#10B981);">
-                            <i class="fa-solid fa-camera"></i> Photo चुनें / Camera
-                        </label>
-                        <input type="file" id="pestImage" name="image" accept="image/*" capture="environment" hidden>
+                <!-- Unified Drop Zone -->
+                <div class="pest-dropzone" id="pestDropZone">
+                    <div id="dropPromptContent">
+                        <div class="pest-drop-icon" id="dropIcon">
+                            <i class="fa-solid fa-film"></i>
+                        </div>
+                        <h3 id="dropTitle" style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.35rem; color: var(--pest-text-main);">
+                            कीट का Video यहाँ डालें
+                        </h3>
+                        <p id="dropSubtitle" style="font-size: 0.85rem; color: var(--pest-text-muted); margin-bottom: 1.25rem;">
+                            MP4, AVI, MOV, WEBM वीडियो (Max 200MB)
+                        </p>
+                        <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                            <label for="pestMediaInput" class="btn-krishi-primary" style="background: linear-gradient(135deg, #059669, #10B981); cursor: pointer; padding: 0.65rem 1.4rem;">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> <span id="btnSelectText">वीडियो चुनें / रिकॉर्ड करें</span>
+                            </label>
+                        </div>
                     </div>
-                    <!-- Preview -->
-                    <div class="image-preview-wrap" id="previewWrap" style="display:none;">
-                        <img id="imagePreview" src="" alt="Preview">
-                        <button type="button" class="remove-image-btn" id="removeImage">
+
+                    <!-- File input accepting both videos and images -->
+                    <input type="file" id="pestMediaInput" name="media_file" accept="video/*,image/*" capture="environment" hidden>
+
+                    <!-- Preview Container -->
+                    <div class="pest-media-preview-wrap" id="mediaPreviewWrap">
+                        <button type="button" class="pest-remove-media-btn" id="removeMediaBtn" title="हटाएं">
                             <i class="fa-solid fa-xmark"></i>
                         </button>
+                        <video id="videoPreviewEl" controls playsinline style="display: none;"></video>
+                        <img id="imagePreviewEl" alt="Preview" style="display: none;">
                     </div>
                 </div>
 
+                <!-- Crop Name / Details Input (Optional) -->
+                <div class="form-group" style="margin-top: 1.25rem; margin-bottom: 1.25rem;">
+                    <label class="form-label" style="font-weight:600; font-size: 0.88rem; display:block; margin-bottom: 0.4rem;">
+                        <i class="fa-solid fa-wheat-awn" style="color:#059669;"></i> फसल का नाम (वैकल्पिक / Optional)
+                    </label>
+                    <input type="text" name="crop" class="krishi-input" placeholder="जैसे: टमाटर, आम, सरसों, मिर्च, अमरूद..." style="width: 100%;">
+                </div>
 
-
-                <button type="submit" class="btn-krishi-primary full-btn" id="analyzeBtn" style="background:linear-gradient(135deg,#22C55E,#10B981);box-shadow:0 4px 14px rgba(34,197,94,0.3);">
-                    <i class="fa-solid fa-microscope"></i> Model Analyze
+                <!-- Submit Button -->
+                <button type="submit" class="btn-krishi-primary full-btn" id="analyzeBtn" style="background: linear-gradient(135deg, #059669, #10B981); box-shadow: 0 4px 16px rgba(5, 150, 105, 0.3); width: 100%;">
+                    <i class="fa-solid fa-microscope"></i> YOLO AI मॉडल से जांच शुरू करें
                 </button>
             </form>
         </div>
 
-        <!-- Result Section -->
+        <!-- 2. Result Section -->
         <div class="result-section fade-in-up delay-1">
-            <!-- Analyzing State -->
-            <div class="krishi-card analyzing-card" id="analyzingCard" style="display:none;">
+
+            <!-- Analyzing Loading State -->
+            <div class="krishi-card analyzing-card" id="analyzingCard" style="display: none; text-align: center; padding: 2.5rem 1.5rem; border-left: 4px solid #059669;">
                 <div class="ai-analyzing">
-                    <div class="ai-spinner">
-                        <div class="spinner-ring"></div>
-                        <i class="fa-solid fa-bug ai-brain-icon" style="color:#22C55E;"></i>
+                    <div class="ai-spinner" style="margin-bottom: 1.25rem;">
+                        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 3.5rem; color: #059669;"></i>
                     </div>
-                    <h3>Model Analyze कर रहा है...</h3>
-                    <p>कीट प्रजाति का डेटाबेस स्कैन हो रहा है</p>
-                    <div class="analyzing-steps">
-                        <div class="step-dot active"></div>
-                        <div class="step-dot"></div>
-                        <div class="step-dot"></div>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--pest-text-main);">
+                        YOLO AI मॉडल वीडियो प्रोसेस कर रहा है...
+                    </h3>
+                    <p style="font-size: 0.88rem; color: var(--pest-text-muted); line-height: 1.6;">
+                        फ्रेम्स का विश्लेषण हो रहा है — फल मक्खी, माहू और स्केल कीटों की ट्रैकिंग जारी है।
+                    </p>
+                    <div style="display: flex; gap: 0.5rem; justify-content: center; margin-top: 1rem;">
+                        <span class="pest-stat-chip"><i class="fa-solid fa-brain"></i> YOLOv8 Deep Learning</span>
+                        <span class="pest-stat-chip"><i class="fa-solid fa-bolt"></i> Realtime Inference</span>
                     </div>
                 </div>
             </div>
 
             <!-- Result Card -->
             {% if result %}
-            <div class="krishi-card result-card {% if result.severity == 'High' %}result-danger{% elif result.severity == 'Medium' %}result-warning{% else %}result-safe{% endif %} fade-in-up" style="border-top: 4px solid #22C55E;">
-                <div class="result-header">
-                    <div class="result-icon" style="background:rgba(34,197,94,0.1);color:#22C55E;">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
+            <div class="krishi-card result-card {% if result.severity == 'High' %}result-danger{% elif result.severity == 'Medium' %}result-warning{% else %}result-safe{% endif %} fade-in-up" style="border-top: 5px solid #059669; padding: 1.5rem;">
+                
+                <!-- Result Header -->
+                <div class="result-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div class="result-icon" style="background: rgba(5, 150, 105, 0.12); color: #059669; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+                            <i class="fa-solid fa-bug"></i>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--pest-text-muted); font-weight: 700;">
+                                {% if result.media_type == 'video' %}वीडियो विश्लेषण परिणाम (Video Analysis){% else %}फोटो विश्लेषण परिणाम{% endif %}
+                            </span>
+                            <h2 class="result-disease-name" style="margin: 0; font-size: 1.35rem; font-weight: 800;">{{ result.disease }}</h2>
+                        </div>
                     </div>
-                    <div>
-                        <h2 class="result-disease-name">{{ result.disease }}</h2>
+                    <div class="severity-badge severity-{{ result.severity|lower }}" style="font-weight: 700; padding: 0.35rem 0.9rem; border-radius: 50px;">
+                        {{ result.severity }} प्रकोप
                     </div>
-                    <div class="severity-badge severity-{{ result.severity|lower }}">{{ result.severity }}</div>
                 </div>
 
+                <!-- Video / Media Player Section -->
+                {% if result.media_type == 'video' %}
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--pest-text-main); display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fa-solid fa-circle-play" style="color: #059669;"></i> बॉन्डिंग बॉक्स युक्त मॉडल डिटेक्टेड वीडियो:</span>
+                        {% if result.frames_analyzed %}
+                        <span class="pest-stat-chip" style="font-size: 0.75rem;"><i class="fa-solid fa-layer-group"></i> {{ result.frames_analyzed }} फ्रेम्स</span>
+                        {% endif %}
+                    </div>
+
+                    {% if result.annotated_video_url %}
+                    <div style="border-radius: 14px; overflow: hidden; background: #000; border: 1px solid var(--pest-border); box-shadow: 0 4px 14px rgba(0,0,0,0.1);">
+                        <video controls autoplay muted loop playsinline src="{{ result.annotated_video_url }}" style="width: 100%; max-height: 380px; display: block;"></video>
+                    </div>
+                    {% endif %}
+
+                    {% if result.uploaded_image_url %}
+                    <div style="margin-top: 1rem;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: var(--pest-text-muted); display: block; margin-bottom: 0.4rem;">
+                            <i class="fa-solid fa-camera"></i> मुख्य फ्रेम स्नैपशॉट (Peak Detection Frame):
+                        </span>
+                        <img src="{{ result.uploaded_image_url }}" alt="Pest Snapshot" style="width: 100%; max-height: 240px; object-fit: contain; border-radius: 12px; border: 1px solid var(--pest-border); background: #000;">
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <!-- Image Display -->
                 {% if result.uploaded_image_url %}
-                <div class="uploaded-image-preview" style="text-align: center; margin: 1rem 0;">
-                    <img src="{{ result.uploaded_image_url }}" alt="Uploaded Image" style="max-width: 100%; max-height: 250px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+                <div class="uploaded-image-preview" style="text-align: center; margin: 1rem 0 1.5rem 0;">
+                    <span style="font-size: 0.8rem; font-weight: 700; color: var(--pest-text-muted); display: block; margin-bottom: 0.4rem; text-align: left;">
+                        <i class="fa-solid fa-crosshairs" style="color: #059669;"></i> मॉडल द्वारा चिह्नित कीट (YOLO Bounding Boxes):
+                    </span>
+                    <img src="{{ result.uploaded_image_url }}" alt="Annotated Pest Detection" style="max-width: 100%; max-height: 300px; border-radius: 12px; border: 1px solid var(--pest-border); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                </div>
+                {% endif %}
+                {% endif %}
+
+                <!-- Detection Statistics Grid -->
+                {% if result.detections %}
+                <div style="margin-bottom: 1.25rem;">
+                    <div style="font-size: 0.85rem; font-weight: 700; color: var(--pest-text-main); margin-bottom: 0.4rem;">
+                        <i class="fa-solid fa-list-check" style="color: #059669;"></i> पाए गए कीटों का विवरण:
+                    </div>
+                    <div class="pest-count-grid">
+                        {% for det in result.detections %}
+                        <div class="pest-count-card">
+                            <span class="pest-count-label">{{ det.label }}</span>
+                            <span class="pest-count-val">{{ det.count }} <span style="font-size: 0.8rem; font-weight: 600; color: var(--pest-text-muted);">पहचाने गए</span></span>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
                 {% endif %}
 
                 <!-- Confidence Meter -->
-                <div class="confidence-section">
-                    <div class="confidence-label">
-                        <span>Model Confidence</span>
-                        <strong style="color:#22C55E;">{{ result.confidence }}%</strong>
+                <div class="confidence-section" style="margin-bottom: 1.25rem;">
+                    <div class="confidence-label" style="display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 0.35rem;">
+                        <span>मॉडल सटीकता (Model Confidence)</span>
+                        <strong style="color:#059669;">{{ result.confidence }}%</strong>
                     </div>
-                    <div class="confidence-track">
-                        <div class="confidence-fill-bar" style="width: {{ result.confidence }}%; background:linear-gradient(90deg,#22C55E,#10B981);"></div>
+                    <div class="confidence-track" style="height: 8px; border-radius: 50px; background: #E2E8F0; overflow: hidden;">
+                        <div class="confidence-fill-bar" style="width: {{ result.confidence }}%; height: 100%; background: linear-gradient(90deg, #059669, #10B981); border-radius: 50px;"></div>
                     </div>
                 </div>
 
-                <!-- Cause -->
-                <div class="result-section-block">
-                    <h4 style="color:#22C55E;"><i class="fa-solid fa-circle-exclamation"></i> नुकसान और व्यवहार</h4>
-                    <p>{{ result.cause }}</p>
+                <!-- Cause & Damage Behavior -->
+                <div class="result-section-block" style="margin-bottom: 1rem; padding: 1rem; border-radius: 12px;">
+                    <h4 style="color:#059669; font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.4rem;">
+                        <i class="fa-solid fa-circle-exclamation"></i> नुकसान और व्यवहार (Damage Behavior)
+                    </h4>
+                    <p style="font-size: 0.88rem; line-height: 1.6; margin: 0;">{{ result.cause }}</p>
                 </div>
 
-                <!-- Treatment -->
-                <div class="result-section-block treatment-block">
-                    <h4 style="color:#22C55E;"><i class="fa-solid fa-spray-can-sparkles"></i> कीट नियंत्रण उपाय</h4>
-                    <ul>
+                <!-- Treatment Measures -->
+                <div class="result-section-block treatment-block" style="margin-bottom: 1rem; padding: 1rem; border-radius: 12px;">
+                    <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+                        <i class="fa-solid fa-spray-can-sparkles"></i> कीट नियंत्रण उपाय (Organic & IPM Measures)
+                    </h4>
+                    <ul style="padding-left: 1.25rem; margin: 0; font-size: 0.88rem; line-height: 1.7;">
                         {% for step in result.treatment %}
-                        <li><i class="fa-solid fa-circle-check" style="color:#22C55E;"></i> {{ step }}</li>
+                        <li>{{ step }}</li>
                         {% endfor %}
                     </ul>
                 </div>
 
                 <!-- Prevention -->
-                <div class="result-section-block prevention-block">
-                    <h4 style="color:#22C55E;"><i class="fa-solid fa-shield-halved"></i> भविष्य में बचाव</h4>
-                    <p>{{ result.prevention }}</p>
+                <div class="result-section-block prevention-block" style="margin-bottom: 1.5rem; padding: 1rem; border-radius: 12px;">
+                    <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.4rem;">
+                        <i class="fa-solid fa-shield-halved"></i> भविष्य में बचाव (Prevention Strategy)
+                    </h4>
+                    <p style="font-size: 0.88rem; line-height: 1.6; margin: 0;">{{ result.prevention }}</p>
                 </div>
 
-
-
-                <div class="result-actions">
-                    <button class="btn-krishi-secondary" onclick="window.print()" style="border-color:#22C55E;color:#22C55E;"><i class="fa-solid fa-print"></i> Print</button>
-                    <a href="{{ url_for('chatbot') }}" class="btn-krishi-primary" style="background:linear-gradient(135deg,#22C55E,#10B981);"><i class="fa-solid fa-robot"></i> और जानें</a>
+                <!-- Action Buttons -->
+                <div class="result-actions" style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                    <button class="btn-krishi-secondary" onclick="window.print()" style="border-color:#059669; color:#059669; padding: 0.55rem 1.2rem;">
+                        <i class="fa-solid fa-print"></i> रिपोर्ट प्रिंट करें
+                    </button>
+                    <a href="{{ url_for('chatbot') }}" class="btn-krishi-primary" style="background: linear-gradient(135deg,#059669,#10B981); padding: 0.55rem 1.4rem;">
+                        <i class="fa-solid fa-robot"></i> AI कृषि मित्र से पूछें
+                    </a>
                 </div>
             </div>
+
             {% else %}
-            <!-- Placeholder -->
-            <div class="krishi-card placeholder-result-card">
+            <!-- Placeholder Default Card -->
+            <div class="krishi-card placeholder-result-card" style="padding: 2.5rem 1.5rem; text-align: center; border-left: 4px solid #059669;">
                 <div class="placeholder-inner">
-                    <i class="fa-solid fa-bug placeholder-icon" style="color:#22C55E;"></i>
-                    <h3>कीट पहचान रिपोर्ट</h3>
-                    <p>कीट या फसल बर्बादी की साफ़ फोटो अपलोड करें और जांच शुरू करें।</p>
-                    <ul class="placeholder-tips">
-                        <li><i class="fa-solid fa-circle-info" style="color:#22C55E;"></i> प्रभावित पत्ती/कीड़े की नज़दीकी फोटो लें</li>
-                        <li><i class="fa-solid fa-circle-info" style="color:#22C55E;"></i> फोटो में कीड़ा साफ दिखना चाहिए</li>
-                        <li><i class="fa-solid fa-circle-info" style="color:#22C55E;"></i> लक्षण व फसल नाम सही चुनें</li>
-                    </ul>
+                    <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(5, 150, 105, 0.1); color: #059669; display: flex; align-items: center; justify-content: center; font-size: 2.4rem; margin: 0 auto 1rem auto;">
+                        <i class="fa-solid fa-video"></i>
+                    </div>
+                    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.4rem;">YOLO कीट पहचान एवं वीडियो विश्लेषण</h3>
+                    <p style="font-size: 0.88rem; color: var(--pest-text-muted); max-width: 480px; margin: 0 auto 1.5rem auto; line-height: 1.6;">
+                        अपने खेत की फसल का छोटा वीडियो या स्पष्ट फोटो अपलोड करें। YOLO मॉडल प्रत्येक फ्रेम में कीटों को पहचान कर सटीक उपाय प्रदान करेगा।
+                    </p>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem; max-width: 420px; margin: 0 auto; text-align: left; font-size: 0.85rem;">
+                        <div class="pest-stat-chip"><i class="fa-solid fa-check"></i> <strong>फल मक्खी (Fruit Fly)</strong> की सघनता पहचान</div>
+                        <div class="pest-stat-chip"><i class="fa-solid fa-check"></i> <strong>माहू / चेपा (Aphids)</strong> का पत्तियों पर फैलाव</div>
+                        <div class="pest-stat-chip"><i class="fa-solid fa-check"></i> <strong>स्केल कीट (Scale Insect)</strong> तना संक्रमण जांच</div>
+                        <div class="pest-stat-chip"><i class="fa-solid fa-check"></i> बॉन्डिंग बॉक्स युक्त रियल-टाइम वीडियो प्लेयर</div>
+                    </div>
                 </div>
             </div>
             {% endif %}
+
         </div>
     </div>
-
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
 <script>
-// Override IDs for pest form
+let currentUploadMode = 'video';
+
+function switchUploadMode(mode) {
+    currentUploadMode = mode;
+    const tabVideo = document.getElementById('tabVideo');
+    const tabImage = document.getElementById('tabImage');
+    const dropIcon = document.getElementById('dropIcon');
+    const dropTitle = document.getElementById('dropTitle');
+    const dropSubtitle = document.getElementById('dropSubtitle');
+    const btnSelectText = document.getElementById('btnSelectText');
+    const mediaInput = document.getElementById('pestMediaInput');
+
+    if (mode === 'video') {
+        tabVideo.classList.add('active');
+        tabImage.classList.remove('active');
+        dropIcon.innerHTML = '<i class="fa-solid fa-film"></i>';
+        dropTitle.textContent = 'कीट का Video यहाँ डालें';
+        dropSubtitle.textContent = 'MP4, AVI, MOV, WEBM वीडियो (Max 200MB)';
+        btnSelectText.textContent = 'वीडियो चुनें / रिकॉर्ड करें';
+        mediaInput.accept = 'video/*';
+    } else {
+        tabImage.classList.add('active');
+        tabVideo.classList.remove('active');
+        dropIcon.innerHTML = '<i class="fa-solid fa-camera"></i>';
+        dropTitle.textContent = 'कीट की Photo यहाँ डालें';
+        dropSubtitle.textContent = 'JPG, PNG, WEBM फोटो (Max 20MB)';
+        btnSelectText.textContent = 'फोटो चुनें / कैमरा';
+        mediaInput.accept = 'image/*';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
+    const dropZone = document.getElementById('pestDropZone');
+    const mediaInput = document.getElementById('pestMediaInput');
+    const dropPrompt = document.getElementById('dropPromptContent');
+    const previewWrap = document.getElementById('mediaPreviewWrap');
+    const videoPreview = document.getElementById('videoPreviewEl');
+    const imagePreview = document.getElementById('imagePreviewEl');
+    const removeBtn = document.getElementById('removeMediaBtn');
     const form = document.getElementById('pestForm');
     const analyzeBtn = document.getElementById('analyzeBtn');
     const analyzingCard = document.getElementById('analyzingCard');
+
+    if (!dropZone || !mediaInput) return;
+
+    // Handle File Selection
+    mediaInput.addEventListener('change', function () {
+        if (this.files && this.files[0]) {
+            displayPreview(this.files[0]);
+        }
+    });
+
+    // Drag & Drop
+    ['dragenter', 'dragover'].forEach(evt => {
+        dropZone.addEventListener(evt, e => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('drag-over');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(evt => {
+        dropZone.addEventListener(evt, e => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('drag-over');
+        });
+    });
+
+    dropZone.addEventListener('drop', e => {
+        const files = e.dataTransfer.files;
+        if (files && files[0]) {
+            mediaInput.files = files;
+            displayPreview(files[0]);
+        }
+    });
+
+    function displayPreview(file) {
+        const isVideo = file.type.startsWith('video/') || /\.(mp4|avi|mov|mkv|webm)$/i.test(file.name);
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            dropPrompt.style.display = 'none';
+            previewWrap.style.display = 'block';
+
+            if (isVideo) {
+                switchUploadMode('video');
+                imagePreview.style.display = 'none';
+                imagePreview.src = '';
+                videoPreview.style.display = 'block';
+                videoPreview.src = e.target.result;
+                videoPreview.play().catch(() => {});
+            } else {
+                switchUploadMode('image');
+                videoPreview.style.display = 'none';
+                videoPreview.pause();
+                videoPreview.src = '';
+                imagePreview.style.display = 'block';
+                imagePreview.src = e.target.result;
+            }
+        };
+
+        reader.readAsDataURL(file);
+    }
+
+    // Remove Preview
+    if (removeBtn) {
+        removeBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            mediaInput.value = '';
+            videoPreview.pause();
+            videoPreview.src = '';
+            videoPreview.style.display = 'none';
+            imagePreview.src = '';
+            imagePreview.style.display = 'none';
+            previewWrap.style.display = 'none';
+            dropPrompt.style.display = 'block';
+        });
+    }
+
+    // Form submit state
     if (form) {
-        form.addEventListener('submit', function() {
-            if (analyzingCard) { analyzingCard.style.display = 'block'; analyzingCard.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-            if (analyzeBtn) { analyzeBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> जांच हो रही है...'; analyzeBtn.disabled = true; }
+        form.addEventListener('submit', function (e) {
+            if (!mediaInput.files || !mediaInput.files[0]) {
+                e.preventDefault();
+                alert('कृपया जांच के लिए कोई Video या Photo चुनें!');
+                return;
+            }
+
+            if (analyzingCard) {
+                analyzingCard.style.display = 'block';
+                analyzingCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            if (analyzeBtn) {
+                analyzeBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> YOLO मॉडल वीडियो/फोटो जांच कर रहा है...';
+                analyzeBtn.disabled = true;
+            }
         });
     }
 });

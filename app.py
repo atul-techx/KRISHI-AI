@@ -40,7 +40,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 from backend.utils.image_validation import validate_image_for_mode
 from backend.services.crop_disease_service import predict_crop_disease
-from backend.services.pest_detection_service import predict_pest
+from backend.services.pest_detection_service import predict_pest, predict_pest_video
 from backend.services.soil_analysis_service import predict_soil
 
 app = Flask(__name__)
@@ -1226,33 +1226,50 @@ def pest():
     if request.method == 'POST':
         crop = request.form.get('crop', '')
         symptoms = request.form.get('symptoms', '')
-        image_file = request.files.get('image')
+        media_file = request.files.get('image') or request.files.get('video') or request.files.get('media_file')
         
-        if not image_file or image_file.filename == '':
-            flash('Please upload an image.', 'danger')
+        if not media_file or media_file.filename == '':
+            flash('कृपया जांच के लिए Video या Photo अपलोड करें।', 'danger')
             return redirect(request.url)
             
-        filename = secure_filename(f"{uuid.uuid4().hex}_{image_file.filename}")
+        ext = os.path.splitext(media_file.filename)[1].lower()
+        video_extensions = {'.mp4', '.avi', '.mov', '.mkv', '.webm'}
+        image_extensions = {'.jpg', '.jpeg', '.png', '.webp', '.bmp'}
+        
+        if ext not in video_extensions and ext not in image_extensions:
+            flash(f"अमान्य फाइल प्रकार '{ext}'। कृपया MP4, AVI, MOV या JPG, PNG फाइल अपलोड करें।", 'danger')
+            return redirect(request.url)
+
+        filename = secure_filename(f"{uuid.uuid4().hex}_{media_file.filename}")
         filepath = os.path.join(UPLOAD_DIR, filename)
-        image_file.save(filepath)
+        media_file.save(filepath)
         
         try:
-            is_valid, error_msg = validate_image_for_mode(filepath, mode='pest')
-            if not is_valid:
-                os.remove(filepath)
-                flash(error_msg, 'danger')
-                return redirect(request.url)
-                
-            result = predict_pest(filepath, user_crop="")
-            if "error" in result:
-                os.remove(filepath)
-                flash(result["error"], 'danger')
-                result = None
+            if ext in video_extensions:
+                # Video pest detection using YOLO
+                result = predict_pest_video(filepath, user_crop=crop, output_dir=UPLOAD_DIR)
+                if "error" in result:
+                    flash(result["error"], 'danger')
+                    result = None
+                else:
+                    result['uploaded_video_url'] = url_for('static', filename=f'uploads/ai_images/{filename}')
+                    if result.get('annotated_video_filename'):
+                        result['annotated_video_url'] = url_for('static', filename=f'uploads/ai_images/{result["annotated_video_filename"]}')
+                    if result.get('snapshot_filename'):
+                        result['uploaded_image_url'] = url_for('static', filename=f'uploads/ai_images/{result["snapshot_filename"]}')
             else:
-                result['uploaded_image_url'] = url_for('static', filename=f'uploads/ai_images/{filename}')
+                # Image pest detection using YOLO
+                result = predict_pest(filepath, user_crop=crop, output_dir=UPLOAD_DIR)
+                if "error" in result:
+                    flash(result["error"], 'danger')
+                    result = None
+                else:
+                    annotated_name = result.get('annotated_filename', filename)
+                    result['uploaded_image_url'] = url_for('static', filename=f'uploads/ai_images/{annotated_name}')
+                    result['original_image_url'] = url_for('static', filename=f'uploads/ai_images/{filename}')
         except Exception as e:
-            if os.path.exists(filepath): os.remove(filepath)
-            flash(f"Error processing image: {e}", 'danger')
+            logger.error(f"Error in pest detection: {e}", exc_info=True)
+            flash(f"कीट जांच में त्रुटि: {e}", 'danger')
             result = None
                 
     return render_template('pest.html', result=result)
