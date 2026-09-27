@@ -54,6 +54,12 @@ if _db_uri:
         _db_uri = _db_uri.replace('postgres://', 'postgresql://', 1)
     if '+asyncpg' in _db_uri:
         _db_uri = _db_uri.replace('+asyncpg', '')
+    if '+aiosqlite' in _db_uri:
+        _db_uri = _db_uri.replace('+aiosqlite', '')
+    if '&channel_binding=require' in _db_uri:
+        _db_uri = _db_uri.replace('&channel_binding=require', '')
+    if '?channel_binding=require' in _db_uri:
+        _db_uri = _db_uri.replace('?channel_binding=require', '')
     app.config['SQLALCHEMY_DATABASE_URI'] = _db_uri
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///krishi.db'
@@ -141,7 +147,17 @@ def load_user(user_id):
 
 # Create database tables
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+    except Exception as e:
+        logger.error(f"Error initializing primary database ({e}). Re-trying with local SQLite...")
+        try:
+            app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///krishi.db'
+            db.engine.dispose()
+            db.create_all()
+            logger.info("Local SQLite database initialized successfully.")
+        except Exception as e2:
+            logger.error(f"Fallback SQLite initialization failed: {e2}")
 
 @app.errorhandler(404)
 def page_not_found(e):
