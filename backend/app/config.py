@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     OPENWEATHER_API_KEY: str = os.getenv("OPENWEATHER_API_KEY", "")
     FIREBASE_PROJECT_ID: str = os.getenv("FIREBASE_PROJECT_ID", "")
     DATA_GOV_API_KEY: str = os.getenv("DATA_GOV_API_KEY", "") or os.getenv("DATA_GOV_IN_API_KEY", "")
+    ACCUWEATHER_API_KEY: str = os.getenv("ACCUWEATHER_API_KEY", "")
     
     @field_validator("DATABASE_URL", mode="after")
     @classmethod

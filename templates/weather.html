@@ -1,2455 +1,1427 @@
 {% extends "base.html" %}
-{% block title %}मौसम एवं फसल रोग चेतावनी - Krishi AI{% endblock %}
+{% block title %}मौसम पूर्वानुमान एवं वर्षा राडार - Krishi AI{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<style>
+  :root {
+    --wx-bg-card: rgba(18, 24, 38, 0.75);
+    --wx-border: rgba(255, 255, 255, 0.08);
+    --wx-border-hover: rgba(16, 185, 129, 0.35);
+    --wx-text-main: #F8FAFC;
+    --wx-text-muted: #94A3B8;
+    --wx-emerald: #10B981;
+    --wx-blue: #38BDF8;
+    --wx-amber: #F59E0B;
+    --wx-rose: #F43F5E;
+    --wx-radius: 16px;
+  }
+
+  .wx-wrapper {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 1.25rem 1rem 3rem 1rem;
+    position: relative;
+  }
+
+  /* Ambient Glow */
+  .wx-glow {
+    position: fixed;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 650px;
+    height: 350px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, rgba(56, 189, 248, 0.04) 50%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(80px);
+  }
+
+  /* Header Bar */
+  .wx-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .wx-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .wx-brand-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(56, 189, 248, 0.2));
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    color: var(--wx-blue);
+  }
+
+  .wx-title {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: var(--wx-text-main);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .wx-subtitle {
+    font-size: 0.82rem;
+    color: var(--wx-text-muted);
+    margin: 0.2rem 0 0 0;
+  }
+
+  .wx-header-actions {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .wx-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.84rem;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid var(--wx-border);
+    background: rgba(30, 41, 59, 0.7);
+    color: var(--wx-text-main);
+  }
+
+  .wx-btn:hover {
+    background: rgba(51, 65, 85, 0.9);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+  }
+
+  .wx-btn-gps {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.35);
+    color: #34D399;
+  }
+
+  .wx-btn-gps:hover {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: #34D399;
+  }
+
+  /* Search & Quick Chips Strip */
+  .wx-search-bar {
+    background: var(--wx-bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--wx-border);
+    border-radius: 14px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.85rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .wx-search-input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 260px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--wx-border);
+    border-radius: 10px;
+    padding: 0.35rem 0.75rem;
+  }
+
+  .wx-search-input-group input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--wx-text-main);
+    font-size: 0.9rem;
+    width: 100%;
+  }
+
+  .wx-search-input-group input::placeholder {
+    color: #64748B;
+  }
+
+  .wx-quick-chips {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .wx-chip-label {
+    font-size: 0.78rem;
+    color: var(--wx-text-muted);
+    font-weight: 600;
+  }
+
+  .wx-chip {
+    padding: 0.3rem 0.65rem;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid var(--wx-border);
+    color: var(--wx-text-main);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .wx-chip:hover, .wx-chip.active {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: var(--wx-emerald);
+    color: #34D399;
+  }
+
+  /* 2-Column Responsive Dashboard Grid */
+  .wx-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 1.25rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (max-width: 960px) {
+    .wx-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Glass Cards */
+  .wx-card {
+    background: var(--wx-bg-card);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--wx-border);
+    border-radius: var(--wx-radius);
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    transition: border-color 0.3s ease;
+  }
+
+  .wx-card:hover {
+    border-color: rgba(255, 255, 255, 0.14);
+  }
+
+  /* Current Weather Hero Card */
+  .wx-hero-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding-bottom: 0.85rem;
+    margin-bottom: 1rem;
+  }
+
+  .wx-loc-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .wx-loc-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--wx-text-main);
+  }
+
+  .wx-badge-source {
+    font-size: 0.68rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    background: rgba(56, 189, 248, 0.15);
+    color: #38BDF8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+  }
+
+  .wx-update-time {
+    font-size: 0.76rem;
+    color: var(--wx-text-muted);
+  }
+
+  .wx-hero-center {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.25rem 0.5rem 1rem 0.5rem;
+  }
+
+  .wx-temp-big {
+    font-size: 3.4rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #FFFFFF;
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .wx-temp-deg {
+    font-size: 1.7rem;
+    font-weight: 600;
+    color: var(--wx-emerald);
+    margin-top: 0.2rem;
+  }
+
+  .wx-condition-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.75rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #E2E8F0;
+    margin-top: 0.5rem;
+  }
+
+  .wx-feels-like {
+    font-size: 0.8rem;
+    color: var(--wx-text-muted);
+    margin-top: 0.35rem;
+  }
+
+  .wx-hero-icon-wrap {
+    font-size: 3.5rem;
+    color: #F8FAFC;
+    filter: drop-shadow(0 6px 12px rgba(56, 189, 248, 0.25));
+    animation: gentleFloat 4s ease-in-out infinite;
+  }
+
+  @keyframes gentleFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+
+  /* 4 Compact Stat Pills */
+  .wx-stats-deck {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.6rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  @media (max-width: 600px) {
+    .wx-stats-deck {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .wx-stat-box {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 0.6rem 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .wx-stat-icon {
+    font-size: 1.15rem;
+  }
+
+  .wx-stat-label {
+    font-size: 0.72rem;
+    color: var(--wx-text-muted);
+    display: block;
+  }
+
+  .wx-stat-val {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #F1F5F9;
+  }
+
+  /* Hourly Forecast Section */
+  .wx-section-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #CBD5E1;
+    margin: 0.9rem 0 0.6rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .wx-hourly-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  @media (max-width: 700px) {
+    .wx-hourly-row {
+      grid-template-columns: repeat(6, minmax(75px, 1fr));
+    }
+  }
+
+  .wx-hourly-item {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 0.55rem 0.35rem;
+    text-align: center;
+    transition: all 0.2s ease;
+  }
+
+  .wx-hourly-item:hover {
+    background: rgba(30, 41, 59, 0.7);
+    border-color: rgba(56, 189, 248, 0.3);
+  }
+
+  .wx-hour-time {
+    font-size: 0.74rem;
+    color: var(--wx-text-muted);
+    font-weight: 600;
+  }
+
+  .wx-hour-icon {
+    font-size: 1.2rem;
+    margin: 0.35rem 0;
+    color: #38BDF8;
+  }
+
+  .wx-hour-temp {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #F8FAFC;
+  }
+
+  .wx-hour-rain {
+    font-size: 0.68rem;
+    color: #60A5FA;
+    font-weight: 600;
+    margin-top: 0.2rem;
+  }
+
+  /* 3-Day Forecast Cards */
+  .wx-daily-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+
+  @media (max-width: 600px) {
+    .wx-daily-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .wx-daily-item {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 0.85rem;
+    transition: all 0.2s ease;
+  }
+
+  .wx-daily-item:hover {
+    border-color: rgba(16, 185, 129, 0.3);
+  }
+
+  .wx-daily-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .wx-daily-day {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #F8FAFC;
+  }
+
+  .wx-daily-date {
+    font-size: 0.72rem;
+    color: var(--wx-text-muted);
+  }
+
+  .wx-daily-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+
+  .wx-daily-temp-range {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #F1F5F9;
+  }
+
+  .wx-daily-rain-prob {
+    font-size: 0.74rem;
+    color: #38BDF8;
+    font-weight: 600;
+  }
+
+  .wx-spray-tag {
+    display: block;
+    text-align: center;
+    padding: 0.25rem 0.4rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-top: 0.4rem;
+  }
+
+  .spray-ok {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34D399;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+  }
+
+  .spray-warn {
+    background: rgba(244, 63, 94, 0.15);
+    color: #FB7185;
+    border: 1px solid rgba(244, 63, 94, 0.25);
+  }
+
+  /* Right Column: Outbreak Risk Compact Card */
+  .wx-risk-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+
+  .wx-risk-badge {
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .badge-low {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34D399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+
+  .badge-watch {
+    background: rgba(245, 158, 11, 0.2);
+    color: #FBBF24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+
+  .badge-high {
+    background: rgba(244, 63, 94, 0.2);
+    color: #FB7185;
+    border: 1px solid rgba(244, 63, 94, 0.3);
+  }
+
+  .wx-risk-bar-track {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 0.5rem 0 0.75rem 0;
+  }
+
+  .wx-risk-bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 6px;
+    transition: width 0.8s ease, background 0.5s ease;
+  }
+
+  .wx-risk-factors-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .wx-factor-pill {
+    font-size: 0.72rem;
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 0.25rem 0.55rem;
+    border-radius: 6px;
+    color: #E2E8F0;
+  }
+
+  .wx-advisory-alert {
+    background: rgba(15, 23, 42, 0.6);
+    border-left: 3px solid var(--wx-blue);
+    padding: 0.65rem 0.85rem;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: #CBD5E1;
+  }
+
+  /* Live Radar Map Card */
+  .wx-radar-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+
+  .wx-live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #EF4444;
+    display: inline-block;
+    box-shadow: 0 0 8px #EF4444;
+    animation: livePulse 1.8s infinite;
+  }
+
+  @keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.2); }
+  }
+
+  .wx-radar-controls {
+    display: flex;
+    gap: 0.4rem;
+  }
+
+  .wx-radar-btn {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid var(--wx-border);
+    color: var(--wx-text-main);
+    padding: 0.3rem 0.65rem;
+    font-size: 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: all 0.2s ease;
+  }
+
+  .wx-radar-btn:hover {
+    background: rgba(51, 65, 85, 0.9);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .wx-map-frame {
+    width: 100%;
+    height: 330px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    background: #0F172A;
+  }
+
+  #weatherRadarMap {
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+  }
+
+  /* Clean Radar Floating Pill */
+  .wx-radar-float-info {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    z-index: 1000;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.74rem;
+    color: #F8FAFC;
+    pointer-events: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+
+  /* Map Legend Below Map (Clean & Unobstructed!) */
+  .wx-radar-legend-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.65rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 0.72rem;
+    color: var(--wx-text-muted);
+  }
+
+  .leg-chips {
+    display: flex;
+    gap: 0.65rem;
+  }
+
+  .leg-item {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .leg-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .leg-light { background: #60A5FA; }
+  .leg-mod { background: #34D399; }
+  .leg-heavy { background: #FBBF24; }
+  .leg-storm { background: #EF4444; }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="wx-container">
+<div class="wx-wrapper">
+  <div class="wx-glow"></div>
 
-  <!-- BACKGROUND AMBIENT GLOW -->
-  <div class="wx-ambient-glow" id="wxAmbientGlow"></div>
-
-  <!-- TOP HEADER & CONTROLS -->
-  <header class="wx-top-bar fade-in-up">
-    <div class="wx-title-group">
-      <div class="wx-icon-badge">
+  <!-- Header -->
+  <header class="wx-header">
+    <div class="wx-header-left">
+      <div class="wx-brand-icon">
         <i class="fa-solid fa-cloud-sun-rain"></i>
       </div>
       <div>
-        <h1 class="wx-main-heading">मौसम एवं आउटब्रेक वॉच</h1>
-        <p class="wx-sub-heading">Agricultural Weather & Disease Outbreak Watch Dashboard</p>
+        <h1 class="wx-title">
+          मौसम एवं वर्षा राडार
+        </h1>
+        <p class="wx-subtitle">AccuWeather™ लाइव मौसम डेटा, सटीक घंटेवार पूर्वानुमान एवं वर्षा रडार</p>
       </div>
     </div>
-
-    <!-- ACTION BUTTONS -->
-    <div class="wx-controls-group">
-      <button type="button" class="wx-btn wx-btn-refresh" id="refreshWeatherBtn" title="Force fresh GPS/Network re-fetch">
-        <i class="fa-solid fa-arrows-rotate" id="refreshBtnIcon"></i>
-        <span>Refresh Weather</span>
-      </button>
-      <button type="button" class="wx-btn wx-btn-gps" id="gpsWeatherBtn" title="Detect my current location">
+    <div class="wx-header-actions">
+      <button type="button" class="wx-btn wx-btn-gps" id="gpsWeatherBtn">
         <i class="fa-solid fa-location-crosshairs"></i>
-        <span>My Location (GPS)</span>
+        <span>मेरा खेत (GPS)</span>
+      </button>
+      <button type="button" class="wx-btn" id="refreshWeatherBtn">
+        <i class="fa-solid fa-rotate-right" id="refreshIcon"></i>
+        <span>रीफ्रेश</span>
       </button>
     </div>
   </header>
 
-  <!-- SEARCH & STATUS BAR -->
-  <div class="wx-search-bar-wrap fade-in-up">
-    <form class="wx-search-form" id="weatherSearchForm" onsubmit="return false;">
-      <div class="wx-search-input-box">
-        <i class="fa-solid fa-magnifying-glass wx-input-icon"></i>
-        <input type="text" id="locationSearchInput" class="wx-search-input"
-               placeholder="शहर या जिला खोजें... (e.g. Bareilly, Lucknow, Delhi, Varanasi)" autocomplete="off">
-        <button type="button" class="wx-clear-btn" id="clearSearchBtn" style="display: none;">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-      <button type="submit" class="wx-btn wx-btn-primary" id="searchWeatherBtn">
-        <i class="fa-solid fa-search"></i>
-        <span>खोजें</span>
+  <!-- Search & Quick Selection Bar -->
+  <div class="wx-search-bar">
+    <div class="wx-search-input-group">
+      <i class="fa-solid fa-magnifying-glass" style="color: #64748B;"></i>
+      <input type="text" id="locationSearchInput" placeholder="शहर या जिला खोजें... (Bareilly, Lucknow, Varanasi, Delhi)" autocomplete="off">
+      <button type="button" class="wx-btn" id="searchWeatherBtn" style="padding: 0.3rem 0.7rem; border-radius: 6px;">
+        खोजें
       </button>
-    </form>
-
-    <!-- STATUS / CACHE INDICATOR PILL -->
-    <div class="wx-status-indicator" id="weatherStatusBadge">
-      <span class="status-dot pulse-dot"></span>
-      <span id="weatherStatusText">सटीक लोकेशन खोजी जा रही है...</span>
+    </div>
+    <div class="wx-quick-chips">
+      <span class="wx-chip-label"><i class="fa-solid fa-location-arrow"></i> त्वरित शहर:</span>
+      <button type="button" class="wx-chip active" data-city="Bareilly, Uttar Pradesh" data-lat="28.3670" data-lon="79.4304">
+        Bareilly (बरेली)
+      </button>
+      <button type="button" class="wx-chip" data-city="Lucknow, Uttar Pradesh" data-lat="26.8467" data-lon="80.9462">
+        Lucknow
+      </button>
+      <button type="button" class="wx-chip" data-city="New Delhi, Delhi" data-lat="28.6139" data-lon="77.2090">
+        New Delhi
+      </button>
+      <button type="button" class="wx-chip" data-city="Kanpur, Uttar Pradesh" data-lat="26.4499" data-lon="80.3319">
+        Kanpur
+      </button>
+      <button type="button" class="wx-chip" data-city="Varanasi, Uttar Pradesh" data-lat="25.3176" data-lon="82.9739">
+        Varanasi
+      </button>
     </div>
   </div>
 
-  <!-- QUICK LOCATION PILLS -->
-  <div class="wx-quick-cities-wrap fade-in-up">
-    <span class="quick-city-label"><i class="fa-solid fa-location-arrow"></i> त्वरित शहर:</span>
-    <button type="button" class="quick-city-pill active-pill" id="quickBareillyBtn" data-city="Bareilly, Uttar Pradesh" data-lat="28.3670" data-lon="79.4304">
-      <i class="fa-solid fa-house-chimney"></i> Bareilly (बरेली - मेरा शहर)
-    </button>
-    <button type="button" class="quick-city-pill" data-city="Lucknow, Uttar Pradesh" data-lat="26.8467" data-lon="80.9462">
-      Lucknow (लखनऊ)
-    </button>
-    <button type="button" class="quick-city-pill" data-city="New Delhi, Delhi" data-lat="28.6139" data-lon="77.2090">
-      New Delhi (दिल्ली)
-    </button>
-    <button type="button" class="quick-city-pill" data-city="Kanpur, Uttar Pradesh" data-lat="26.4499" data-lon="80.3319">
-      Kanpur (कानपुर)
-    </button>
-    <button type="button" class="quick-city-pill" data-city="Varanasi, Uttar Pradesh" data-lat="25.3176" data-lon="82.9739">
-      Varanasi (वाराणसी)
-    </button>
-  </div>
+  <!-- Main 2-Column Clean Layout -->
+  <div class="wx-grid">
 
-  <!-- PERMISSION HINT BANNER (Hidden by default, shown if GPS denied) -->
-  <div class="wx-permission-hint" id="gpsPermissionNotice" style="display: none;">
-    <i class="fa-solid fa-circle-info"></i>
-    <span>ब्राउज़र में GPS लोकेशन अनुमति बंद है। सटीक खेत लोकेशन के लिए एड्रेस बार में लॉक (🔒) आइकन पर क्लिक करके <strong>Location: Allow</strong> करें, या ऊपर <strong>Bareilly</strong> बटन दबाएं।</span>
-    <button type="button" class="btn-dismiss" onclick="document.getElementById('gpsPermissionNotice').style.display='none';">✕</button>
-  </div>
+    <!-- LEFT COLUMN: Live Weather Overview + Hourly + 3-Day Forecast -->
+    <div class="wx-col-left">
 
-  <!-- LOADING SKELETON (Visible while fetching) -->
-  <div class="wx-skeleton-container" id="weatherSkeleton" style="display: none;">
-    <div class="skeleton-card skeleton-hero"></div>
-    <div class="skeleton-card skeleton-hourly"></div>
-    <div class="skeleton-card skeleton-risk"></div>
-  </div>
-
-  <!-- MAIN DASHBOARD CONTENT -->
-  <main class="wx-dashboard-grid" id="weatherDashboardContent">
-
-    <!-- 1. CURRENT WEATHER OVERVIEW CARD -->
-    <section class="wx-glass-card wx-overview-card fade-in-up" id="currentWeatherCard">
-      <!-- Card Header: Location & Time -->
-      <div class="wx-card-header">
-        <div class="wx-loc-tag">
-          <i class="fa-solid fa-location-dot"></i>
-          <span id="locationLabel">Bareilly, Uttar Pradesh</span>
-          <span class="wx-source-badge" id="sourceBadge">LIVE</span>
-        </div>
-        <div class="wx-timestamp">
-          <i class="fa-regular fa-clock"></i>
-          <span>अपडेट: </span>
-          <strong id="lastUpdatedTimestamp">अभी</strong>
-        </div>
-      </div>
-
-      <!-- Main Temp & Hero Graphic -->
-      <div class="wx-hero-body">
-        <div class="wx-temp-col">
-          <div class="wx-temp-number-wrap">
-            <span class="wx-temp-val" id="currentTemp">--</span>
-            <span class="wx-temp-degree">°C</span>
+      <!-- CARD 1: Hero Current Weather & Next 6 Hours Strip -->
+      <section class="wx-card">
+        <div class="wx-hero-top">
+          <div class="wx-loc-wrap">
+            <i class="fa-solid fa-location-dot" style="color: #38BDF8;"></i>
+            <span class="wx-loc-title" id="locationLabel">Bareilly, Uttar Pradesh</span>
+            <span class="wx-badge-source" id="sourceBadge">ACCUWEATHER</span>
           </div>
-          <div class="wx-condition-pill" id="weatherConditionPill">
-            <span id="weatherConditionText">लोड हो रहा है...</span>
-          </div>
-          <div class="wx-feels-like">
-            महसूस हो रहा है: <strong id="feelsLikeTemp">--°C</strong>
+          <div class="wx-update-time">
+            <i class="fa-regular fa-clock"></i> अपडेट: <strong id="lastUpdatedTimestamp">अभी</strong>
           </div>
         </div>
 
-        <div class="wx-hero-icon-showcase">
-          <div class="wx-animated-weather-icon" id="weatherHeroIcon">
-            <i class="fa-solid fa-cloud"></i>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick Metrics Grid -->
-      <div class="wx-metrics-strip">
-        <div class="wx-metric-item">
-          <div class="metric-icon-bubble humidity-bubble">
-            <i class="fa-solid fa-droplet"></i>
-          </div>
-          <div class="metric-meta">
-            <span class="metric-label">आर्द्रता (Humidity)</span>
-            <strong class="metric-val" id="currentHumidity">--%</strong>
-          </div>
-        </div>
-
-        <div class="wx-metric-item">
-          <div class="metric-icon-bubble rain-bubble">
-            <i class="fa-solid fa-cloud-rain"></i>
-          </div>
-          <div class="metric-meta">
-            <span class="metric-label">वर्षा (Rain)</span>
-            <strong class="metric-val" id="currentRain">0.0 mm</strong>
-          </div>
-        </div>
-
-        <div class="wx-metric-item">
-          <div class="metric-icon-bubble wind-bubble">
-            <i class="fa-solid fa-wind"></i>
-          </div>
-          <div class="metric-meta">
-            <span class="metric-label">हवा (Wind Speed)</span>
-            <strong class="metric-val" id="currentWind">-- km/h</strong>
-          </div>
-        </div>
-
-        <div class="wx-metric-item">
-          <div class="metric-icon-bubble dew-bubble">
-            <i class="fa-solid fa-temperature-arrow-down"></i>
-          </div>
-          <div class="metric-meta">
-            <span class="metric-label">ओस बिंदु (Dew Point)</span>
-            <strong class="metric-val" id="currentDewPoint">--°C</strong>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- 2. HOURLY WEATHER FORECAST STRIP -->
-    <section class="wx-glass-card wx-hourly-card fade-in-up" id="hourlyForecastSection">
-      <div class="wx-section-heading">
-        <div class="heading-left">
-          <i class="fa-solid fa-chart-line-up"></i>
+        <div class="wx-hero-center">
           <div>
-            <h2 class="section-title">अगले 6 घंटों का पूर्वानुमान (Hourly Forecast)</h2>
-            <p class="section-desc">खेत में छिड़काव व सिंचाई योजना के लिए प्रति घंटा मौसम</p>
+            <div class="wx-temp-big">
+              <span id="currentTemp">23</span>
+              <span class="wx-temp-deg">°C</span>
+            </div>
+            <div class="wx-condition-pill" id="weatherConditionPill">
+              <i class="fa-solid fa-cloud-showers-heavy" id="condIconMini" style="color: #38BDF8;"></i>
+              <span id="weatherConditionText">बारिश (Rain)</span>
+            </div>
+            <div class="wx-feels-like">
+              महसूस हो रहा है: <strong id="feelsLikeTemp">24°C</strong>
+            </div>
           </div>
-        </div>
-        <div class="heading-tag">Next 6 Hours</div>
-      </div>
 
-      <div class="wx-hourly-strip" id="hourlyForecastStrip">
-        <!-- Injected via JavaScript -->
-        <div class="hourly-placeholder">घंटेवार पूर्वानुमान लोड हो रहा है...</div>
-      </div>
-    </section>
-
-    <!-- 3. SMART FIELD RISK & OUTBREAK WATCH -->
-    <section class="wx-glass-card wx-risk-card fade-in-up" id="outbreakWatchCard">
-      <div class="wx-risk-top">
-        <div class="risk-title-box">
-          <div class="risk-icon-bubble">
-            <i class="fa-solid fa-shield-virus"></i>
-          </div>
-          <div>
-            <h2 class="section-title">स्मार्ट फील्ड रिस्क एवं आउटब्रेक वॉच</h2>
-            <p class="section-desc">Dynamic Micro-Climate Disease & Pest Prediction Engine</p>
+          <div class="wx-hero-icon-wrap" id="weatherHeroIcon">
+            <i class="fa-solid fa-cloud-showers-heavy" style="color: #60A5FA;"></i>
           </div>
         </div>
 
-        <!-- RISK BADGE -->
-        <div class="risk-badge-wrap">
-          <span class="risk-badge risk-low" id="riskBadge">
-            <i class="fa-solid fa-circle-check"></i>
-            <span id="riskBadgeText">Calculating...</span>
+        <!-- 4 Compact Stat Items -->
+        <div class="wx-stats-deck">
+          <div class="wx-stat-box">
+            <i class="fa-solid fa-droplet wx-stat-icon" style="color: #38BDF8;"></i>
+            <div>
+              <span class="wx-stat-label">आर्द्रता (Humidity)</span>
+              <span class="wx-stat-val" id="currentHumidity">90%</span>
+            </div>
+          </div>
+          <div class="wx-stat-box">
+            <i class="fa-solid fa-cloud-rain wx-stat-icon" style="color: #60A5FA;"></i>
+            <div>
+              <span class="wx-stat-label">वर्षा (Rain)</span>
+              <span class="wx-stat-val" id="currentRain">1.5 mm</span>
+            </div>
+          </div>
+          <div class="wx-stat-box">
+            <i class="fa-solid fa-wind wx-stat-icon" style="color: #34D399;"></i>
+            <div>
+              <span class="wx-stat-label">हवा (Wind Speed)</span>
+              <span class="wx-stat-val" id="currentWind">18 km/h</span>
+            </div>
+          </div>
+          <div class="wx-stat-box">
+            <i class="fa-solid fa-temperature-arrow-down wx-stat-icon" style="color: #FBBF24;"></i>
+            <div>
+              <span class="wx-stat-label">ओस बिंदु (Dew Point)</span>
+              <span class="wx-stat-val" id="currentDewPoint">21°C</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Integrated Hourly Forecast (Next 6 Hours) -->
+        <div class="wx-section-title">
+          <span><i class="fa-regular fa-clock" style="color: #38BDF8; margin-right: 0.35rem;"></i> अगले 6 घंटों का पूर्वानुमान (Hourly)</span>
+          <span style="font-size: 0.74rem; color: var(--wx-text-muted); font-weight: 500;">प्रति घंटा मौसम</span>
+        </div>
+        <div class="wx-hourly-row" id="hourlyForecastStrip">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+      <!-- CARD 2: 3-Day Agricultural Outlook -->
+      <section class="wx-card">
+        <div class="wx-section-title" style="margin-top: 0; margin-bottom: 0.85rem;">
+          <span><i class="fa-solid fa-calendar-days" style="color: #34D399; margin-right: 0.35rem;"></i> 3-दिवसीय कृषि पूर्वानुमान (3-Day Outlook)</span>
+          <span style="font-size: 0.74rem; color: var(--wx-text-muted); font-weight: 500;">खेत व छिड़काव प्रबंधन</span>
+        </div>
+        <div class="wx-daily-grid" id="dailyForecastGrid">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+    </div>
+
+    <!-- RIGHT COLUMN: Disease Risk & Live Doppler Map -->
+    <div class="wx-col-right">
+
+      <!-- CARD 3: Simplified Field Risk & Spray Advice -->
+      <section class="wx-card">
+        <div class="wx-risk-top">
+          <div style="display: flex; align-items: center; gap: 0.45rem;">
+            <i class="fa-solid fa-shield-virus" style="color: #10B981; font-size: 1.1rem;"></i>
+            <strong style="font-size: 0.95rem; color: #F8FAFC;">फसल रोग व छिड़काव जोखिम</strong>
+          </div>
+          <span class="wx-risk-badge badge-watch" id="riskBadge">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="riskBadgeText">चेक हो रहा है...</span>
           </span>
         </div>
-      </div>
 
-      <!-- RISK GAUGE & METER BAR -->
-      <div class="wx-risk-meter-container">
-        <div class="meter-info-row">
-          <span class="meter-label">Calculated Outbreak Risk Score:</span>
-          <div class="meter-score-display">
-            <span class="score-number" id="riskScoreVal">0</span>
-            <span class="score-max">/100</span>
+        <!-- Risk Bar -->
+        <div style="display: flex; justify-content: space-between; font-size: 0.76rem; color: var(--wx-text-muted);">
+          <span>आउटब्रेक जोखिम स्कोर:</span>
+          <span><strong id="riskScoreVal" style="color: #F8FAFC; font-size: 0.95rem;">--</strong> / 100</span>
+        </div>
+        <div class="wx-risk-bar-track">
+          <div class="wx-risk-bar-fill" id="riskMeterFill"></div>
+        </div>
+
+        <!-- Triggered Factors -->
+        <div class="wx-risk-factors-list" id="riskFactorPills">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- Spray & Farming Advice Box -->
+        <div class="wx-advisory-alert" id="actionAdviceBox">
+          <i class="fa-solid fa-lightbulb" style="color: #38BDF8; margin-right: 0.35rem;"></i>
+          <span id="advisoryText">डेटा लोड हो रहा है...</span>
+        </div>
+      </section>
+
+      <!-- CARD 4: Live Precipitation Radar Map (Clean & Beautiful) -->
+      <section class="wx-card">
+        <div class="wx-radar-top">
+          <div style="display: flex; align-items: center; gap: 0.45rem;">
+            <span class="wx-live-dot"></span>
+            <strong style="font-size: 0.95rem; color: #F8FAFC;">लाइव वर्षा राडार (Doppler)</strong>
           </div>
-        </div>
-
-        <!-- Progress Bar Track -->
-        <div class="risk-progress-track">
-          <div class="risk-progress-fill" id="riskMeterFill" style="width: 0%;"></div>
-        </div>
-
-        <div class="risk-scale-labels">
-          <span class="scale-item scale-low">0 - 44: Low</span>
-          <span class="scale-item scale-watch">45 - 69: Watch</span>
-          <span class="scale-item scale-high">70 - 100: High Risk</span>
-        </div>
-      </div>
-
-      <!-- TRIGGERED FACTOR PILLS -->
-      <div class="wx-factors-section">
-        <h4 class="factors-title">
-          <i class="fa-solid fa-triangle-exclamation"></i>
-          पहचाने गए जोखिम कारक (Active Weather Risk Factors):
-        </h4>
-        <div class="risk-factor-pills-list" id="riskFactorPills">
-          <!-- Dynamically populated pills -->
-        </div>
-      </div>
-
-      <!-- AGRICULTURAL ACTION ADVICE BOX -->
-      <div class="wx-action-advice-box" id="actionAdviceBox">
-        <!-- Injected via JavaScript based on risk tier -->
-      </div>
-    </section>
-
-    <!-- 4. 3-DAY AGRONOMIC OUTLOOK -->
-    <section class="wx-glass-card wx-daily-card fade-in-up" id="dailyForecastSection">
-      <div class="wx-section-heading">
-        <div class="heading-left">
-          <i class="fa-solid fa-calendar-days"></i>
-          <div>
-            <h2 class="section-title">3-दिवसीय कृषि दृष्टिकोण (3-Day Agricultural Outlook)</h2>
-            <p class="section-desc">फसल प्रबंधन एवं कटाई के लिए 3 दिन की अग्रिम रूपरेखा</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="wx-daily-grid" id="dailyForecastGrid">
-        <!-- Injected via JavaScript -->
-      </div>
-    </section>
-
-    <!-- 5. LIVE PRECIPITATION & RAIN RADAR MAP -->
-    <section class="wx-glass-card wx-radar-card fade-in-up" id="radarMapSection">
-      <div class="wx-section-heading radar-heading">
-        <div class="heading-left">
-          <div class="radar-live-badge">
-            <span class="live-blink-dot"></span>
-            <span>LIVE DOPPLER RADAR</span>
-          </div>
-          <div>
-            <h2 class="section-title">
-              <i class="fa-solid fa-map-location-dot" style="color: #38BDF8; margin-right: 0.5rem;"></i>
-              लाइव वर्षा राडार एवं वर्षा संभावना मैप
-            </h2>
-            <p class="section-desc">
-              रीयल-टाइम वर्षा ट्रैक, बादल की स्थिति एवं आपके क्षेत्र में बारिश की संभावना (Animated Rain Radar)
-            </p>
-          </div>
-        </div>
-
-        <!-- RADAR CONTROLS -->
-        <div class="radar-controls-toolbar">
-          <div class="radar-anim-btn-group">
-            <button type="button" class="radar-ctrl-btn" id="radarPlayPauseBtn" title="राडार एनीमेशन शुरू / रोकें">
+          <div class="wx-radar-controls">
+            <button type="button" class="wx-radar-btn" id="radarPlayPauseBtn" title="एनीमेशन चलाएं">
               <i class="fa-solid fa-play" id="radarPlayIcon"></i>
-              <span id="radarPlayText">एनीमेशन देखें</span>
+              <span id="radarPlayText">प्ले</span>
             </button>
-            <button type="button" class="radar-ctrl-btn" id="radarCenterMyLocBtn" title="मेरे खेत पर सेंटर करें">
-              <i class="fa-solid fa-location-crosshairs"></i>
-              <span>मेरा खेत</span>
-            </button>
-          </div>
-
-          <div class="radar-layer-toggles">
-            <button type="button" class="radar-layer-btn active-layer" id="btnLayerRadar" data-layer="radar">
-              <i class="fa-solid fa-cloud-showers-heavy"></i> बारिश (Rain)
-            </button>
-            <button type="button" class="radar-layer-btn" id="btnLayerSat" data-layer="satellite">
-              <i class="fa-solid fa-satellite"></i> बादल (Clouds)
+            <button type="button" class="wx-radar-btn" id="radarCenterMyLocBtn" title="मेरे खेत पर लाएं">
+              <i class="fa-solid fa-crosshairs"></i>
+              <span>खेत</span>
             </button>
           </div>
         </div>
-      </div>
 
-      <!-- MAP WRAPPER -->
-      <div class="wx-map-wrapper">
-        <div id="weatherRadarMap" class="weather-radar-map-canvas"></div>
-
-        <!-- TIME SLIDER & TIMESTAMP OVERLAY -->
-        <div class="radar-time-overlay">
-          <div class="radar-time-info">
-            <span class="radar-time-label"><i class="fa-regular fa-clock"></i> राडार समय:</span>
-            <strong id="radarCurrentTimestamp">लाइव</strong>
-          </div>
-          <div class="radar-scrubber-track">
-            <input type="range" id="radarTimelineSlider" min="0" max="12" step="1" value="12" class="radar-range-slider">
+        <!-- Leaflet Map Container -->
+        <div class="wx-map-frame">
+          <div id="weatherRadarMap"></div>
+          <div class="wx-radar-float-info" id="radarLocStatBadge">
+            <i class="fa-solid fa-cloud-rain" style="color: #38BDF8;"></i>
+            <span id="radarMapLocName">Bareilly</span>: बारिश संभावना <strong id="radarMapRainProb">--%</strong>
           </div>
         </div>
 
-        <!-- RAIN INTENSITY LEGEND -->
-        <div class="radar-legend-card">
-          <div class="legend-title">वर्षा तीव्रता (Rainfall Intensity)</div>
-          <div class="legend-color-bar"></div>
-          <div class="legend-labels">
-            <span>हल्की (Light)</span>
-            <span>मध्यम (Moderate)</span>
-            <span>भारी (Heavy)</span>
-            <span>आंधी/तूफान (Extreme)</span>
+        <!-- Clean Legend Below Map (No Overlap) -->
+        <div class="wx-radar-legend-bar">
+          <span>राडार बादल व वर्षा तीव्रता:</span>
+          <div class="leg-chips">
+            <span class="leg-item"><span class="leg-dot leg-light"></span> हल्की</span>
+            <span class="leg-item"><span class="leg-dot leg-mod"></span> मध्यम</span>
+            <span class="leg-item"><span class="leg-dot leg-heavy"></span> भारी</span>
+            <span class="leg-item"><span class="leg-dot leg-storm"></span> आंधी</span>
           </div>
         </div>
+      </section>
 
-        <!-- RAIN CHANCE FLOATING STAT FOR SELECTED CITY -->
-        <div class="radar-stat-float" id="radarLocStatBadge">
-          <div class="stat-float-icon">
-            <i class="fa-solid fa-cloud-rain" style="color: #60A5FA;"></i>
-          </div>
-          <div class="stat-float-content">
-            <div class="stat-float-loc" id="radarMapLocName">Bareilly, UP</div>
-            <div class="stat-float-val">बारिश की संभावना: <strong id="radarMapRainProb">--%</strong></div>
-          </div>
-        </div>
-      </div>
-    </section>
+    </div>
 
-  </main>
+  </div>
 </div>
 
-<!-- ============================================================
-     CSS STYLES
-     ============================================================ -->
-<style>
-/* Page Root & Ambient Container */
-.wx-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1.5rem 1rem 3rem 1rem;
-  position: relative;
-  min-height: calc(100vh - 100px);
-}
-
-.wx-ambient-glow {
-  position: fixed;
-  top: 15%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 700px;
-  height: 450px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(56, 189, 248, 0.05) 50%, transparent 75%);
-  pointer-events: none;
-  z-index: 0;
-  filter: blur(60px);
-  transition: background 0.8s ease;
-}
-
-/* Top Bar */
-.wx-top-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.25rem;
-  margin-bottom: 1.25rem;
-  position: relative;
-  z-index: 1;
-  flex-wrap: wrap;
-}
-
-.wx-title-group {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.wx-icon-badge {
-  width: 54px;
-  height: 54px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(56, 189, 248, 0.2));
-  border: 1px solid rgba(56, 189, 248, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.7rem;
-  color: #38BDF8;
-  box-shadow: 0 0 20px rgba(56, 189, 248, 0.25);
-}
-
-.wx-main-heading {
-  font-size: 1.85rem;
-  font-weight: 800;
-  color: #FFFFFF;
-  margin: 0;
-  letter-spacing: -0.5px;
-}
-
-.wx-sub-heading {
-  font-size: 0.92rem;
-  color: rgba(255, 255, 255, 0.55);
-  margin: 0.2rem 0 0 0;
-}
-
-/* Action Buttons */
-.wx-controls-group {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.wx-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  border-radius: 12px;
-  font-size: 0.92rem;
-  font-weight: 600;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  white-space: nowrap;
-}
-
-.wx-btn-refresh {
-  background: rgba(30, 41, 59, 0.8);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: #E2E8F0;
-  backdrop-filter: blur(10px);
-}
-.wx-btn-refresh:hover {
-  background: rgba(51, 65, 85, 0.9);
-  border-color: #38BDF8;
-  color: #38BDF8;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(56, 189, 248, 0.2);
-}
-
-.wx-btn-gps {
-  background: rgba(16, 185, 129, 0.15);
-  border-color: rgba(16, 185, 129, 0.4);
-  color: #34D399;
-}
-.wx-btn-gps:hover {
-  background: rgba(16, 185, 129, 0.28);
-  border-color: #34D399;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
-}
-
-.wx-btn-primary {
-  background: linear-gradient(135deg, #10B981, #059669);
-  color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
-}
-.wx-btn-primary:hover {
-  background: linear-gradient(135deg, #34D399, #10B981);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
-}
-
-/* Search Bar & Status */
-.wx-search-bar-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.85rem;
-  background: rgba(15, 23, 42, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  padding: 0.85rem 1.25rem;
-  backdrop-filter: blur(16px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-  position: relative;
-  z-index: 1;
-  flex-wrap: wrap;
-}
-
-.wx-search-form {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex: 1;
-  min-width: 280px;
-}
-
-.wx-search-input-box {
-  position: relative;
-  flex: 1;
-  display: flex;
-  align-items: center;
-}
-
-.wx-input-icon {
-  position: absolute;
-  left: 1rem;
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 1rem;
-  pointer-events: none;
-}
-
-.wx-search-input {
-  width: 100%;
-  background: rgba(3, 7, 18, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 0.75rem 2.5rem 0.75rem 2.75rem;
-  font-size: 0.98rem;
-  color: #F8FAFC;
-  outline: none;
-  transition: all 0.25s ease;
-}
-
-.wx-search-input:focus {
-  border-color: #38BDF8;
-  background: rgba(15, 23, 42, 0.8);
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
-}
-
-.wx-clear-btn {
-  position: absolute;
-  right: 0.75rem;
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.4);
-  cursor: pointer;
-  padding: 0.25rem;
-  font-size: 0.9rem;
-}
-.wx-clear-btn:hover { color: #FFF; }
-
-.wx-status-indicator {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.75);
-  background: rgba(3, 7, 18, 0.45);
-  padding: 0.45rem 0.9rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  white-space: nowrap;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #10B981;
-}
-
-.pulse-dot {
-  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse-ring {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(1.3); }
-}
-
-/* Quick Cities Wrap */
-.wx-quick-cities-wrap {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-  position: relative;
-  z-index: 1;
-}
-
-.quick-city-label {
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.5);
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-.quick-city-label i { color: #38BDF8; }
-
-.quick-city-pill {
-  background: rgba(30, 41, 59, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  padding: 0.35rem 0.85rem;
-  color: #E2E8F0;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  transition: all 0.2s ease;
-}
-
-.quick-city-pill:hover {
-  background: rgba(56, 189, 248, 0.15);
-  border-color: rgba(56, 189, 248, 0.4);
-  color: #38BDF8;
-  transform: translateY(-1px);
-}
-
-.quick-city-pill.active-pill {
-  background: rgba(16, 185, 129, 0.2);
-  border-color: rgba(16, 185, 129, 0.5);
-  color: #34D399;
-}
-
-/* Permission hint banner */
-.wx-permission-hint {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  color: #FDE68A;
-  padding: 0.75rem 1.25rem;
-  border-radius: 12px;
-  margin-bottom: 1.25rem;
-  font-size: 0.88rem;
-  position: relative;
-  z-index: 1;
-}
-.wx-permission-hint i { color: #F59E0B; font-size: 1.1rem; }
-.btn-dismiss { background: transparent; border: none; color: #FDE68A; cursor: pointer; font-size: 1rem; }
-
-/* Glassmorphism Cards */
-.wx-glass-card {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.65) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
-  padding: 1.75rem;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
-  margin-bottom: 1.5rem;
-  position: relative;
-  z-index: 1;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.wx-glass-card:hover {
-  border-color: rgba(255, 255, 255, 0.14);
-}
-
-/* Card 1: Overview Card */
-.wx-overview-card {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(20, 30, 48, 0.85) 100%);
-  border: 1px solid rgba(56, 189, 248, 0.2);
-}
-
-.wx-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding-bottom: 1rem;
-  margin-bottom: 1.25rem;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.wx-loc-tag {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #FFFFFF;
-}
-
-.wx-loc-tag i { color: #F87171; }
-
-.wx-source-badge {
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  background: rgba(16, 185, 129, 0.18);
-  color: #34D399;
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  padding: 0.15rem 0.5rem;
-  border-radius: 6px;
-  letter-spacing: 0.5px;
-}
-
-.wx-timestamp {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.5);
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-.wx-timestamp strong { color: rgba(255, 255, 255, 0.85); }
-
-.wx-hero-body {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-  gap: 1.5rem;
-}
-
-.wx-temp-number-wrap {
-  display: flex;
-  align-items: flex-start;
-  line-height: 1;
-}
-
-.wx-temp-val {
-  font-size: 4.8rem;
-  font-weight: 900;
-  letter-spacing: -2px;
-  color: #FFFFFF;
-  font-family: 'Outfit', sans-serif;
-}
-
-.wx-temp-degree {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #38BDF8;
-  margin-top: 0.5rem;
-  margin-left: 0.2rem;
-}
-
-.wx-condition-pill {
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 0.35rem 0.85rem;
-  border-radius: 999px;
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #F1F5F9;
-  margin-top: 0.4rem;
-  margin-bottom: 0.4rem;
-}
-
-.wx-feels-like {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.5);
-}
-.wx-feels-like strong { color: #E2E8F0; }
-
-.wx-hero-icon-showcase {
-  font-size: 5.5rem;
-  padding-right: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.wx-animated-weather-icon i {
-  filter: drop-shadow(0 0 24px rgba(56, 189, 248, 0.4));
-  animation: wx-float-gentle 4s ease-in-out infinite;
-}
-
-@keyframes wx-float-gentle {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-
-/* Metrics Strip */
-.wx-metrics-strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  background: rgba(3, 7, 18, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 18px;
-  padding: 1.2rem;
-}
-
-.wx-metric-item {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.metric-icon-bubble {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-  flex-shrink: 0;
-}
-
-.humidity-bubble { background: rgba(56, 189, 248, 0.12); color: #38BDF8; }
-.rain-bubble { background: rgba(129, 140, 248, 0.12); color: #818CF8; }
-.wind-bubble { background: rgba(45, 212, 191, 0.12); color: #2DD4BF; }
-.dew-bubble { background: rgba(251, 146, 60, 0.12); color: #FB923C; }
-
-.metric-meta {
-  display: flex;
-  flex-direction: column;
-}
-
-.metric-label {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.metric-val {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #FFFFFF;
-}
-
-/* Section Headings */
-.wx-section-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.25rem;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.heading-left {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.heading-left > i {
-  font-size: 1.5rem;
-  color: #34D399;
-}
-
-.section-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #FFFFFF;
-  margin: 0;
-}
-
-.section-desc {
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.5);
-  margin: 0.15rem 0 0 0;
-}
-
-.heading-tag {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0.25rem 0.65rem;
-  border-radius: 8px;
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: 600;
-}
-
-/* Card 2: Hourly Forecast Strip */
-.wx-hourly-strip {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 0.85rem;
-  overflow-x: auto;
-  padding-bottom: 0.5rem;
-}
-
-.hourly-item-card {
-  background: rgba(3, 7, 18, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 16px;
-  padding: 1.1rem 0.6rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-  text-align: center;
-  transition: all 0.25s ease;
-  min-width: 100px;
-}
-
-.hourly-item-card:hover {
-  background: rgba(15, 23, 42, 0.8);
-  border-color: rgba(56, 189, 248, 0.35);
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-}
-
-.hourly-time-label {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.hourly-icon-wrap {
-  font-size: 1.7rem;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.hourly-temp-label {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: #FFFFFF;
-}
-
-.hourly-rain-badge {
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.2rem 0.5rem;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.rain-badge-low {
-  background: rgba(16, 185, 129, 0.12);
-  color: #34D399;
-  border: 1px solid rgba(16, 185, 129, 0.2);
-}
-
-.rain-badge-med {
-  background: rgba(245, 158, 11, 0.12);
-  color: #FBBF24;
-  border: 1px solid rgba(245, 158, 11, 0.2);
-}
-
-.rain-badge-high {
-  background: rgba(56, 189, 248, 0.18);
-  color: #38BDF8;
-  border: 1px solid rgba(56, 189, 248, 0.35);
-}
-
-/* Card 3: Smart Field Risk & Outbreak Watch */
-.wx-risk-card {
-  border: 1px solid rgba(245, 158, 11, 0.25);
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(26, 18, 32, 0.7) 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-.wx-risk-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.risk-title-box {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.risk-icon-bubble {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  color: #F59E0B;
-}
-
-.risk-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.55rem 1.25rem;
-  border-radius: 999px;
-  font-size: 0.95rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-}
-
-.risk-low {
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  color: #34D399;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
-}
-
-.risk-watch {
-  background: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.45);
-  color: #FBBF24;
-  box-shadow: 0 0 18px rgba(245, 158, 11, 0.25);
-  animation: pulse-border-watch 2s infinite;
-}
-
-.risk-high {
-  background: rgba(239, 68, 68, 0.2);
-  border: 1px solid rgba(239, 68, 68, 0.6);
-  color: #F87171;
-  box-shadow: 0 0 24px rgba(239, 68, 68, 0.4);
-  animation: pulse-border-high 1.5s infinite;
-}
-
-@keyframes pulse-border-watch {
-  0%, 100% { border-color: rgba(245, 158, 11, 0.4); }
-  50% { border-color: rgba(245, 158, 11, 0.85); box-shadow: 0 0 25px rgba(245, 158, 11, 0.4); }
-}
-
-@keyframes pulse-border-high {
-  0%, 100% { border-color: rgba(239, 68, 68, 0.5); }
-  50% { border-color: #EF4444; box-shadow: 0 0 35px rgba(239, 68, 68, 0.6); }
-}
-
-/* Risk Meter Bar */
-.wx-risk-meter-container {
-  background: rgba(3, 7, 18, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  padding: 1.25rem;
-  margin-bottom: 1.5rem;
-}
-
-.meter-info-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-}
-
-.meter-label {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.meter-score-display {
-  display: flex;
-  align-items: baseline;
-  gap: 2px;
-}
-
-.score-number {
-  font-size: 1.9rem;
-  font-weight: 900;
-  font-family: 'Outfit', sans-serif;
-  color: #FFFFFF;
-}
-
-.score-max {
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.risk-progress-track {
-  width: 100%;
-  height: 12px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  overflow: hidden;
-  position: relative;
-}
-
-.risk-progress-fill {
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #10B981 0%, #F59E0B 55%, #EF4444 100%);
-  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
-}
-
-.risk-scale-labels {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 0.6rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-}
-
-.scale-low { color: #34D399; }
-.scale-watch { color: #FBBF24; }
-.scale-high { color: #F87171; }
-
-/* Risk Factor Pills */
-.wx-factors-section {
-  margin-bottom: 1.5rem;
-}
-
-.factors-title {
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.8);
-  margin: 0 0 0.75rem 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.factors-title i { color: #F59E0B; }
-
-.risk-factor-pills-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-}
-
-.factor-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.45rem 0.9rem;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  background: rgba(30, 41, 59, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #E2E8F0;
-  backdrop-filter: blur(8px);
-}
-
-.factor-pill-active {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.4);
-  color: #FCA5A5;
-}
-
-.factor-pill-warn {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: rgba(245, 158, 11, 0.4);
-  color: #FDE68A;
-}
-
-.factor-pill-safe {
-  background: rgba(16, 185, 129, 0.12);
-  border-color: rgba(16, 185, 129, 0.3);
-  color: #A7F3D0;
-}
-
-/* Action Advice Box */
-.wx-action-advice-box {
-  background: rgba(3, 7, 18, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 18px;
-  padding: 1.35rem;
-}
-
-.advice-header {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #FFFFFF;
-  margin-bottom: 0.9rem;
-}
-.advice-header i { color: #34D399; font-size: 1.2rem; }
-
-.advice-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.advice-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  font-size: 0.92rem;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.advice-icon-wrap {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.85rem;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.advice-icon-high { background: rgba(239, 68, 68, 0.2); color: #F87171; }
-.advice-icon-warn { background: rgba(245, 158, 11, 0.2); color: #FBBF24; }
-.advice-icon-safe { background: rgba(16, 185, 129, 0.2); color: #34D399; }
-
-/* Card 4: Daily Outlook Grid */
-.wx-daily-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-}
-
-.daily-card-item {
-  background: rgba(3, 7, 18, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 18px;
-  padding: 1.25rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  transition: all 0.25s ease;
-}
-
-.daily-card-item:hover {
-  background: rgba(15, 23, 42, 0.75);
-  border-color: rgba(56, 189, 248, 0.3);
-  transform: translateY(-3px);
-}
-
-.daily-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.daily-day-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #FFFFFF;
-}
-
-.daily-date-sub {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.daily-center-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.daily-icon-box {
-  font-size: 2.2rem;
-  display: flex;
-  align-items: center;
-}
-
-.daily-temp-box {
-  text-align: right;
-}
-
-.daily-temp-high {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: #FFFFFF;
-}
-
-.daily-temp-low {
-  font-size: 0.95rem;
-  color: rgba(255, 255, 255, 0.45);
-  margin-left: 0.3rem;
-}
-
-.daily-rain-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.daily-spray-pill {
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 0.25rem 0.55rem;
-  border-radius: 6px;
-  text-align: center;
-  margin-top: 0.25rem;
-}
-.spray-safe { background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3); }
-.spray-avoid { background: rgba(239, 68, 68, 0.15); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3); }
-
-/* Skeleton Loading */
-.wx-skeleton-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.skeleton-card {
-  background: linear-gradient(90deg, rgba(30, 41, 59, 0.4) 25%, rgba(51, 65, 85, 0.5) 50%, rgba(30, 41, 59, 0.4) 75%);
-  background-size: 200% 100%;
-  animation: skeleton-shimmer 1.5s infinite;
-  border-radius: 20px;
-}
-.skeleton-hero { height: 260px; }
-.skeleton-hourly { height: 160px; }
-.skeleton-risk { height: 320px; }
-
-@keyframes skeleton-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-/* Responsive Breakpoints */
-@media (max-width: 992px) {
-  .wx-metrics-strip { grid-template-columns: repeat(2, 1fr); }
-  .wx-daily-grid { grid-template-columns: 1fr; }
-  .wx-hourly-strip { grid-template-columns: repeat(6, minmax(90px, 1fr)); }
-}
-
-@media (max-width: 680px) {
-  .wx-top-bar { flex-direction: column; align-items: flex-start; }
-  .wx-controls-group { width: 100%; justify-content: flex-start; }
-  .wx-search-bar-wrap { flex-direction: column; align-items: stretch; }
-  .wx-search-form { flex-direction: column; min-width: 100%; }
-  .wx-btn-primary { width: 100%; justify-content: center; }
-  .wx-hero-body { flex-direction: column-reverse; align-items: flex-start; }
-  .wx-hero-icon-showcase { font-size: 4rem; padding-right: 0; margin-bottom: 0.5rem; }
-  .wx-temp-val { font-size: 3.8rem; }
-  .wx-metrics-strip { grid-template-columns: 1fr; }
-/* Live Radar Map Styles */
-.wx-radar-card {
-  padding: 1.5rem;
-  overflow: hidden;
-  position: relative;
-}
-
-.radar-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-}
-
-.radar-live-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  background: rgba(239, 68, 68, 0.15);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  color: #F87171;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  padding: 0.2rem 0.6rem;
-  border-radius: 9999px;
-  margin-bottom: 0.4rem;
-}
-
-.live-blink-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #EF4444;
-  box-shadow: 0 0 8px #EF4444;
-  animation: pulse-dot 1.2s infinite;
-}
-
-.radar-controls-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.radar-anim-btn-group, .radar-layer-toggles {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  background: rgba(15, 23, 42, 0.6);
-  padding: 0.25rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.radar-ctrl-btn, .radar-layer-btn {
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.82rem;
-  font-weight: 600;
-  padding: 0.45rem 0.85rem;
-  border-radius: 8px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  transition: all 0.2s ease;
-}
-
-.radar-ctrl-btn:hover, .radar-layer-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #FFFFFF;
-}
-
-.radar-layer-btn.active-layer {
-  background: #0284C7;
-  color: #FFFFFF;
-  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
-}
-
-.wx-map-wrapper {
-  position: relative;
-  width: 100%;
-  height: 480px;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
-}
-
-.weather-radar-map-canvas {
-  width: 100%;
-  height: 100%;
-  background: #0B1120;
-}
-
-/* Time & Scrubber Overlay */
-.radar-time-overlay {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  right: 20px;
-  z-index: 1000;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 14px;
-  padding: 0.75rem 1.25rem;
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-}
-
-.radar-time-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 150px;
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.radar-time-info strong {
-  color: #38BDF8;
-}
-
-.radar-scrubber-track {
-  flex: 1;
-}
-
-.radar-range-slider {
-  width: 100%;
-  accent-color: #0284C7;
-  cursor: pointer;
-}
-
-/* Radar Legend */
-.radar-legend-card {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 1000;
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 0.6rem 0.9rem;
-  min-width: 220px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-}
-
-.legend-title {
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.75);
-  margin-bottom: 0.35rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.legend-color-bar {
-  height: 8px;
-  border-radius: 4px;
-  background: linear-gradient(to right, #00B4D8 0%, #2ECC71 35%, #F39C12 70%, #E74C3C 90%, #9B59B6 100%);
-  margin-bottom: 0.3rem;
-}
-
-.legend-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.66rem;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-/* Floating City Rain Stat */
-.radar-stat-float {
-  position: absolute;
-  top: 16px;
-  left: 60px;
-  z-index: 1000;
-  background: rgba(15, 23, 42, 0.9);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
-  padding: 0.6rem 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-}
-
-.stat-float-icon {
-  font-size: 1.4rem;
-}
-
-.stat-float-loc {
-  font-size: 0.88rem;
-  font-weight: 800;
-  color: #FFFFFF;
-}
-
-.stat-float-val {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.75);
-}
-
-.stat-float-val strong {
-  color: #38BDF8;
-}
-
-@media (max-width: 768px) {
-  .wx-map-wrapper { height: 380px; }
-  .radar-time-overlay { flex-direction: column; align-items: stretch; gap: 0.5rem; bottom: 10px; left: 10px; right: 10px; }
-  .radar-stat-float { left: 10px; top: auto; bottom: 95px; padding: 0.4rem 0.75rem; }
-  .radar-legend-card { display: none; }
-}
-</style>
-
-<!-- Leaflet.js Interactive Map Engine -->
+<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-<!-- ============================================================
-     JAVASCRIPT LOGIC: INSTANT WEATHER & INTERACTIVE RAIN RADAR
-     ============================================================ -->
 <script>
-/**
- * KRISHI AI - AGRICULTURAL WEATHER & OUTBREAK WATCH ENGINE
- * WITH INTERACTIVE LIVE RAIN DOPPLER RADAR MAP
- */
-
-(function () {
-  // Config
-  const CACHE_KEY = 'weather_cache_v5';
-  const CACHE_TTL_MS = 20 * 60 * 1000; // 20 mins
-  const DEFAULT_CITY = '{{ user_district or "Bareilly" }}, {{ user_state or "Uttar Pradesh" }}';
-  const DEFAULT_LAT = 28.3670;
-  const DEFAULT_LON = 79.4304;
-
-  // DOM Elements
-  const refreshWeatherBtn = document.getElementById('refreshWeatherBtn');
-  const refreshBtnIcon = document.getElementById('refreshBtnIcon');
-  const gpsWeatherBtn = document.getElementById('gpsWeatherBtn');
-  const weatherSearchForm = document.getElementById('weatherSearchForm');
-  const locationSearchInput = document.getElementById('locationSearchInput');
-  const searchWeatherBtn = document.getElementById('searchWeatherBtn');
-  const clearSearchBtn = document.getElementById('clearSearchBtn');
-  const weatherStatusBadge = document.getElementById('weatherStatusBadge');
-  const weatherStatusText = document.getElementById('weatherStatusText');
-  const weatherDashboardContent = document.getElementById('weatherDashboardContent');
-  const gpsPermissionNotice = document.getElementById('gpsPermissionNotice');
-
-  // Overview elements
+document.addEventListener('DOMContentLoaded', () => {
+  // DOM References
   const locationLabel = document.getElementById('locationLabel');
   const sourceBadge = document.getElementById('sourceBadge');
   const lastUpdatedTimestamp = document.getElementById('lastUpdatedTimestamp');
   const currentTemp = document.getElementById('currentTemp');
   const feelsLikeTemp = document.getElementById('feelsLikeTemp');
   const weatherConditionText = document.getElementById('weatherConditionText');
+  const condIconMini = document.getElementById('condIconMini');
   const weatherHeroIcon = document.getElementById('weatherHeroIcon');
   const currentHumidity = document.getElementById('currentHumidity');
   const currentRain = document.getElementById('currentRain');
   const currentWind = document.getElementById('currentWind');
   const currentDewPoint = document.getElementById('currentDewPoint');
 
-  // Hourly & Outbreak elements
   const hourlyForecastStrip = document.getElementById('hourlyForecastStrip');
+  const dailyForecastGrid = document.getElementById('dailyForecastGrid');
+
   const riskBadge = document.getElementById('riskBadge');
+  const riskBadgeText = document.getElementById('riskBadgeText');
   const riskScoreVal = document.getElementById('riskScoreVal');
   const riskMeterFill = document.getElementById('riskMeterFill');
   const riskFactorPills = document.getElementById('riskFactorPills');
   const actionAdviceBox = document.getElementById('actionAdviceBox');
-  const dailyForecastGrid = document.getElementById('dailyForecastGrid');
+  const advisoryText = document.getElementById('advisoryText');
 
-  // Radar Map Elements
+  const locationSearchInput = document.getElementById('locationSearchInput');
+  const searchWeatherBtn = document.getElementById('searchWeatherBtn');
+  const gpsWeatherBtn = document.getElementById('gpsWeatherBtn');
+  const refreshWeatherBtn = document.getElementById('refreshWeatherBtn');
+  const refreshIcon = document.getElementById('refreshIcon');
+
   const radarPlayPauseBtn = document.getElementById('radarPlayPauseBtn');
   const radarPlayIcon = document.getElementById('radarPlayIcon');
   const radarPlayText = document.getElementById('radarPlayText');
   const radarCenterMyLocBtn = document.getElementById('radarCenterMyLocBtn');
-  const btnLayerRadar = document.getElementById('btnLayerRadar');
-  const btnLayerSat = document.getElementById('btnLayerSat');
-  const radarTimelineSlider = document.getElementById('radarTimelineSlider');
-  const radarCurrentTimestamp = document.getElementById('radarCurrentTimestamp');
   const radarMapLocName = document.getElementById('radarMapLocName');
   const radarMapRainProb = document.getElementById('radarMapRainProb');
 
   // State
-  let isFetching = false;
-  let activeLat = DEFAULT_LAT;
-  let activeLon = DEFAULT_LON;
-  let activeCityName = DEFAULT_CITY;
+  let currentLat = 28.3670;
+  let currentLon = 79.4304;
+  let currentCity = 'Bareilly, Uttar Pradesh';
 
-  // Radar Map State
-  let radarMap = null;
+  // -------------------------------------------------------------
+  // LEAFLET RADAR MAP SETUP
+  // -------------------------------------------------------------
+  let map = null;
   let farmMarker = null;
-  let radarTileLayers = [];
+  let radarLayers = [];
   let radarFrames = [];
-  let currentFrameIdx = 0;
-  let radarAnimInterval = null;
-  let isPlayingRadar = false;
-  let activeRadarMode = 'radar'; // 'radar' or 'satellite'
-  let rainViewerHost = 'https://tilecache.rainviewer.com';
+  let currentRadarIndex = -1;
+  let radarAnimationTimer = null;
+  let isRadarPlaying = false;
 
-  // WMO Weather Code Mapper
-  function mapWmoCode(code) {
-    if (code === 0) return { label: 'साफ़ मौसम (Clear Sky)', icon: 'fa-solid fa-sun', color: '#FBBF24', type: 'clear' };
-    if ([1, 2].includes(code)) return { label: 'आंशिक बादल (Partly Cloudy)', icon: 'fa-solid fa-cloud-sun', color: '#94A3B8', type: 'cloud' };
-    if (code === 3) return { label: 'घने बादल (Overcast)', icon: 'fa-solid fa-cloud', color: '#94A3B8', type: 'cloud' };
-    if ([45, 48].includes(code)) return { label: 'कोहरा (Fog)', icon: 'fa-solid fa-smog', color: '#CBD5E1', type: 'fog' };
-    if ([51, 53, 55, 56, 57].includes(code)) return { label: 'हल्की बूंदाबांदी (Drizzle)', icon: 'fa-solid fa-cloud-rain', color: '#60A5FA', type: 'rain' };
-    if ([61, 63, 65, 80, 81, 82].includes(code)) return { label: 'वर्षा (Rain)', icon: 'fa-solid fa-cloud-showers-heavy', color: '#38BDF8', type: 'rain' };
-    if ([95, 96, 99].includes(code)) return { label: 'गरज-चमक / आंधी (Thunderstorm)', icon: 'fa-solid fa-cloud-bolt', color: '#A78BFA', type: 'storm' };
-    return { label: 'सामान्य (Moderate)', icon: 'fa-solid fa-cloud-sun', color: '#38BDF8', type: 'clear' };
-  }
-
-  // Set Status Badge Text
-  function setStatus(text, isLive = true) {
-    if (!weatherStatusText) return;
-    weatherStatusText.textContent = text;
-    const dot = weatherStatusBadge ? weatherStatusBadge.querySelector('.status-dot') : null;
-    if (dot) {
-      dot.style.background = isLive ? '#10B981' : '#F59E0B';
-    }
-  }
-
-  function setLoading(loading) {
-    isFetching = loading;
-    if (refreshBtnIcon) {
-      if (loading) refreshBtnIcon.classList.add('fa-spin');
-      else refreshBtnIcon.classList.remove('fa-spin');
-    }
-  }
-
-  // Cache Handlers
-  function getCachedWeather() {
+  function initMap(lat, lon) {
+    if (map) return;
     try {
-      const raw = localStorage.getItem(CACHE_KEY);
-      if (!raw) return null;
-      const data = JSON.parse(raw);
-      if (data && data.timestamp && (Date.now() - data.timestamp < CACHE_TTL_MS)) {
-        return data;
-      }
-    } catch (e) {}
-    return null;
-  }
-
-  function setCachedWeather(locationName, lat, lon, source, data) {
-    try {
-      const payload = {
-        timestamp: Date.now(),
-        locationName,
-        lat,
-        lon,
-        source,
-        data
-      };
-      localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
-    } catch (e) {}
-  }
-
-  // Fetch Open-Meteo Weather with Fallback to Server Proxy
-  async function fetchOpenMeteoForecast(lat, lon) {
-    const directUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,dew_point_2m,wind_speed_10m&forecast_days=3&timezone=auto`;
-    try {
-      const res = await fetch(directUrl);
-      if (!res.ok) throw new Error(`HTTP error ${res.status}`);
-      return await res.json();
-    } catch (err) {
-      console.warn('Direct Open-Meteo failed, trying server proxy...', err);
-      const proxyUrl = `/api/weather/live?lat=${lat}&lon=${lon}`;
-      const proxyRes = await fetch(proxyUrl);
-      if (!proxyRes.ok) throw new Error(`Proxy error ${proxyRes.status}`);
-      return await proxyRes.json();
-    }
-  }
-
-  // Geocode City Name with Fallback
-  async function geocodeCity(cityName) {
-    const directUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=en&format=json`;
-    try {
-      const res = await fetch(directUrl);
-      if (res.ok) {
-        const json = await res.json();
-        if (json.results && json.results.length > 0) return json.results[0];
-      }
-    } catch (err) {
-      const proxyUrl = `/api/weather/geocode?q=${encodeURIComponent(cityName)}`;
-      try {
-        const proxyRes = await fetch(proxyUrl);
-        if (proxyRes.ok) {
-          const json = await proxyRes.json();
-          if (json.results && json.results.length > 0) return json.results[0];
-        }
-      } catch (e) {}
-    }
-    return null;
-  }
-
-  // Reverse Geocode Coords
-  async function reverseGeocodeCoords(lat, lon) {
-    try {
-      const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
-      const res = await fetch(url);
-      if (res.ok) {
-        const d = await res.json();
-        const city = d.city || d.locality || d.principalSubdivision;
-        const state = d.principalSubdivision;
-        if (city && state && city !== state) return `${city}, ${state}`;
-        if (city) return city;
-      }
-    } catch (e) {}
-    return `खेत (${lat.toFixed(2)}°, ${lon.toFixed(2)}°)`;
-  }
-
-  // Dynamic Risk Score Calculation
-  function calculateOutbreakRisk(current, hourly) {
-    let score = 0;
-    const factors = [];
-
-    const humidity = current.relative_humidity_2m || 0;
-    if (humidity >= 80) {
-      score += 18;
-      factors.push({ label: '💧 उच्च आर्द्रता (High Humidity ≥80%)', pts: 18 });
-    }
-
-    const recentRain = Math.max(current.rain || 0, current.precipitation || 0);
-    if (recentRain >= 2.0) {
-      score += 18;
-      factors.push({ label: `🌧️ हालिया वर्षा (Recent Rain ${recentRain}mm ≥2mm)`, pts: 18 });
-    }
-
-    let maxRainProb = 0;
-    if (hourly && hourly.precipitation_probability && hourly.precipitation_probability.length > 0) {
-      const nextFew = hourly.precipitation_probability.slice(0, 6);
-      maxRainProb = Math.max(...nextFew);
-      if (maxRainProb >= 60) {
-        score += 18;
-        factors.push({ label: `☔ उच्च वर्षा संभावना (Rain Prob. ${maxRainProb}% ≥60%)`, pts: 18 });
-      }
-    }
-
-    let wetHoursCount = 0;
-    if (hourly && hourly.relative_humidity_2m) {
-      for (let i = 0; i < Math.min(6, hourly.relative_humidity_2m.length); i++) {
-        const hRh = hourly.relative_humidity_2m[i] || 0;
-        const hRain = (hourly.precipitation && hourly.precipitation[i]) || 0;
-        if (hRh >= 78 || hRain > 0.1) wetHoursCount++;
-      }
-      if (wetHoursCount >= 3) {
-        score += 15;
-        factors.push({ label: `🌿 पत्तों पर लगातार गीलापन (Wet Hours ${wetHoursCount}h)`, pts: 15 });
-      }
-    }
-
-    const temp = current.temperature_2m || 0;
-    if (temp >= 18 && temp <= 30 && humidity >= 75) {
-      score += 31;
-      factors.push({ label: `🍄 फंगस प्रसार विंडो सक्रिय (Fungal Window 18-30°C + RH≥75%)`, pts: 31 });
-    }
-
-    score = Math.min(100, Math.max(0, score));
-    let tier = 'low';
-    if (score >= 70) tier = 'high';
-    else if (score >= 45) tier = 'watch';
-
-    return { score, tier, factors, maxRainProb };
-  }
-
-  // Render Weather Dashboard
-  function renderDashboard(locationName, lat, lon, source, data) {
-    const current = data.current || {};
-    const hourly = data.hourly || {};
-
-    if (locationLabel) locationLabel.textContent = locationName;
-    if (sourceBadge) {
-      sourceBadge.textContent = source.toUpperCase();
-      sourceBadge.className = `wx-source-badge source-${source}`;
-    }
-    if (lastUpdatedTimestamp) {
-      const now = new Date();
-      lastUpdatedTimestamp.textContent = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-    }
-
-    if (currentTemp) currentTemp.textContent = Math.round(current.temperature_2m !== undefined ? current.temperature_2m : 24);
-    if (feelsLikeTemp) feelsLikeTemp.textContent = `${Math.round(current.apparent_temperature !== undefined ? current.apparent_temperature : 25)}°C`;
-    if (currentHumidity) currentHumidity.textContent = `${current.relative_humidity_2m || 0}%`;
-    if (currentRain) currentRain.textContent = `${(current.precipitation || 0).toFixed(1)} mm`;
-    if (currentWind) currentWind.textContent = `${Math.round(current.wind_speed_10m || 0)} km/h`;
-
-    const dewPointVal = (hourly.dew_point_2m && hourly.dew_point_2m.length > 0) ? hourly.dew_point_2m[0] : null;
-    if (currentDewPoint) currentDewPoint.textContent = dewPointVal !== null ? `${Math.round(dewPointVal)}°C` : '--';
-
-    const cond = mapWmoCode(current.weather_code);
-    if (weatherConditionText) weatherConditionText.textContent = cond.label;
-    if (weatherHeroIcon) {
-      weatherHeroIcon.innerHTML = `<i class="${cond.icon}" style="color: ${cond.color};"></i>`;
-    }
-
-    // Hourly Forecast Strip (Next 6 Hours)
-    if (hourlyForecastStrip && hourly.time && hourly.time.length > 0) {
-      const nowTs = Date.now();
-      let startIndex = hourly.time.findIndex(t => new Date(t).getTime() >= nowTs - 30 * 60 * 1000);
-      if (startIndex === -1) startIndex = 0;
-
-      let stripHtml = '';
-      for (let i = startIndex; i < Math.min(startIndex + 6, hourly.time.length); i++) {
-        const timeStr = hourly.time[i];
-        const dateObj = new Date(timeStr);
-        const timeLabel = (i === startIndex) ? 'अभी (Now)' : dateObj.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-        const hTemp = Math.round(hourly.temperature_2m[i]);
-        const hRainProb = (hourly.precipitation_probability && hourly.precipitation_probability[i] !== undefined) ? hourly.precipitation_probability[i] : 0;
-        const hCode = (hourly.weather_code && hourly.weather_code[i] !== undefined) ? hourly.weather_code[i] : (current.weather_code || 0);
-        const hCond = mapWmoCode(hCode);
-
-        let badgeClass = 'rain-badge-low';
-        if (hRainProb >= 60) badgeClass = 'rain-badge-high';
-        else if (hRainProb >= 30) badgeClass = 'rain-badge-med';
-
-        stripHtml += `
-          <div class="hourly-item-card">
-            <span class="hourly-time-label">${timeLabel}</span>
-            <div class="hourly-icon-wrap">
-              <i class="${hCond.icon}" style="color: ${hCond.color};"></i>
-            </div>
-            <span class="hourly-temp-label">${hTemp}°</span>
-            <span class="hourly-rain-badge ${badgeClass}">
-              <i class="fa-solid fa-umbrella"></i> ${hRainProb}%
-            </span>
-          </div>
-        `;
-      }
-      hourlyForecastStrip.innerHTML = stripHtml;
-    }
-
-    // Outbreak Risk Calculation
-    const risk = calculateOutbreakRisk(current, hourly);
-
-    if (riskScoreVal) riskScoreVal.textContent = risk.score;
-    if (riskMeterFill) {
-      riskMeterFill.style.width = `${risk.score}%`;
-      if (risk.tier === 'high') {
-        riskMeterFill.style.background = 'linear-gradient(90deg, #F59E0B, #EF4444)';
-      } else if (risk.tier === 'watch') {
-        riskMeterFill.style.background = 'linear-gradient(90deg, #10B981, #F59E0B)';
-      } else {
-        riskMeterFill.style.background = 'linear-gradient(90deg, #059669, #10B981)';
-      }
-    }
-
-    if (riskBadge) {
-      riskBadge.className = `risk-badge risk-${risk.tier}`;
-      if (risk.tier === 'high') {
-        riskBadge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> <span>HIGH RISK (गंभीर जोखिम)</span>`;
-      } else if (risk.tier === 'watch') {
-        riskBadge.innerHTML = `<i class="fa-solid fa-eye"></i> <span>WATCH (सतर्कता / मध्यम)</span>`;
-      } else {
-        riskBadge.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>LOW RISK (कम जोखिम / सुरक्षित)</span>`;
-      }
-    }
-
-    if (riskFactorPills) {
-      if (risk.factors.length === 0) {
-        riskFactorPills.innerHTML = `<span class="factor-pill factor-pill-safe"><i class="fa-solid fa-circle-check"></i> कोई गंभीर जोखिम कारक नहीं (सभी मौसम पैरामीटर अनुकूल हैं)</span>`;
-      } else {
-        riskFactorPills.innerHTML = risk.factors.map(f => {
-          const pillClass = (f.pts >= 25 || risk.tier === 'high') ? 'factor-pill-active' : 'factor-pill-warn';
-          return `<span class="factor-pill ${pillClass}">${f.label} <strong style="opacity:0.85;">(+${f.pts})</strong></span>`;
-        }).join('');
-      }
-    }
-
-    // Advice Box
-    if (actionAdviceBox) {
-      let adviceHtml = '';
-      if (risk.tier === 'high') {
-        adviceHtml = `
-          <div class="advice-header" style="color: #F87171;">
-            <i class="fa-solid fa-shield-virus" style="color: #F87171;"></i>
-            तत्काल कृषि परामर्श (High Outbreak Alert Advisory)
-          </div>
-          <div class="advice-list">
-            <div class="advice-item">
-              <div class="advice-icon-wrap advice-icon-high"><i class="fa-solid fa-spray-can-sparkles"></i></div>
-              <div><strong>निवारक फफूंदनाशक स्प्रे:</strong> डाउनी मिल्ड्यू, अगेती/पछेती झुलसा का अत्यधिक खतरा है। सिस्टेमिक फंजीसाइड (Mancozeb या Azoxystrobin) का सुरक्षात्मक छिड़काव करें।</div>
-            </div>
-            <div class="advice-item">
-              <div class="advice-icon-wrap advice-icon-high"><i class="fa-solid fa-faucet-drip"></i></div>
-              <div><strong>सिंचाई पर रोक:</strong> खेत में नमी अत्यधिक है; तुरंत सिंचाई रोकें और जलनिकासी की नालियां साफ रखें।</div>
-            </div>
-          </div>
-        `;
-      } else if (risk.tier === 'watch') {
-        adviceHtml = `
-          <div class="advice-header" style="color: #FBBF24;">
-            <i class="fa-solid fa-magnifying-glass-chart" style="color: #FBBF24;"></i>
-            सतर्कता परामर्श (Field Watch & Monitoring Advisory)
-          </div>
-          <div class="advice-list">
-            <div class="advice-item">
-              <div class="advice-icon-wrap advice-icon-warn"><i class="fa-solid fa-eye"></i></div>
-              <div><strong>सघन निगरानी:</strong> नमी के स्तर में वृद्धि से रसचूसक कीटों एवं पत्ती धब्बा रोग का खतरा पनप सकता है। खेत का नियमित मुआयना करें।</div>
-            </div>
-            <div class="advice-item">
-              <div class="advice-icon-wrap advice-icon-warn"><i class="fa-solid fa-leaf"></i></div>
-              <div><strong>जैविक/नीम सुरक्षा:</strong> रोग की शुरुआत रोकने हेतु नीम का तेल (Neem Oil 10,000 ppm) का छिड़काव उपयोगी रहेगा।</div>
-            </div>
-          </div>
-        `;
-      } else {
-        adviceHtml = `
-          <div class="advice-header" style="color: #34D399;">
-            <i class="fa-solid fa-circle-check" style="color: #34D399;"></i>
-            अनुकूल कृषि स्थितियां (Safe Farming Window)
-          </div>
-          <div class="advice-list">
-            <div class="advice-item">
-              <div class="advice-icon-wrap advice-icon-safe"><i class="fa-solid fa-tractor"></i></div>
-              <div><strong>खेत कार्य एवं खाद प्रयोग:</strong> मौसम साफ और अनुकूल है। उर्वरक डालने, निराई-गुड़ाई और बुवाई/कटाई के लिए उपयुक्त समय है।</div>
-            </div>
-            <div class="advice-item">
-              <div class="advice-icon-wrap advice-icon-safe"><i class="fa-solid fa-sun"></i></div>
-              <div><strong>सुरक्षित स्प्रे विंडो:</strong> कीटनाशक या पोषक तत्वों का सामान्य छिड़काव दोपहर पूर्व किया जा सकता है।</div>
-            </div>
-          </div>
-        `;
-      }
-      actionAdviceBox.innerHTML = adviceHtml;
-    }
-
-    // 3-Day Outlook Grid
-    if (dailyForecastGrid && hourly.time) {
-      let dailyHtml = '';
-      const daysHi = ['सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार', 'रविवार'];
-      const today = new Date();
-
-      for (let dayOffset = 0; dayOffset < 3; dayOffset++) {
-        const targetDate = new Date(today);
-        targetDate.setDate(today.getDate() + dayOffset);
-        const dayName = dayOffset === 0 ? 'आज (Today)' : (dayOffset === 1 ? 'कल (Tomorrow)' : daysHi[targetDate.getDay()]);
-        const dateSub = targetDate.toLocaleDateString('hi-IN', { day: 'numeric', month: 'short' });
-
-        const dayStartHour = dayOffset * 24;
-        const dayEndHour = Math.min(dayStartHour + 24, hourly.time.length);
-        const dayTemps = (hourly.temperature_2m || []).slice(dayStartHour, dayEndHour);
-        const dayRainProbs = (hourly.precipitation_probability || []).slice(dayStartHour, dayEndHour);
-
-        const maxTemp = dayTemps.length ? Math.round(Math.max(...dayTemps)) : 28;
-        const minTemp = dayTemps.length ? Math.round(Math.min(...dayTemps)) : 19;
-        const maxRainProb = dayRainProbs.length ? Math.max(...dayRainProbs) : 10;
-
-        let dIcon = 'fa-solid fa-cloud-sun';
-        let dColor = '#38BDF8';
-        if (maxRainProb >= 60) { dIcon = 'fa-solid fa-cloud-showers-heavy'; dColor = '#60A5FA'; }
-        else if (maxRainProb >= 30) { dIcon = 'fa-solid fa-cloud-rain'; dColor = '#94A3B8'; }
-        else { dIcon = 'fa-solid fa-sun'; dColor = '#FBBF24'; }
-
-        const sprayStatus = maxRainProb < 40
-          ? '<span class="daily-spray-pill spray-safe"><i class="fa-solid fa-check"></i> स्प्रे के अनुकूल</span>'
-          : '<span class="daily-spray-pill spray-avoid"><i class="fa-solid fa-ban"></i> स्प्रे से बचें</span>';
-
-        dailyHtml += `
-          <div class="daily-card-item">
-            <div class="daily-header-row">
-              <span class="daily-day-title">${dayName}</span>
-              <span class="daily-date-sub">${dateSub}</span>
-            </div>
-            <div class="daily-center-row">
-              <div class="daily-icon-box">
-                <i class="${dIcon}" style="color: ${dColor};"></i>
-              </div>
-              <div class="daily-temp-box">
-                <span class="daily-temp-high">${maxTemp}°</span>
-                <span class="daily-temp-low">/ ${minTemp}°</span>
-              </div>
-            </div>
-            <div class="daily-rain-row">
-              <span><i class="fa-solid fa-umbrella"></i> वर्षा संभावना:</span>
-              <strong style="color: ${maxRainProb >= 50 ? '#60A5FA' : '#34D399'};">${maxRainProb}%</strong>
-            </div>
-            ${sprayStatus}
-          </div>
-        `;
-      }
-      dailyForecastGrid.innerHTML = dailyHtml;
-    }
-
-    // Sync Radar Map to this location
-    updateRadarLocation(lat, lon, locationName, risk.maxRainProb, current.precipitation || 0);
-  }
-
-  // Master Loader for Coordinates
-  async function loadWeatherForCoordinates(lat, lon, knownName = null, source = 'gps') {
-    activeLat = lat;
-    activeLon = lon;
-    setLoading(true);
-
-    try {
-      let displayName = knownName;
-      if (!displayName) {
-        displayName = await reverseGeocodeCoords(lat, lon);
-      }
-      activeCityName = displayName;
-
-      setStatus(`${displayName} का मौसम लोड हो रहा है...`, true);
-
-      const weatherData = await fetchOpenMeteoForecast(lat, lon);
-      setCachedWeather(displayName, lat, lon, source, weatherData);
-      renderDashboard(displayName, lat, lon, source, weatherData);
-
-      const sourceHi = (source === 'gps') ? 'GPS लाइव' : (source === 'search' ? 'सर्च' : 'सक्रिय');
-      setStatus(`🟢 ${displayName} (${sourceHi})`, true);
-
-      // Highlight quick pills if matching
-      document.querySelectorAll('.quick-city-pill').forEach(btn => {
-        if (displayName.toLowerCase().includes(btn.dataset.city.split(',')[0].toLowerCase())) {
-          btn.classList.add('active-pill');
-        } else {
-          btn.classList.remove('active-pill');
-        }
-      });
-    } catch (err) {
-      console.error('Weather load error:', err);
-      setStatus(`⚠️ ${knownName || 'स्थान'} का डेटा लोड नहीं हुआ (${err.message})`, false);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // ============================================================
-  // LIVE PRECIPITATION & RAIN RADAR MAP ENGINE (Leaflet + RainViewer)
-  // ============================================================
-  function initRadarMapEngine(initialLat, initialLon) {
-    if (radarMap || !window.L) return;
-
-    try {
-      radarMap = L.map('weatherRadarMap', {
-        center: [initialLat, initialLon],
-        zoom: 8,
-        minZoom: 4,
-        maxZoom: 15,
+      map = L.map('weatherRadarMap', {
+        center: [lat, lon],
+        zoom: 7,
         zoomControl: true,
         attributionControl: false
       });
 
-      // Sleek CartoDB Dark Matter Base Tiles
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        subdomains: 'abcd',
-        maxZoom: 19
-      }).addTo(radarMap);
+      // Dark Base Map Tiles
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        maxZoom: 18,
+        subdomains: 'abcd'
+      }).addTo(map);
 
-      // Custom Glowing Farm Marker
+      // Farm Location Marker
       const farmIcon = L.divIcon({
-        className: 'custom-farm-radar-marker',
-        html: `
-          <div style="position:relative; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">
-            <div style="position:absolute; width:100%; height:100%; border-radius:50%; background:rgba(56,189,248,0.35); animation:pulse-dot 1.5s infinite;"></div>
-            <div style="width:14px; height:14px; border-radius:50%; background:#38BDF8; border:2px solid #FFFFFF; box-shadow:0 0 10px #38BDF8;"></div>
-          </div>
-        `,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
+        className: 'custom-farm-pin',
+        html: `<div style="background:#10B981; border:2px solid #ffffff; width:16px; height:16px; border-radius:50%; box-shadow:0 0 10px #10B981;"></div>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
       });
+      farmMarker = L.marker([lat, lon], { icon: farmIcon }).addTo(map);
+      farmMarker.bindPopup(`<b>${currentCity}</b><br>आपका खेत क्षेत्र`).openPopup();
 
-      farmMarker = L.marker([initialLat, initialLon], { icon: farmIcon }).addTo(radarMap);
-      farmMarker.bindPopup(`<b>🌾 आपका खेत / क्षेत्र</b><br>${activeCityName}`);
-
-      // Fetch RainViewer Live Radar Frames
-      fetchRainViewerFrames();
+      loadRadarTiles();
     } catch (e) {
-      console.warn('Radar map init error:', e);
+      console.warn("Map init error:", e);
     }
   }
 
-  async function fetchRainViewerFrames() {
+  function updateMapLocation(lat, lon, cityName) {
+    if (!map) {
+      initMap(lat, lon);
+      return;
+    }
+    map.setView([lat, lon], 7);
+    if (farmMarker) {
+      farmMarker.setLatLng([lat, lon]);
+      farmMarker.setPopupContent(`<b>${cityName}</b><br>आपका खेत क्षेत्र`);
+    }
+  }
+
+  // Load RainViewer Doppler Radar Layers
+  async function loadRadarTiles() {
     try {
       const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
       if (!res.ok) return;
       const data = await res.json();
-      rainViewerHost = data.host || 'https://tilecache.rainviewer.com';
+      if (!data.radar || !data.radar.past) return;
 
-      // Collect past + nowcast frames
-      const past = (data.radar && data.radar.past) || [];
-      const nowcast = (data.radar && data.radar.nowcast) || [];
-      const sat = (data.satellite && data.satellite.infrared) || [];
+      // Clear existing layers
+      radarLayers.forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
+      radarLayers = [];
+      radarFrames = data.radar.past;
 
-      radarFrames = (activeRadarMode === 'satellite') ? sat : [...past, ...nowcast];
-
-      if (radarFrames.length === 0) return;
-
-      if (radarTimelineSlider) {
-        radarTimelineSlider.max = radarFrames.length - 1;
-        radarTimelineSlider.value = past.length > 0 ? (past.length - 1) : (radarFrames.length - 1);
-        currentFrameIdx = parseInt(radarTimelineSlider.value);
-      }
-
-      // Pre-create tile layers
-      clearRadarLayers();
-      radarTileLayers = radarFrames.map(frame => {
-        const url = (activeRadarMode === 'satellite')
-          ? `${rainViewerHost}${frame.path}/256/{z}/{x}/{y}/0/0_0.png`
-          : `${rainViewerHost}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`;
-
-        const layer = L.tileLayer(url, {
-          opacity: 0,
-          zIndex: 10
-        });
-        layer.addTo(radarMap);
-        return layer;
+      // Create Leaflet Tile Layers for past frames
+      radarFrames.forEach(frame => {
+        const tileUrl = `https://tilecache.rainviewer.com/v2/radar/${frame.time}/256/{z}/{x}/{y}/2/1_1.png`;
+        const layer = L.tileLayer(tileUrl, { opacity: 0.65, zIndex: 100 });
+        radarLayers.push(layer);
       });
 
-      showRadarFrame(currentFrameIdx);
-    } catch (err) {
-      console.warn('RainViewer API error:', err);
+      if (radarLayers.length > 0) {
+        currentRadarIndex = radarLayers.length - 1;
+        radarLayers[currentRadarIndex].addTo(map);
+      }
+    } catch (e) {
+      console.warn("RainViewer fetch failed:", e);
     }
-  }
-
-  function clearRadarLayers() {
-    radarTileLayers.forEach(l => {
-      if (radarMap.hasLayer(l)) radarMap.removeLayer(l);
-    });
-    radarTileLayers = [];
   }
 
   function showRadarFrame(index) {
-    if (!radarTileLayers || radarTileLayers.length === 0) return;
-    index = Math.max(0, Math.min(index, radarTileLayers.length - 1));
+    if (radarLayers.length === 0) return;
+    if (currentRadarIndex >= 0 && currentRadarIndex < radarLayers.length) {
+      if (map.hasLayer(radarLayers[currentRadarIndex])) {
+        map.removeLayer(radarLayers[currentRadarIndex]);
+      }
+    }
+    currentRadarIndex = index;
+    radarLayers[currentRadarIndex].addTo(map);
+  }
 
-    radarTileLayers.forEach((layer, i) => {
-      if (i === index) layer.setOpacity(0.78);
-      else layer.setOpacity(0);
-    });
-
-    currentFrameIdx = index;
-
-    if (radarTimelineSlider) radarTimelineSlider.value = index;
-
-    if (radarCurrentTimestamp && radarFrames[index]) {
-      const date = new Date(radarFrames[index].time * 1000);
-      const isLatest = index === radarTileLayers.length - 1;
-      radarCurrentTimestamp.textContent = `${date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })} ${isLatest ? '(लाइव)' : ''}`;
+  function toggleRadarAnimation() {
+    if (isRadarPlaying) {
+      clearInterval(radarAnimationTimer);
+      isRadarPlaying = false;
+      radarPlayIcon.className = 'fa-solid fa-play';
+      radarPlayText.textContent = 'प्ले';
+    } else {
+      if (radarLayers.length === 0) return;
+      isRadarPlaying = true;
+      radarPlayIcon.className = 'fa-solid fa-pause';
+      radarPlayText.textContent = 'रोकें';
+      radarAnimationTimer = setInterval(() => {
+        let nextIndex = (currentRadarIndex + 1) % radarLayers.length;
+        showRadarFrame(nextIndex);
+      }, 700);
     }
   }
 
-  function startRadarAnimation() {
-    if (isPlayingRadar) return;
-    isPlayingRadar = true;
-    if (radarPlayIcon) radarPlayIcon.className = 'fa-solid fa-pause';
-    if (radarPlayText) radarPlayText.textContent = 'रोकें';
-
-    radarAnimInterval = setInterval(() => {
-      let nextIdx = currentFrameIdx + 1;
-      if (nextIdx >= radarTileLayers.length) nextIdx = 0;
-      showRadarFrame(nextIdx);
-    }, 650);
-  }
-
-  function stopRadarAnimation() {
-    if (!isPlayingRadar) return;
-    isPlayingRadar = false;
-    if (radarPlayIcon) radarPlayIcon.className = 'fa-solid fa-play';
-    if (radarPlayText) radarPlayText.textContent = 'एनीमेशन देखें';
-    if (radarAnimInterval) {
-      clearInterval(radarAnimInterval);
-      radarAnimInterval = null;
-    }
-  }
-
-  function updateRadarLocation(lat, lon, name, rainProb = 0, rainMm = 0) {
-    if (!radarMap) return;
-    radarMap.flyTo([lat, lon], 9, { duration: 1.2 });
-    if (farmMarker) {
-      farmMarker.setLatLng([lat, lon]);
-      farmMarker.setPopupContent(`
-        <div style="font-family:'Outfit',sans-serif; min-width:180px;">
-          <h4 style="margin:0 0 6px 0; color:#0284C7; font-size:1rem;">📍 ${name}</h4>
-          <div style="font-size:0.85rem; color:#334155; line-height:1.4;">
-            <div>☔ वर्षा संभावना: <b>${rainProb}%</b></div>
-            <div>🌧️ वर्तमान वर्षा: <b>${rainMm.toFixed(1)} mm</b></div>
-            <div style="margin-top:4px; color:${rainProb >= 40 ? '#DC2626' : '#16A34A'}; font-weight:700;">
-              ${rainProb >= 40 ? '⚠️ आज बारिश की संभावना - स्प्रे स्थगित रखें' : '✅ मौसम अनुकूल - सामान्य स्प्रे संभव'}
-            </div>
-          </div>
-        </div>
-      `);
-    }
-
-    if (radarMapLocName) radarMapLocName.textContent = name;
-    if (radarMapRainProb) {
-      radarMapRainProb.textContent = `${rainProb}%`;
-      radarMapRainProb.style.color = rainProb >= 50 ? '#60A5FA' : '#34D399';
-    }
-  }
-
-  // Radar UI Events
   if (radarPlayPauseBtn) {
-    radarPlayPauseBtn.addEventListener('click', () => {
-      if (isPlayingRadar) stopRadarAnimation();
-      else startRadarAnimation();
-    });
+    radarPlayPauseBtn.addEventListener('click', toggleRadarAnimation);
   }
 
   if (radarCenterMyLocBtn) {
     radarCenterMyLocBtn.addEventListener('click', () => {
-      if (radarMap) radarMap.flyTo([activeLat, activeLon], 10, { duration: 1 });
+      if (map) map.setView([currentLat, currentLon], 8);
     });
   }
 
-  if (radarTimelineSlider) {
-    radarTimelineSlider.addEventListener('input', (e) => {
-      stopRadarAnimation();
-      showRadarFrame(parseInt(e.target.value));
-    });
+  // -------------------------------------------------------------
+  // WEATHER ICONS & CONDITIONS MAPPING
+  // -------------------------------------------------------------
+  function getWeatherVisual(code, text) {
+    const t = (text || '').toLowerCase();
+    if (t.includes('thunder') || t.includes('storm')) {
+      return { icon: 'fa-solid fa-cloud-bolt', color: '#F87171', name: 'आंधी / तूफान (Thunderstorm)' };
+    }
+    if (t.includes('rain') || t.includes('shower') || [51,53,55,61,63,65,80,81,82,18,12].includes(code)) {
+      return { icon: 'fa-solid fa-cloud-showers-heavy', color: '#60A5FA', name: 'बारिश (Rain)' };
+    }
+    if (t.includes('snow') || [71,73,75,85].includes(code)) {
+      return { icon: 'fa-solid fa-snowflake', color: '#E0F2FE', name: 'बर्फबारी (Snow)' };
+    }
+    if (t.includes('fog') || t.includes('mist') || [45,48,11].includes(code)) {
+      return { icon: 'fa-solid fa-smog', color: '#CBD5E1', name: 'धुंध / कोहरा (Fog)' };
+    }
+    if (t.includes('cloud') || [2,3,6,7,8].includes(code)) {
+      return { icon: 'fa-solid fa-cloud', color: '#94A3B8', name: 'बादल छाए (Cloudy)' };
+    }
+    return { icon: 'fa-solid fa-sun', color: '#FBBF24', name: 'साफ मौसम (Clear Sky)' };
   }
 
-  if (btnLayerRadar && btnLayerSat) {
-    btnLayerRadar.addEventListener('click', () => {
-      if (activeRadarMode === 'radar') return;
-      activeRadarMode = 'radar';
-      btnLayerRadar.classList.add('active-layer');
-      btnLayerSat.classList.remove('active-layer');
-      stopRadarAnimation();
-      fetchRainViewerFrames();
-    });
+  // -------------------------------------------------------------
+  // WEATHER FETCH & DASHBOARD RENDER
+  // -------------------------------------------------------------
+  async function loadWeather(lat, lon, cityName = 'Bareilly, Uttar Pradesh') {
+    currentLat = lat;
+    currentLon = lon;
+    currentCity = cityName;
 
-    btnLayerSat.addEventListener('click', () => {
-      if (activeRadarMode === 'satellite') return;
-      activeRadarMode = 'satellite';
-      btnLayerSat.classList.add('active-layer');
-      btnLayerRadar.classList.remove('active-layer');
-      stopRadarAnimation();
-      fetchRainViewerFrames();
-    });
-  }
-
-  // ============================================================
-  // BACKGROUND GPS ENRICHMENT (Non-blocking)
-  // ============================================================
-  function trySilentGps() {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-        console.log('GPS acquired in background:', lat, lon);
-        await loadWeatherForCoordinates(lat, lon, null, 'gps');
-      },
-      (err) => {
-        console.log('Silent GPS bypassed (using default city):', err.message);
-      },
-      { timeout: 6000, enableHighAccuracy: false, maximumAge: 60000 }
-    );
-  }
-
-  // Handle City Search
-  async function handleCitySearch(query) {
-    const trimmed = query.trim();
-    if (!trimmed) return;
-
-    setStatus(`"${trimmed}" खोजा जा रहा है...`, true);
-    setLoading(true);
+    if (locationLabel) locationLabel.textContent = cityName;
+    if (radarMapLocName) radarMapLocName.textContent = cityName.split(',')[0];
+    if (refreshIcon) refreshIcon.classList.add('fa-spin');
 
     try {
-      const geo = await geocodeCity(trimmed);
-      if (!geo) {
-        setStatus(`"${trimmed}" का स्थान नहीं मिला। कृपया सही नाम दर्ज करें।`, false);
-        setLoading(false);
-        return;
+      const res = await fetch(`/api/weather/live?lat=${lat}&lon=${lon}`);
+      const data = await res.json();
+
+      const source = data.source || 'accuweather';
+      if (sourceBadge) {
+        sourceBadge.textContent = source.toUpperCase();
+        sourceBadge.style.color = source === 'accuweather' ? '#38BDF8' : '#34D399';
       }
 
-      const name = `${geo.name}${geo.admin1 ? ', ' + geo.admin1 : ''}`;
-      if (locationSearchInput) locationSearchInput.value = name;
-      await loadWeatherForCoordinates(geo.latitude, geo.longitude, name, 'search');
+      if (lastUpdatedTimestamp) {
+        lastUpdatedTimestamp.textContent = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+      }
+
+      const curr = data.current || {};
+      const tempVal = Math.round(curr.temperature_2m !== undefined ? curr.temperature_2m : 24);
+      const feelsVal = Math.round(curr.apparent_temperature !== undefined ? curr.apparent_temperature : tempVal);
+      const humidityVal = curr.relative_humidity_2m || 70;
+      const rainVal = curr.precipitation !== undefined ? curr.precipitation : 0.0;
+      const windVal = Math.round(curr.wind_speed_10m || 10);
+      const dewVal = Math.round(curr.dew_point_2m !== undefined ? curr.dew_point_2m : tempVal - 3);
+
+      if (currentTemp) currentTemp.textContent = tempVal;
+      if (feelsLikeTemp) feelsLikeTemp.textContent = `${feelsVal}°C`;
+      if (currentHumidity) currentHumidity.textContent = `${humidityVal}%`;
+      if (currentRain) currentRain.textContent = `${rainVal.toFixed(1)} mm`;
+      if (currentWind) currentWind.textContent = `${windVal} km/h`;
+      if (currentDewPoint) currentDewPoint.textContent = `${dewVal}°C`;
+
+      const visual = getWeatherVisual(curr.weather_code, curr.weather_text);
+      if (weatherConditionText) weatherConditionText.textContent = curr.weather_text ? `${curr.weather_text} (${visual.name.split(' ')[0]})` : visual.name;
+      if (weatherHeroIcon) weatherHeroIcon.innerHTML = `<i class="${visual.icon}" style="color:${visual.color};"></i>`;
+      if (condIconMini) condIconMini.className = `${visual.icon}`;
+
+      // Render Next 6 Hours
+      renderHourly(data.hourly || {}, tempVal);
+
+      // Render 3-Day Outlook
+      renderDaily(data.daily || {}, tempVal);
+
+      // Calculate & Render Disease Risk & Spray Advice
+      renderRiskAndAdvisory(curr, data.hourly || {});
+
+      // Update Map
+      updateMapLocation(lat, lon, cityName);
+
     } catch (e) {
-      console.error('Search error:', e);
-      setStatus(`खोज में त्रुटि: ${e.message}`, false);
-      setLoading(false);
+      console.error("Weather load error:", e);
+    } finally {
+      if (refreshIcon) refreshIcon.classList.remove('fa-spin');
     }
   }
 
-  // Event Listeners
-  if (refreshWeatherBtn) {
-    refreshWeatherBtn.addEventListener('click', () => {
-      localStorage.removeItem(CACHE_KEY);
-      loadWeatherForCoordinates(activeLat, activeLon, activeCityName, 'refresh');
+  function renderHourly(hourly, fallbackTemp) {
+    if (!hourlyForecastStrip) return;
+    hourlyForecastStrip.innerHTML = '';
+
+    const times = hourly.time || [];
+    const temps = hourly.temperature_2m || [];
+    const probs = hourly.precipitation_probability || [];
+    const texts = hourly.weather_text || [];
+
+    for (let i = 0; i < Math.min(6, Math.max(times.length, 6)); i++) {
+      let timeStr = 'आगे';
+      if (times[i]) {
+        const d = new Date(times[i]);
+        timeStr = isNaN(d) ? `+${i+1}h` : d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+      } else {
+        const d = new Date();
+        d.setHours(d.getHours() + i + 1);
+        timeStr = d.toLocaleTimeString('en-IN', { hour: '2-digit', hour12: true });
+      }
+
+      const tVal = Math.round(temps[i] !== undefined ? temps[i] : fallbackTemp);
+      const rainProb = probs[i] !== undefined ? probs[i] : 20;
+      const vis = getWeatherVisual(0, texts[i] || (rainProb > 50 ? 'Rain' : 'Cloud'));
+
+      const col = document.createElement('div');
+      col.className = 'wx-hourly-item';
+      col.innerHTML = `
+        <div class="wx-hour-time">${timeStr}</div>
+        <div class="wx-hour-icon"><i class="${vis.icon}" style="color:${vis.color};"></i></div>
+        <div class="wx-hour-temp">${tVal}°</div>
+        <div class="wx-hour-rain"><i class="fa-solid fa-droplet"></i> ${rainProb}%</div>
+      `;
+      hourlyForecastStrip.appendChild(col);
+    }
+  }
+
+  function renderDaily(daily, fallbackTemp) {
+    if (!dailyForecastGrid) return;
+    dailyForecastGrid.innerHTML = '';
+
+    const times = daily.time || [];
+    const maxTemps = daily.temperature_2m_max || [];
+    const minTemps = daily.temperature_2m_min || [];
+    const probs = daily.precipitation_probability_max || [];
+    const texts = daily.weather_text || [];
+
+    const dayLabels = ['आज (Today)', 'कल (Tomorrow)', 'परसों (Day 3)'];
+
+    for (let i = 0; i < 3; i++) {
+      let dateLabel = '';
+      if (times[i]) {
+        const d = new Date(times[i]);
+        dateLabel = isNaN(d) ? '' : d.toLocaleDateString('hi-IN', { month: 'short', day: 'numeric' });
+      }
+
+      const maxT = Math.round(maxTemps[i] !== undefined ? maxTemps[i] : fallbackTemp + 2);
+      const minT = Math.round(minTemps[i] !== undefined ? minTemps[i] : fallbackTemp - 3);
+      const rainP = probs[i] !== undefined ? probs[i] : (i === 0 ? 80 : 30);
+      const vis = getWeatherVisual(0, texts[i] || (rainP > 50 ? 'Rain' : 'Sun'));
+
+      const isSpraySafe = rainP < 40;
+      const sprayBadge = isSpraySafe
+        ? `<span class="wx-spray-tag spray-ok"><i class="fa-solid fa-check"></i> छिड़काव हेतु अनुकूल</span>`
+        : `<span class="wx-spray-tag spray-warn"><i class="fa-solid fa-triangle-exclamation"></i> छिड़काव से बचें (बारिश)</span>`;
+
+      const card = document.createElement('div');
+      card.className = 'wx-daily-item';
+      card.innerHTML = `
+        <div class="wx-daily-header">
+          <span class="wx-daily-day">${dayLabels[i]}</span>
+          <span class="wx-daily-date">${dateLabel}</span>
+        </div>
+        <div class="wx-daily-body">
+          <div style="font-size: 1.5rem;"><i class="${vis.icon}" style="color:${vis.color};"></i></div>
+          <div style="text-align: right;">
+            <div class="wx-daily-temp-range">${maxT}° / ${minT}°C</div>
+            <div class="wx-daily-rain-prob"><i class="fa-solid fa-cloud-rain"></i> ${rainP}% वर्षा</div>
+          </div>
+        </div>
+        ${sprayBadge}
+      `;
+      dailyForecastGrid.appendChild(card);
+    }
+  }
+
+  function renderRiskAndAdvisory(current, hourly) {
+    let score = 20;
+    const factors = [];
+
+    const humidity = current.relative_humidity_2m || 0;
+    if (humidity >= 80) {
+      score += 25;
+      factors.push('उच्च आर्द्रता (≥80%)');
+    }
+
+    const rain = Math.max(current.rain || 0, current.precipitation || 0);
+    if (rain >= 1.0) {
+      score += 25;
+      factors.push(`हालिया बारिश (${rain.toFixed(1)}mm)`);
+    }
+
+    const probs = hourly.precipitation_probability || [];
+    const maxProb = probs.length > 0 ? Math.max(...probs.slice(0, 6)) : 0;
+    if (maxProb >= 60) {
+      score += 25;
+      factors.push(`बारिश की उच्च संभावना (${maxProb}%)`);
+    }
+
+    if (radarMapRainProb) radarMapRainProb.textContent = `${maxProb}%`;
+
+    const temp = current.temperature_2m || 24;
+    if (temp >= 18 && temp <= 30 && humidity >= 75) {
+      score += 15;
+      factors.push('फंगस/झुलसा प्रसार विंडो');
+    }
+
+    score = Math.min(100, Math.max(10, score));
+
+    if (riskScoreVal) riskScoreVal.textContent = score;
+    if (riskMeterFill) {
+      riskMeterFill.style.width = `${score}%`;
+      riskMeterFill.style.background = score >= 70 ? 'linear-gradient(90deg, #F59E0B, #EF4444)' : (score >= 45 ? '#F59E0B' : '#10B981');
+    }
+
+    if (riskBadge && riskBadgeText) {
+      if (score >= 70) {
+        riskBadge.className = 'wx-risk-badge badge-high';
+        riskBadgeText.textContent = 'गंभीर जोखिम (High Risk)';
+      } else if (score >= 45) {
+        riskBadge.className = 'wx-risk-badge badge-watch';
+        riskBadgeText.textContent = 'निगरानी (Watch Risk)';
+      } else {
+        riskBadge.className = 'wx-risk-badge badge-low';
+        riskBadgeText.textContent = 'सुरक्षित (Low Risk)';
+      }
+    }
+
+    if (riskFactorPills) {
+      riskFactorPills.innerHTML = factors.map(f => `<span class="wx-factor-pill"><i class="fa-solid fa-triangle-exclamation" style="color:#F59E0B; margin-right:4px;"></i>${f}</span>`).join('');
+    }
+
+    if (advisoryText) {
+      if (score >= 70) {
+        advisoryText.innerHTML = `<strong>तुरंत सलाह:</strong> खेत में नमी अत्यधिक है। फफूंदनाशक छिड़काव रोकें तथा जल निकासी की नालियां साफ रखें। मौसम खुलने पर कार्बेन्डाजिम या मैन्कोजेब का सुरक्षात्मक छिड़काव करें।`;
+      } else if (score >= 45) {
+        advisoryText.innerHTML = `<strong>सतर्कता सलाह:</strong> हल्की बारिश व नमी से कीट-रोग बढ़ सकते हैं। शाम के समय ही छिड़काव योजना बनाएं एवं खेत में जलभराव न होने दें।`;
+      } else {
+        advisoryText.innerHTML = `<strong>अनुकूल मौसम:</strong> मौसम साफ है। फसलों में कीटनाशक, फफूंदनाशक व खाद छिड़काव के लिए यह आदर्श समय है।`;
+      }
+    }
+  }
+
+  // -------------------------------------------------------------
+  // EVENT LISTENERS & SEARCH
+  // -------------------------------------------------------------
+  // Quick City Chips
+  document.querySelectorAll('.wx-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.wx-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      const lat = parseFloat(chip.dataset.lat);
+      const lon = parseFloat(chip.dataset.lon);
+      const city = chip.dataset.city;
+      loadWeather(lat, lon, city);
+    });
+  });
+
+  // Search Submit
+  async function performSearch() {
+    const q = (locationSearchInput.value || '').trim();
+    if (!q) return;
+
+    try {
+      const res = await fetch(`/api/weather/geocode?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        const item = data.results[0];
+        const cityName = `${item.name}${item.admin1 ? ', ' + item.admin1 : ''}`;
+        loadWeather(item.latitude, item.longitude, cityName);
+      } else {
+        alert(`"${q}" नहीं मिला। कृपया सही शहर या जिला नाम लिखें।`);
+      }
+    } catch (e) {
+      console.error("Geocode error:", e);
+    }
+  }
+
+  if (searchWeatherBtn) searchWeatherBtn.addEventListener('click', performSearch);
+  if (locationSearchInput) {
+    locationSearchInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') performSearch();
     });
   }
 
+  // GPS Location Button
   if (gpsWeatherBtn) {
     gpsWeatherBtn.addEventListener('click', () => {
-      setStatus('📍 GPS लोकेशन प्राप्त की जा रही है...', true);
-      setLoading(true);
       if (!navigator.geolocation) {
-        setStatus('⚠️ आपके डिवाइस में GPS समर्थित नहीं है', false);
-        setLoading(false);
+        alert("आपके ब्राउज़र में GPS सपोर्ट उपलब्ध नहीं है।");
         return;
       }
+      gpsWeatherBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> लोकेशन ले रहे हैं...`;
       navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          if (gpsPermissionNotice) gpsPermissionNotice.style.display = 'none';
-          await loadWeatherForCoordinates(pos.coords.latitude, pos.coords.longitude, null, 'gps');
+        (pos) => {
+          gpsWeatherBtn.innerHTML = `<i class="fa-solid fa-location-crosshairs"></i> मेरा खेत (GPS)`;
+          loadWeather(pos.coords.latitude, pos.coords.longitude, `मेरा खेत (${pos.coords.latitude.toFixed(2)}°, ${pos.coords.longitude.toFixed(2)}°)`);
         },
         (err) => {
-          setLoading(false);
-          setStatus('⚠️ GPS सिग्नल नहीं मिला या अनुमति अस्वीकृत है', false);
-          if (gpsPermissionNotice) gpsPermissionNotice.style.display = 'flex';
+          gpsWeatherBtn.innerHTML = `<i class="fa-solid fa-location-crosshairs"></i> मेरा खेत (GPS)`;
+          alert("GPS अनुमति अस्वीकृत हुई। कृपया ब्राउज़र में लोकेशन अनुमति दें या ऊपर त्वरित शहर चुनें।");
         },
-        { timeout: 8000, enableHighAccuracy: true, maximumAge: 0 }
+        { timeout: 7000 }
       );
     });
   }
 
-  // Quick City Pills Click Handler
-  document.querySelectorAll('.quick-city-pill').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const city = btn.dataset.city;
-      const lat = parseFloat(btn.dataset.lat);
-      const lon = parseFloat(btn.dataset.lon);
-
-      document.querySelectorAll('.quick-city-pill').forEach(b => b.classList.remove('active-pill'));
-      btn.classList.add('active-pill');
-
-      if (locationSearchInput) locationSearchInput.value = city;
-      loadWeatherForCoordinates(lat, lon, city, 'saved');
-    });
-  });
-
-  if (weatherSearchForm) {
-    weatherSearchForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      if (locationSearchInput) handleCitySearch(locationSearchInput.value);
+  // Refresh Button
+  if (refreshWeatherBtn) {
+    refreshWeatherBtn.addEventListener('click', () => {
+      loadWeather(currentLat, currentLon, currentCity);
     });
   }
 
-  if (searchWeatherBtn) {
-    searchWeatherBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (locationSearchInput) handleCitySearch(locationSearchInput.value);
-    });
-  }
-
-  if (locationSearchInput) {
-    locationSearchInput.addEventListener('input', () => {
-      if (clearSearchBtn) {
-        clearSearchBtn.style.display = locationSearchInput.value ? 'block' : 'none';
-      }
-    });
-
-    locationSearchInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        handleCitySearch(locationSearchInput.value);
-      }
-    });
-  }
-
-  if (clearSearchBtn) {
-    clearSearchBtn.addEventListener('click', () => {
-      if (locationSearchInput) {
-        locationSearchInput.value = '';
-        clearSearchBtn.style.display = 'none';
-        locationSearchInput.focus();
-      }
-    });
-  }
-
-  // ============================================================
-  // FAST AUTO-INITIALIZE ON PAGE LOAD
-  // ============================================================
-  let hasInitialized = false;
-  function startWeatherApp() {
-    if (hasInitialized) return;
-    hasInitialized = true;
-
-    // 1. Initialize Interactive Rain Radar Map immediately
-    initRadarMapEngine(DEFAULT_LAT, DEFAULT_LON);
-
-    // 2. Load cached weather if valid, else immediately load Default City (Bareilly / District)
-    const cached = getCachedWeather();
-    if (cached) {
-      renderDashboard(cached.locationName, cached.lat, cached.lon, 'cached', cached.data);
-      setStatus(`⚡ कैश्ड डेटा (${cached.locationName})`, true);
-    } else {
-      loadWeatherForCoordinates(DEFAULT_LAT, DEFAULT_LON, DEFAULT_CITY, 'default');
-    }
-
-    // 3. Silently request GPS in background without blocking screen
-    trySilentGps();
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', startWeatherApp);
-  } else {
-    startWeatherApp();
-  }
-})();
+  // Initial Load (Default Bareilly)
+  initMap(currentLat, currentLon);
+  loadWeather(currentLat, currentLon, currentCity);
+});
 </script>
 {% endblock %}

@@ -4,6 +4,7 @@ import string
 import os
 import uuid
 import base64
+import time
 from datetime import datetime, timedelta
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -427,16 +428,150 @@ def api_weather_detect_location():
         "source": "default"
     })
 
+# AccuWeather API Caches with TTL (15 mins)
+ACCUWEATHER_CACHE = {}
+ACCUWEATHER_LOC_CACHE = {}
+
+def get_accuweather_data(lat_str, lon_str):
+    accu_key = os.getenv("ACCUWEATHER_API_KEY", "").strip()
+    if not accu_key:
+        return None
+
+    try:
+        lat = round(float(lat_str), 2)
+        lon = round(float(lon_str), 2)
+        cache_key = f"{lat},{lon}"
+        now_ts = time.time()
+
+        # Cache check (15 min TTL)
+        if cache_key in ACCUWEATHER_CACHE:
+            entry = ACCUWEATHER_CACHE[cache_key]
+            if now_ts - entry['ts'] < 900:
+                return entry['data']
+
+        # 1. Resolve Location Key
+        loc_key, city_name = ACCUWEATHER_LOC_CACHE.get(cache_key, (None, None))
+        if not loc_key:
+            geo_url = "https://dataservice.accuweather.com/locations/v1/cities/geoposition/search"
+            geo_res = requests.get(geo_url, params={'apikey': accu_key, 'q': f"{lat},{lon}"}, headers={'User-Agent': 'Mozilla/5.0'}, timeout=5)
+            if geo_res.status_code == 200:
+                gdata = geo_res.json()
+                loc_key = gdata.get('Key')
+                loc_name = gdata.get('LocalizedName', '')
+                admin_name = gdata.get('AdministrativeArea', {}).get('LocalizedName', '')
+                city_name = f"{loc_name}, {admin_name}".strip(', ')
+                if loc_key:
+                    ACCUWEATHER_LOC_CACHE[cache_key] = (loc_key, city_name)
+            else:
+                logger.warning(f"AccuWeather Geoposition failed {geo_res.status_code}")
+                return None
+
+        # 2. Current Conditions
+        curr_url = f"https://dataservice.accuweather.com/currentconditions/v1/{loc_key}"
+        curr_res = requests.get(curr_url, params={'apikey': accu_key, 'details': 'true'}, headers={'User-Agent': 'Mozilla/5.0'}, timeout=5)
+        if curr_res.status_code != 200:
+            return None
+        curr_list = curr_res.json()
+        if not curr_list:
+            return None
+        curr = curr_list[0]
+
+        # 3. Hourly Forecast (12 Hours)
+        hourly_url = f"https://dataservice.accuweather.com/forecasts/v1/hourly/12hour/{loc_key}"
+        hourly_res = requests.get(hourly_url, params={'apikey': accu_key, 'metric': 'true', 'details': 'true'}, headers={'User-Agent': 'Mozilla/5.0'}, timeout=5)
+        hourly_list = hourly_res.json() if hourly_res.status_code == 200 else []
+
+        # 4. Daily Forecast (5 Days)
+        daily_url = f"https://dataservice.accuweather.com/forecasts/v1/daily/5day/{loc_key}"
+        daily_res = requests.get(daily_url, params={'apikey': accu_key, 'metric': 'true', 'details': 'true'}, headers={'User-Agent': 'Mozilla/5.0'}, timeout=5)
+        daily_dict = daily_res.json() if daily_res.status_code == 200 else {}
+        daily_forecasts = daily_dict.get('DailyForecasts', [])
+
+        temp_val = curr.get('Temperature', {}).get('Metric', {}).get('Value', 24.0)
+        apparent_temp = curr.get('RealFeelTemperature', {}).get('Metric', {}).get('Value', temp_val)
+        humidity = curr.get('RelativeHumidity', 65)
+        wind_speed = curr.get('Wind', {}).get('Speed', {}).get('Metric', {}).get('Value', 10.0)
+        dew_point = curr.get('DewPoint', {}).get('Metric', {}).get('Value', max(0, temp_val - 2.5))
+        precip = curr.get('PrecipitationSummary', {}).get('PastHour', {}).get('Metric', {}).get('Value', 0.0) if curr.get('HasPrecipitation') else 0.0
+        weather_text = curr.get('WeatherText', 'Clear')
+        weather_icon = curr.get('WeatherIcon', 1)
+
+        hourly_time, hourly_temp, hourly_rh, hourly_precip_prob, hourly_precip, hourly_text = [], [], [], [], [], []
+        for h in hourly_list[:12]:
+            hourly_time.append(h.get('DateTime', ''))
+            hourly_temp.append(h.get('Temperature', {}).get('Value', temp_val))
+            hourly_rh.append(h.get('RelativeHumidity', humidity))
+            hourly_precip_prob.append(h.get('PrecipitationProbability', 0))
+            hourly_precip.append(h.get('Rain', {}).get('Value', 0.0))
+            hourly_text.append(h.get('IconPhrase', weather_text))
+
+        daily_time, daily_temp_max, daily_temp_min, daily_precip_prob, daily_text = [], [], [], [], []
+        for d in daily_forecasts[:5]:
+            daily_time.append(d.get('Date', ''))
+            daily_temp_max.append(d.get('Temperature', {}).get('Maximum', {}).get('Value', temp_val + 3))
+            daily_temp_min.append(d.get('Temperature', {}).get('Minimum', {}).get('Value', temp_val - 3))
+            day_info = d.get('Day', {})
+            daily_precip_prob.append(day_info.get('PrecipitationProbability', 0))
+            daily_text.append(day_info.get('IconPhrase', 'Fair'))
+
+        result = {
+            "source": "accuweather",
+            "location_name": city_name or "Bareilly",
+            "latitude": lat,
+            "longitude": lon,
+            "current": {
+                "temperature_2m": temp_val,
+                "apparent_temperature": apparent_temp,
+                "relative_humidity_2m": humidity,
+                "precipitation": precip,
+                "rain": precip,
+                "wind_speed_10m": wind_speed,
+                "weather_code": weather_icon,
+                "weather_text": weather_text,
+                "dew_point_2m": dew_point
+            },
+            "hourly": {
+                "time": hourly_time,
+                "temperature_2m": hourly_temp,
+                "relative_humidity_2m": hourly_rh,
+                "precipitation_probability": hourly_precip_prob,
+                "precipitation": hourly_precip,
+                "dew_point_2m": [dew_point] * len(hourly_time),
+                "weather_text": hourly_text
+            },
+            "daily": {
+                "time": daily_time,
+                "temperature_2m_max": daily_temp_max,
+                "temperature_2m_min": daily_temp_min,
+                "precipitation_probability_max": daily_precip_prob,
+                "weather_text": daily_text
+            }
+        }
+        ACCUWEATHER_CACHE[cache_key] = {"data": result, "ts": now_ts}
+        return result
+    except Exception as e:
+        logger.error(f"AccuWeather live fetch error: {e}")
+        return None
+
 @app.route('/api/weather/live')
 def api_weather_live():
     lat = request.args.get('lat', '28.3670')
     lon = request.args.get('lon', '79.4304')
+
+    # 1. Try AccuWeather (if API key configured)
+    accu_data = get_accuweather_data(lat, lon)
+    if accu_data:
+        return jsonify(accu_data)
+
+    # 2. Resilient Fallback to Open-Meteo
     try:
         url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,dew_point_2m,wind_speed_10m&forecast_days=3&timezone=auto"
         res = requests.get(url, timeout=8)
-        return jsonify(res.json()), res.status_code
+        data = res.json()
+        data["source"] = "open-meteo"
+        return jsonify(data), res.status_code
     except Exception as e:
-        logger.error(f"Live weather proxy error: {e}")
+        logger.error(f"Live weather fallback error: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/weather/geocode')
@@ -444,8 +579,33 @@ def api_weather_geocode():
     q = request.args.get('q', '').strip()
     if not q:
         return jsonify({"results": []})
+
+    accu_key = os.getenv("ACCUWEATHER_API_KEY", "").strip()
+    if accu_key:
+        try:
+            url = "https://dataservice.accuweather.com/locations/v1/cities/search"
+            res = requests.get(url, params={'apikey': accu_key, 'q': q}, headers={'User-Agent': 'Mozilla/5.0'}, timeout=5)
+            if res.status_code == 200:
+                items = res.json()
+                results = []
+                for item in items[:5]:
+                    geo = item.get('GeoPosition', {})
+                    admin = item.get('AdministrativeArea', {}).get('LocalizedName', '')
+                    country = item.get('Country', {}).get('LocalizedName', 'India')
+                    results.append({
+                        "name": item.get('LocalizedName'),
+                        "admin1": admin,
+                        "country": country,
+                        "latitude": geo.get('Latitude'),
+                        "longitude": geo.get('Longitude')
+                    })
+                if results:
+                    return jsonify({"results": results})
+        except Exception as e:
+            logger.error(f"AccuWeather geocoding error: {e}")
+
     try:
-        url = f"https://geocoding-api.open-meteo.com/v1/search?name={requests.utils.quote(q)}&count=1&language=en&format=json"
+        url = f"https://geocoding-api.open-meteo.com/v1/search?name={requests.utils.quote(q)}&count=5&language=en&format=json"
         res = requests.get(url, timeout=8)
         return jsonify(res.json()), res.status_code
     except Exception as e:
