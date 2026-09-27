@@ -1006,10 +1006,10 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: false
       });
 
-      // Dark Base Map Tiles
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      // Base Map Tiles (OpenStreetMap)
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 18,
-        subdomains: 'abcd'
+        attribution: '&copy; OpenStreetMap'
       }).addTo(map);
 
       // Farm Location Marker
@@ -1021,6 +1021,10 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       farmMarker = L.marker([lat, lon], { icon: farmIcon }).addTo(map);
       farmMarker.bindPopup(`<b>${currentCity}</b><br>आपका खेत क्षेत्र`).openPopup();
+
+      setTimeout(() => {
+        if (map) map.invalidateSize();
+      }, 200);
 
       loadRadarTiles();
     } catch (e) {

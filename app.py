@@ -44,6 +44,7 @@ from backend.services.pest_detection_service import predict_pest
 from backend.services.soil_analysis_service import predict_soil
 
 app = Flask(__name__)
+app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'super_secret_krishi_key_2026')
 
 # Support PostgreSQL from DATABASE_URL with SQLite fallback
@@ -383,11 +384,13 @@ import requests
 from datetime import datetime
 
 @app.route('/weather', methods=['GET', 'POST'])
-@login_required
 def weather():
     logger.info("Accessed Weather page")
-    user_district = getattr(current_user, 'district', None) or 'Bareilly'
-    user_state = getattr(current_user, 'state', None) or 'Uttar Pradesh'
+    user_district = 'Bareilly'
+    user_state = 'Uttar Pradesh'
+    if current_user.is_authenticated:
+        user_district = getattr(current_user, 'district', None) or 'Bareilly'
+        user_state = getattr(current_user, 'state', None) or 'Uttar Pradesh'
     return render_template('weather.html', user_district=user_district, user_state=user_state)
 
 @app.route('/api/weather/detect-location')
