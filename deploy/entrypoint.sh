@@ -1,8 +1,15 @@
 #!/bin/sh
 set -e
 
-# Default to 80 if PORT is not set (Render provides $PORT, e.g. 10000)
+# Default to 80 if PORT is not set (Railway and Render provide $PORT)
 export PORT="${PORT:-80}"
+
+# Optimize Python and TensorFlow memory usage for cloud containers
+export PYTHONUNBUFFERED=1
+export PYTHONDONTWRITEBYTECODE=1
+export CUDA_VISIBLE_DEVICES="-1"
+export TF_ENABLE_ONEDNN_OPTS="0"
+export TF_CPP_MIN_LOG_LEVEL="3"
 
 echo "=================================================="
 echo " Starting KRISHI-AI Container on PORT: ${PORT}"
