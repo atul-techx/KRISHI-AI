@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}जैविक खेती - Krishi AI{% endblock %}
+{% block title %}जैविक खेती एवं प्राकृतिक खाद निर्माण - Krishi AI{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -12,6 +12,7 @@
         --org-text-main: #F8FAFC;
         --org-text-sub: #CBD5E1;
         --org-text-muted: #94A3B8;
+        --org-modal-bg: #0F172A;
         --org-banner-wheat: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(245,158,11,0.08));
         --org-banner-rice: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(16,185,129,0.08));
         --org-banner-tomato: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(245,158,11,0.08));
@@ -31,6 +32,7 @@
         --org-text-main: #0F172A;
         --org-text-sub: #334155;
         --org-text-muted: #64748B;
+        --org-modal-bg: #FFFFFF;
         --org-banner-wheat: linear-gradient(135deg, #FEF3C7 0%, #ECFDF5 100%);
         --org-banner-rice: linear-gradient(135deg, #EFF6FF 0%, #ECFDF5 100%);
         --org-banner-tomato: linear-gradient(135deg, #FEE2E2 0%, #FEF3C7 100%);
@@ -56,7 +58,7 @@
         color: var(--org-text-main);
         font-size: 1.25rem;
         font-weight: 700;
-        margin-bottom: 0.85rem;
+        margin-bottom: 0.65rem;
         display: flex;
         align-items: center;
         gap: 0.55rem;
@@ -65,7 +67,7 @@
     .org-subtext {
         color: var(--org-text-muted);
         font-size: 0.88rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
         line-height: 1.5;
     }
 
@@ -78,6 +80,235 @@
         transition: all 0.25s ease;
     }
 
+    /* Filter Pills */
+    .org-filter-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .org-filter-btn {
+        padding: 0.45rem 1rem;
+        border-radius: 50px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        border: 1px solid var(--org-tile-border);
+        background: var(--org-tile-bg);
+        color: var(--org-text-sub);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .org-filter-btn:hover {
+        border-color: #059669;
+        color: #059669;
+    }
+    .org-filter-btn.active {
+        background: #059669;
+        color: #FFFFFF !important;
+        border-color: #059669;
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+    }
+
+    /* Recipe Item Cards */
+    .org-recipe-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+        gap: 1.25rem;
+    }
+    .org-recipe-card {
+        background: var(--org-tile-bg);
+        border: 1px solid var(--org-tile-border);
+        border-radius: 16px;
+        padding: 1.35rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        cursor: pointer;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        position: relative;
+    }
+    .org-recipe-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+        border-color: #059669;
+    }
+    .org-recipe-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.85rem;
+    }
+    .org-recipe-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        flex-shrink: 0;
+        background: rgba(5, 150, 105, 0.1);
+        border: 1px solid rgba(5, 150, 105, 0.2);
+    }
+    .org-badge {
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 0.25rem 0.65rem;
+        border-radius: 50px;
+        letter-spacing: 0.02em;
+    }
+    .badge-fertilizer { background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; }
+    .badge-pesticide { background: #FEF3C7; color: #D97706; border: 1px solid #FDE68A; }
+    .badge-tonic { background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; }
+    .badge-antifungal { background: #FAF5FF; color: #7C3AED; border: 1px solid #DDD6FE; }
+
+    .org-recipe-name {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--org-text-main);
+        margin-bottom: 0.2rem;
+    }
+    .org-recipe-eng {
+        font-size: 0.78rem;
+        color: var(--org-text-muted);
+        font-weight: 600;
+        margin-bottom: 0.65rem;
+    }
+    .org-recipe-desc {
+        font-size: 0.84rem;
+        line-height: 1.55;
+        color: var(--org-text-sub);
+        margin-bottom: 1rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .org-recipe-meta-row {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.78rem;
+        color: var(--org-text-muted);
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--org-tile-border);
+        margin-bottom: 0.85rem;
+    }
+    .org-recipe-meta-row span {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .org-recipe-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        padding: 0.6rem 1rem;
+        border-radius: 10px;
+        font-size: 0.84rem;
+        font-weight: 700;
+        border: 1px solid rgba(5, 150, 105, 0.3);
+        background: rgba(5, 150, 105, 0.08);
+        color: #059669;
+        transition: all 0.2s ease;
+    }
+    .org-recipe-card:hover .org-recipe-btn {
+        background: #059669;
+        color: #FFFFFF !important;
+        border-color: #059669;
+    }
+
+    /* Recipe Detail Modal */
+    .org-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.65);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        z-index: 1050;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        animation: fadeIn 0.2s ease;
+    }
+    .org-modal-content {
+        background: var(--org-modal-bg);
+        border: 1px solid var(--org-card-border);
+        border-radius: 20px;
+        width: 100%;
+        max-width: 720px;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 2rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        position: relative;
+    }
+    .org-modal-close-btn {
+        position: absolute;
+        top: 1.25rem;
+        right: 1.25rem;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--org-tile-bg);
+        border: 1px solid var(--org-tile-border);
+        color: var(--org-text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+    }
+    .org-modal-close-btn:hover {
+        background: #EF4444;
+        color: #FFFFFF;
+        border-color: #EF4444;
+    }
+
+    /* Modal Content Blocks */
+    .org-step-card {
+        background: var(--org-tile-bg);
+        border: 1px solid var(--org-tile-border);
+        border-radius: 12px;
+        padding: 0.9rem 1rem;
+        margin-bottom: 0.65rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.85rem;
+    }
+    .org-step-num {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #059669;
+        color: #fff;
+        font-weight: 800;
+        font-size: 0.82rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+    .org-ing-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.88rem;
+        padding: 0.45rem 0;
+        border-bottom: 1px dashed var(--org-tile-border);
+        color: var(--org-text-sub);
+    }
+    .org-ing-item:last-child {
+        border-bottom: none;
+    }
+
+    /* Crops Directory styles */
     .org-crop-card {
         background: var(--org-tile-bg);
         border: 1px solid var(--org-tile-border);
@@ -91,16 +322,14 @@
         transform: translateY(-4px);
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
     }
-
     .org-crop-banner {
-        height: 110px;
+        height: 100px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 3.2rem;
+        font-size: 3rem;
         border-bottom: 1px solid var(--org-tile-border);
     }
-
     .org-crop-body {
         padding: 1.25rem;
         display: flex;
@@ -109,18 +338,13 @@
         font-size: 0.85rem;
         color: var(--org-text-sub);
     }
-
     .org-crop-name {
         font-size: 1.05rem;
         font-weight: 700;
         color: var(--org-text-main);
         margin-bottom: 0.25rem;
     }
-
-    .org-label {
-        font-weight: 700;
-        margin-right: 0.35rem;
-    }
+    .org-label { font-weight: 700; margin-right: 0.35rem; }
     .org-label.soil { color: var(--org-tag-soil); }
     .org-label.water { color: var(--org-tag-water); }
     .org-label.variety { color: var(--org-tag-variety); }
@@ -135,16 +359,8 @@
         flex-direction: column;
         gap: 0.2rem;
     }
-    .org-stat-label {
-        font-size: 0.75rem;
-        color: var(--org-text-muted);
-        font-weight: 600;
-    }
-    .org-stat-val {
-        font-size: 1.2rem;
-        font-weight: 800;
-        color: #059669;
-    }
+    .org-stat-label { font-size: 0.75rem; color: var(--org-text-muted); font-weight: 600; }
+    .org-stat-val { font-size: 1.2rem; font-weight: 800; color: #059669; }
 </style>
 {% endblock %}
 
@@ -153,19 +369,62 @@
 
     <!-- Page Header -->
     <div class="page-header fade-in-up">
-        <h1 class="page-title" style="color:#059669;"><i class="fa-solid fa-leaf"></i> जैविक खेती संवर्धन</h1>
-        <p class="page-sub">परंपरा और तकनीक का मिलाप — सीखें प्राकृतिक कीटनाशक बनाना और निकालें जैविक खाद की सटीक मात्रा।</p>
+        <h1 class="page-title" style="color:#059669;"><i class="fa-solid fa-leaf"></i> जैविक खेती एवं प्राकृतिक खाद निर्माण</h1>
+        <p class="page-sub">घर पर आसानी से बनाएं प्राकृतिक कीटनाशक, जैविक खाद व ग्रोथ प्रमोटर — किसी भी कार्ड पर क्लिक करके <strong>पूरी सामग्री व चरण-दर-चरण विधि</strong> देखें।</p>
     </div>
 
     <div style="display:grid;grid-template-columns:1fr;gap:2rem;">
 
-        <!-- 1. Certification Guide Card -->
-        <div class="krishi-card org-card fade-in-up" style="border-left: 4px solid #059669; padding: 1.5rem;">
+        <!-- ══════════════════════════════════════════════════════════
+             1. INTERACTIVE ORGANIC FORMULATION RECIPE LIBRARY
+             ══════════════════════════════════════════════════════════ -->
+        <div class="krishi-card org-card fade-in-up" style="border-left: 4px solid #059669; padding: 1.75rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <h3 class="org-title" style="margin: 0;">
+                        <i class="fa-solid fa-flask-vial" style="color:#059669;"></i>
+                        प्राकृतिक खाद एवं कीटनाशक निर्माण ज्ञानकोश
+                    </h3>
+                    <p class="org-subtext" style="margin: 0.25rem 0 0 0;">
+                        कार्ड पर क्लिक करें — विस्तृत सामग्री (Ingredients) और बनाने का तरीका (Step-by-Step Method) तुरंत खुलेगा।
+                    </p>
+                </div>
+            </div>
+
+            <!-- Category Filter Tabs -->
+            <div class="org-filter-bar">
+                <button type="button" class="org-filter-btn active" onclick="filterRecipes('all', this)">
+                    <i class="fa-solid fa-border-all"></i> सभी विधियां (10)
+                </button>
+                <button type="button" class="org-filter-btn" onclick="filterRecipes('fertilizer', this)">
+                    🌿 जैविक खाद (Bio-Fertilizers)
+                </button>
+                <button type="button" class="org-filter-btn" onclick="filterRecipes('pesticide', this)">
+                    🛡️ प्राकृतिक कीटनाशक (Bio-Pesticides)
+                </button>
+                <button type="button" class="org-filter-btn" onclick="filterRecipes('tonic', this)">
+                    ⚡ वृद्धि वर्धक टॉनिक (Plant Tonics)
+                </button>
+                <button type="button" class="org-filter-btn" onclick="filterRecipes('antifungal', this)">
+                    🍄 फंगस रोधक (Antifungal)
+                </button>
+            </div>
+
+            <!-- Dynamic Recipes Grid (Populated by JavaScript) -->
+            <div class="org-recipe-grid" id="recipesGrid">
+                <!-- Cards will render here dynamically -->
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════════════
+             2. ORGANIC CERTIFICATION GUIDE
+             ══════════════════════════════════════════════════════════ -->
+        <div class="krishi-card org-card fade-in-up" style="border-left: 4px solid #2563EB; padding: 1.5rem;">
             <h3 class="org-title">
-                <i class="fa-solid fa-certificate" style="color:#059669;"></i>
+                <i class="fa-solid fa-certificate" style="color:#2563EB;"></i>
                 भारत जैविक प्रमाणन गाइड (Organic Certification Guide)
             </h3>
-            <p class="org-subtext" style="margin-bottom: 1.25rem;">अपनी फसल को आधिकारिक जैविक दर्जा दिलाएं और मंडी व निर्यात में 30% तक अधिक दाम पाएं।</p>
+            <p class="org-subtext">अपनी फसल को आधिकारिक जैविक दर्जा दिलाएं और मंडी व निर्यात में 30% तक अधिक दाम पाएं।</p>
             
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.25rem;">
                 <div class="org-tile">
@@ -187,7 +446,9 @@
             </div>
         </div>
 
-        <!-- 2. Organic Crop Directory Card -->
+        <!-- ══════════════════════════════════════════════════════════
+             3. ORGANIC CROP DIRECTORY
+             ══════════════════════════════════════════════════════════ -->
         <div class="krishi-card org-card fade-in-up" style="border-left: 4px solid #D97706; padding: 1.5rem;">
             <h3 class="org-title">
                 <i class="fa-solid fa-book-open" style="color:#D97706;"></i>
@@ -195,7 +456,6 @@
             </h3>
             <p class="org-subtext">अनाज, सब्जियां, दलहन और फलों की श्रेणी के अनुसार जैविक खेती करने की पूरी वैज्ञानिक जानकारी।</p>
 
-            <!-- Crop Cards Grid -->
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;">
 
                 <!-- Organic Wheat -->
@@ -257,66 +517,19 @@
             </div>
         </div>
 
-        <!-- 3. Bio-recipes & Fertilizer Calculator Row -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:2rem;">
+        <!-- ══════════════════════════════════════════════════════════
+             4. FERTILIZER DOSAGE CALCULATOR
+             ══════════════════════════════════════════════════════════ -->
+        <div class="krishi-card org-card fade-in-up" style="border-left: 4px solid #10B981; padding: 1.5rem;">
+            <h3 class="org-title">
+                <i class="fa-solid fa-calculator" style="color:#059669;"></i>
+                जैविक उर्वरक कैलकुलेटर (Bio-Fertilizer Calculator)
+            </h3>
+            <p class="org-subtext">अपने खेत के क्षेत्रफल अनुसार आवश्यक जैविक खाद की सही मात्रा जानें।</p>
 
-            <!-- Bio-recipes Card -->
-            <div class="krishi-card org-card fade-in-up" style="border-left: 4px solid #10B981; padding: 1.5rem;">
-                <h3 class="org-title">
-                    <i class="fa-solid fa-jar" style="color:#059669;"></i>
-                    प्राकृतिक कीटनाशक एवं खाद विधि
-                </h3>
-                <p class="org-subtext">घर पर आसानी से बनाएं बिना किसी रासायनिक खर्च के।</p>
-
-                <!-- Jeevamrutha -->
-                <div class="org-tile" style="margin-bottom: 1.25rem;">
-                    <h4 style="color:#059669;font-size:1.05rem;font-weight:700;margin-bottom:0.4rem;display:flex;align-items:center;gap:0.4rem;">
-                        <i class="fa-solid fa-seedling"></i> जीवामृत (Jeevamrutha)
-                    </h4>
-                    <p style="font-size:0.84rem;line-height:1.5;margin-bottom:0.75rem;">मिट्टी में सूक्ष्म जीवाणुओं की संख्या तेजी से बढ़ाता है और फसल की रोग प्रतिरोधक क्षमता को मजबूत करता है।</p>
-                    
-                    <strong style="color:#059669;font-size:0.85rem;display:block;margin-bottom:0.35rem;">आवश्यक सामग्री:</strong>
-                    <ul style="padding-left:1.25rem;margin:0;font-size:0.84rem;line-height:1.7;">
-                        <li>ताजा देशी गाय का गोबर: 10 किलोग्राम</li>
-                        <li>देशी गाय का गोमूत्र: 5 से 10 लीटर</li>
-                        <li>पुराना गुड़: 1 किलो, बेसन (चने का आटा): 1 किलो</li>
-                        <li>बरगद या पुराने पेड़ की सजीव मिट्टी: 1 मुट्ठी</li>
-                    </ul>
-
-                    <strong style="color:#059669;font-size:0.85rem;display:block;margin-top:0.75rem;margin-bottom:0.35rem;">तैयारी विधि:</strong>
-                    <ol style="padding-left:1.25rem;margin:0;font-size:0.84rem;line-height:1.7;">
-                        <li>200 लीटर पानी के ड्रम में सभी सामग्री अच्छी तरह घोलें।</li>
-                        <li>48 घंटे तक छाया में रखें और प्रतिदिन सुबह-शाम लकड़ी के डंडे से हिलाएं।</li>
-                        <li>सिंचाई के पानी के साथ या 10% घोल बनाकर फसल पर छिड़कें।</li>
-                    </ol>
-                </div>
-
-                <!-- Neem Astra -->
-                <div class="org-tile">
-                    <h4 style="color:#D97706;font-size:1.05rem;font-weight:700;margin-bottom:0.4rem;display:flex;align-items:center;gap:0.4rem;">
-                        <i class="fa-solid fa-shield-virus"></i> नीमास्त्र (Neem Astra)
-                    </h4>
-                    <p style="font-size:0.84rem;line-height:1.5;margin-bottom:0.75rem;">माहू, सफेद मक्खी, थ्रिप्स और रस चूसने वाले सभी कीटों के लिए 100% प्राकृतिक समाधान।</p>
-                    
-                    <strong style="color:#D97706;font-size:0.85rem;display:block;margin-bottom:0.35rem;">आवश्यक सामग्री:</strong>
-                    <ul style="padding-left:1.25rem;margin:0;font-size:0.84rem;line-height:1.7;">
-                        <li>नीम के ताजे पत्ते या निम्बोली: 5 किलोग्राम</li>
-                        <li>देशी गोमूत्र: 5 लीटर + देशी गाय का गोबर: 2 किलो</li>
-                        <li>साफ पानी: 100 लीटर</li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Fertilizer Calculator -->
-            <div class="krishi-card org-card fade-in-up" style="border-left: 4px solid #2563EB; padding: 1.5rem;">
-                <h3 class="org-title">
-                    <i class="fa-solid fa-calculator" style="color:#2563EB;"></i>
-                    जैविक उर्वरक कैलकुलेटर (Bio Dosage)
-                </h3>
-                <p class="org-subtext">अपने खेत के क्षेत्रफल अनुसार आवश्यक जैविक खाद की सही मात्रा जानें।</p>
-
-                <form id="organicCalcForm" onsubmit="calcOrganic(event)">
-                    <div class="form-group" style="margin-bottom: 1.1rem;">
+            <form id="organicCalcForm" onsubmit="calcOrganic(event)">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.25rem;margin-bottom:1.25rem;">
+                    <div class="form-group">
                         <label class="form-label" style="font-weight:600;font-size:0.9rem;display:block;margin-bottom:0.4rem;">फसल की श्रेणी</label>
                         <select class="krishi-input" id="cropCat" style="width:100%;">
                             <option value="cereals">अनाज एवं दलहन (गेहूं, धान, चना)</option>
@@ -324,46 +537,528 @@
                             <option value="cash">नकदी फसलें (गन्ना, कपास, तिलहन)</option>
                         </select>
                     </div>
-                    <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <div class="form-group">
                         <label class="form-label" style="font-weight:600;font-size:0.9rem;display:block;margin-bottom:0.4rem;">खेत का क्षेत्रफल (एकड़ में)</label>
                         <input type="number" class="krishi-input" id="acreage" placeholder="जैसे: 2 एकड़" step="0.1" min="0.1" required style="width:100%;">
                     </div>
-                    <button type="submit" class="btn-krishi-primary full-btn" style="background:linear-gradient(135deg,#2563EB,#1D4ED8);box-shadow:0 4px 14px rgba(37,99,235,0.3);width:100%;">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> आवश्यकता की गणना करें
-                    </button>
-                </form>
+                </div>
+                <button type="submit" class="btn-krishi-primary" style="background:linear-gradient(135deg,#059669,#10B981);box-shadow:0 4px 14px rgba(5,150,105,0.3);padding:0.65rem 1.6rem;">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> आवश्यकता की गणना करें
+                </button>
+            </form>
 
-                <div id="calcResult" style="display:none;margin-top:1.5rem;border-top:1px solid var(--org-card-border);padding-top:1.25rem;">
-                    <h4 style="font-size:0.95rem;font-weight:700;margin-bottom:0.85rem;color:var(--org-text-main);">अनुशंसित जैविक खुराक:</h4>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.85rem;">
-                        <div class="org-stat-box">
-                            <span class="org-stat-label">गोबर खाद (Compost)</span>
-                            <strong class="org-stat-val" id="resCompost">-</strong>
-                        </div>
-                        <div class="org-stat-box">
-                            <span class="org-stat-label">केंचुआ खाद (Vermi)</span>
-                            <strong class="org-stat-val" id="resVermi">-</strong>
-                        </div>
-                        <div class="org-stat-box">
-                            <span class="org-stat-label">नीम केक खाद</span>
-                            <strong class="org-stat-val" id="resNeem">-</strong>
-                        </div>
-                        <div class="org-stat-box">
-                            <span class="org-stat-label">जीवामृत जरूरत</span>
-                            <strong class="org-stat-val" id="resJeeva">-</strong>
-                        </div>
+            <div id="calcResult" style="display:none;margin-top:1.5rem;border-top:1px solid var(--org-card-border);padding-top:1.25rem;">
+                <h4 style="font-size:0.95rem;font-weight:700;margin-bottom:0.85rem;color:var(--org-text-main);">अनुशंसित जैविक खुराक:</h4>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.85rem;">
+                    <div class="org-stat-box">
+                        <span class="org-stat-label">गोबर खाद (Compost)</span>
+                        <strong class="org-stat-val" id="resCompost">-</strong>
+                    </div>
+                    <div class="org-stat-box">
+                        <span class="org-stat-label">केंचुआ खाद (Vermi)</span>
+                        <strong class="org-stat-val" id="resVermi">-</strong>
+                    </div>
+                    <div class="org-stat-box">
+                        <span class="org-stat-label">नीम केक खाद</span>
+                        <strong class="org-stat-val" id="resNeem">-</strong>
+                    </div>
+                    <div class="org-stat-box">
+                        <span class="org-stat-label">जीवामृत जरूरत</span>
+                        <strong class="org-stat-val" id="resJeeva">-</strong>
                     </div>
                 </div>
             </div>
-
         </div>
 
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     RECIPE FULL DETAILS MODAL
+     ══════════════════════════════════════════════════════════ -->
+<div class="org-modal-overlay" id="recipeModal" onclick="closeRecipeModal(event)">
+    <div class="org-modal-content" onclick="event.stopPropagation()">
+        <button type="button" class="org-modal-close-btn" onclick="closeRecipeModal()" title="बंद करें">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;">
+            <div class="org-recipe-icon" id="modalIcon" style="width:64px;height:64px;font-size:2.2rem;">🥛</div>
+            <div>
+                <span class="org-badge badge-fertilizer" id="modalBadge">जैविक खाद</span>
+                <h2 id="modalTitle" style="margin:0.25rem 0 0.1rem 0;font-size:1.45rem;font-weight:800;color:var(--org-text-main);">जीवामृत (Jeevamrutha)</h2>
+                <span id="modalEngTitle" style="font-size:0.82rem;color:var(--org-text-muted);font-weight:600;">Jeevamrutha Microbial Culture</span>
+            </div>
+        </div>
+
+        <p id="modalDesc" style="font-size:0.9rem;line-height:1.6;color:var(--org-text-sub);margin-bottom:1.5rem;">
+            मिट्टी में सूक्ष्म जीवाणुओं की संख्या तेजी से बढ़ाता है...
+        </p>
+
+        <!-- Quick Specs Row -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.75rem;margin-bottom:1.5rem;">
+            <div class="org-stat-box">
+                <span class="org-stat-label">⏱️ निर्माण समय</span>
+                <strong style="font-size:0.95rem;color:var(--org-text-main);" id="modalTime">48-72 घंटे</strong>
+            </div>
+            <div class="org-stat-box">
+                <span class="org-stat-label">💰 अनुमानित लागत</span>
+                <strong style="font-size:0.95rem;color:#059669;" id="modalCost">₹0 - ₹20</strong>
+            </div>
+            <div class="org-stat-box">
+                <span class="org-stat-label">📦 शेल्फ लाइफ</span>
+                <strong style="font-size:0.95rem;color:var(--org-text-main);" id="modalShelf">7-10 दिन</strong>
+            </div>
+        </div>
+
+        <!-- Ingredients Section -->
+        <div style="margin-bottom:1.5rem;">
+            <h4 style="font-size:1.05rem;font-weight:700;color:var(--org-text-main);margin-bottom:0.75rem;display:flex;align-items:center;gap:0.45rem;">
+                <i class="fa-solid fa-list-check" style="color:#059669;"></i> आवश्यक सामग्री (Ingredients Checklist):
+            </h4>
+            <div class="org-tile" id="modalIngredients" style="padding:0.75rem 1.25rem;">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Steps Section -->
+        <div style="margin-bottom:1.5rem;">
+            <h4 style="font-size:1.05rem;font-weight:700;color:var(--org-text-main);margin-bottom:0.75rem;display:flex;align-items:center;gap:0.45rem;">
+                <i class="fa-solid fa-stairs" style="color:#059669;"></i> चरण-दर-चरण निर्माण विधि (Step-by-Step Method):
+            </h4>
+            <div id="modalSteps">
+                <!-- Populated dynamically -->
+            </div>
+        </div>
+
+        <!-- Dosage & Application -->
+        <div class="org-tile" style="margin-bottom:1.5rem;border-left:4px solid #059669;">
+            <h4 style="font-size:0.95rem;font-weight:700;color:#059669;margin-bottom:0.4rem;display:flex;align-items:center;gap:0.4rem;">
+                <i class="fa-solid fa-spray-can"></i> प्रयोग की विधि एवं मात्रा (Dosage & Application):
+            </h4>
+            <p id="modalDosage" style="font-size:0.86rem;line-height:1.6;margin:0;color:var(--org-text-sub);"></p>
+        </div>
+
+        <!-- Precautions -->
+        <div class="org-tile" style="margin-bottom:1.5rem;border-left:4px solid #D97706;">
+            <h4 style="font-size:0.95rem;font-weight:700;color:#D97706;margin-bottom:0.4rem;display:flex;align-items:center;gap:0.4rem;">
+                <i class="fa-solid fa-shield-heart"></i> महत्वपूर्ण सावधानियां (Precautions):
+            </h4>
+            <p id="modalPrecautions" style="font-size:0.86rem;line-height:1.6;margin:0;color:var(--org-text-sub);"></p>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
+            <button type="button" class="btn-krishi-secondary" onclick="window.print()" style="padding:0.5rem 1.2rem;border-color:#059669;color:#059669;">
+                <i class="fa-solid fa-print"></i> प्रिंट / PDF सेव करें
+            </button>
+            <button type="button" class="btn-krishi-primary" onclick="closeRecipeModal()" style="padding:0.5rem 1.4rem;background:#059669;">
+                समझ गया (Close)
+            </button>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
+// 10 Detailed Organic Recipes Database
+const ORGANIC_RECIPES = [
+    {
+        id: "jeevamrutha",
+        category: "fertilizer",
+        badgeText: "🌿 तरल जैविक खाद",
+        badgeClass: "badge-fertilizer",
+        icon: "🥛",
+        title: "जीवामृत",
+        engTitle: "Jeevamrutha (Microbial Bio-Culture)",
+        time: "48 से 72 घंटे",
+        cost: "₹10 - ₹20 (नगण्य)",
+        shelf: "7 से 10 दिन",
+        desc: "मिट्टी में सूक्ष्म जीवाणुओं की संख्या करोड़ों गुना बढ़ाता है। जड़ों का तीव्र विकास करता है और पौधों में पोषक तत्व सोखने की क्षमता में वृद्धि करता है।",
+        target: "सभी फसलें, फल-सब्जियां",
+        ingredients: [
+            "ताजा देशी गाय का गोबर: 10 किलोग्राम",
+            "देशी गाय का गोमूत्र: 5 से 10 लीटर",
+            "पुराना गुड़: 1 किलोग्राम (जीवाणुओं का भोजन)",
+            "बेसन (चना/उड़द/मूंग आटा): 1 किलोग्राम (प्रोटीन स्रोत)",
+            "पीपल या बरगद के पेड़ के नीचे की सजीव मिट्टी: 1 मुट्ठी",
+            "साफ पानी: 200 लीटर (क्लोरीन रहित)"
+        ],
+        steps: [
+            "200 लीटर क्षमता वाले प्लास्टिक के ड्रम में 200 लीटर साफ पानी भरें।",
+            "10 किलो देशी गाय का गोबर और 5-10 लीटर गोमूत्र डालकर लकड़ी के डंडे से अच्छी तरह घोलें।",
+            "1 किलो गुड़ को थोड़े गर्म पानी में घोलकर ड्रम में मिला दें।",
+            "1 किलो बेसन और 1 मुट्ठी पीपल/बरगद के नीचे की मिट्टी डालकर 2 मिनट तक घड़ी की दिशा (Clockwise) में हिलाएं।",
+            "ड्रम को जूट की बोरी से ढककर छायादार स्थान पर रखें (सीधी धूप से बचाएं)।",
+            "प्रतिदिन सुबह और शाम 2-2 मिनट तक लकड़ी के डंडे से हिलाएं। 48 से 72 घंटे में जीवामृत तैयार हो जाता है।"
+        ],
+        dosage: "200 लीटर जीवामृत प्रति एकड़ सिंचाई के पानी के साथ बहाएं। अथवा 10% घोल (10 लीटर जीवामृत + 90 लीटर पानी) बनाकर 15 दिन के अंतराल पर पत्तों पर छिड़कें।",
+        precautions: "इसे कभी भी प्लास्टिक शीट से एयरटाइट बंद न करें, जूट की बोरी से ही ढकें ताकि हवा मिलती रहे। 10 दिन के अंदर इसका उपयोग कर लें।"
+    },
+    {
+        id: "ghanjeevamrutha",
+        category: "fertilizer",
+        badgeText: "🌿 ठोस जैविक खाद",
+        badgeClass: "badge-fertilizer",
+        icon: "🧱",
+        title: "घनजीवामृत",
+        engTitle: "Ghanjeevamrutha (Solid Bio-Fertilizer)",
+        time: "4 से 5 दिन",
+        cost: "बहुत कम",
+        shelf: "6 महीने",
+        desc: "रासायनिक डीएपी (DAP) का सबसे शक्तिशाली प्राकृतिक विकल्प। खेत की बुवाई या जुताई के समय जमीन में डाला जाता है, जिससे मिट्टी भुरभुरी और समृद्ध बनती है।",
+        target: "गेहूं, धान, गन्ना, आलू, तिलहन",
+        ingredients: [
+            "देशी गाय का सूखा गोबर: 100 किलोग्राम",
+            "ताजा तैयार तरल जीवामृत: 20 लीटर"
+        ],
+        steps: [
+            "पक्के फर्श या तिरपाल पर 100 किलो सूखे देशी गोबर को बारीक करके फैला लें।",
+            "इसके ऊपर 20 लीटर तरल जीवामृत को थोड़ा-थोड़ा छिड़कते जाएं।",
+            "फावड़े से गोबर और जीवामृत को अच्छी तरह मिलाएं ताकि पूरी नमी एकसमान हो जाए।",
+            "मिश्रण का ढेर बनाकर जूट के बोरे से 48 घंटे के लिए ढक कर छोड़ दें।",
+            "48 घंटे बाद इसे छाया में फैलाकर सुखा लें और बारीक कूटकर बोरियों में भर लें।"
+        ],
+        dosage: "बुवाई के समय 100 से 200 किलो घनजीवामृत प्रति एकड़ खेत में छिड़कें या बीज के साथ कूंड़ों में डालें।",
+        precautions: "इसे कड़ी धूप में न सुखाएं, हमेशा छायादार स्थान पर सुखाएं ताकि जीवाणु जीवित रहें। नमी वाली जगह पर न रखें।"
+    },
+    {
+        id: "neemastra",
+        category: "pesticide",
+        badgeText: "🛡️ प्राकृतिक कीटनाशक",
+        badgeClass: "badge-pesticide",
+        icon: "🌿",
+        title: "नीमास्त्र",
+        engTitle: "Neemastra (Sucking Pest Repellent)",
+        time: "48 घंटे",
+        cost: "मुफ्त (घरेलू)",
+        shelf: "6 महीने",
+        desc: "माहू (Aphids), सफेद मक्खी (Whitefly), थ्रिप्स और रस चूसने वाले सभी छोटे कीटों व प्रारंभिक अवस्था की इल्लियों के लिए 100% प्राकृतिक व अचूक कीटनाशक।",
+        target: "माहू, थ्रिप्स, सफेद मक्खी, जैसिड",
+        ingredients: [
+            "नीम की पत्तियां या कुटी हुई निम्बोली: 5 किलोग्राम",
+            "देशी गाय का गोमूत्र: 5 लीटर",
+            "ताजा देशी गाय का गोबर: 2 किलोग्राम",
+            "साफ पानी: 100 लीटर"
+        ],
+        steps: [
+            "100 लीटर पानी में 5 लीटर गोमूत्र और 2 किलो ताजा गोबर डालकर अच्छी तरह घोलें।",
+            "नीम की पत्तियों को ओखली में कूटकर या चटनी बनाकर इस घोल में मिला दें।",
+            "ड्रम को जूट की बोरी से ढककर छायादार स्थान पर 48 घंटे तक रखें।",
+            "सुबह-शाम लकड़ी के डंडे से 2 मिनट तक हिलाएं।",
+            "48 घंटे बाद बारीक सूती कपड़े से छान लें। आपका नीमास्त्र तैयार है।"
+        ],
+        dosage: "1 एकड़ फसल के लिए 100 लीटर नीमास्त्र पर्याप्त है। इसे बिना पानी मिलाए सीधे स्प्रे पंप में भरकर छिड़कें।",
+        precautions: "छिड़काव हमेशा शाम 4 बजे के बाद करें जब धूप कम हो जाए। आंखों में जाने से बचाएं।"
+    },
+    {
+        id: "brahmastra",
+        category: "pesticide",
+        badgeText: "🛡️ शक्तिशाली कीटनाशक",
+        badgeClass: "badge-pesticide",
+        icon: "🏹",
+        title: "ब्रह्मास्त्र",
+        engTitle: "Brahmastra (Borer & Caterpillar Control)",
+        time: "24 घंटे",
+        cost: "₹20 - ₹40",
+        shelf: "6 महीने",
+        desc: "बड़ी और जिद्दी इल्लियों, फल छेदक (Fruit Borer), तना छेदक व पत्ती लपेटक कीटों के खात्मे के लिए सर्वाधिक असरदार प्राकृतिक अस्त्र।",
+        target: "फल छेदक, तना छेदक, सूंडी, इल्ली",
+        ingredients: [
+            "देशी गाय का गोमूत्र: 10 लीटर",
+            "नीम के पत्ते: 3 किलोग्राम",
+            "सीताफल (शरीफा) या करंज के पत्ते: 2 किलोग्राम",
+            "पपीते के पत्ते: 2 किलोग्राम",
+            "अमरूद के पत्ते: 2 किलोग्राम",
+            "आक (धतूरा/मदार) के पत्ते: 2 किलोग्राम"
+        ],
+        steps: [
+            "सभी 5 प्रकार के पत्तों को सिलबट्टे या ओखली में बारीक कूटकर चटनी बना लें।",
+            "एक मिट्टी या स्टील के बर्तन में 10 लीटर गोमूत्र डालें और कुटी हुई पत्तियां मिलाएं।",
+            "धीमी आंच पर इसे उबालें। जब इसमें 4 बार उबाल आ जाए, तो बर्तन को आंच से उतार लें।",
+            "इसे 48 घंटे तक छाया में ठंडा होने दें और रोज़ सुबह-शाम हिलाएं।",
+            "48 घंटे बाद बारीक कपड़े से छानकर कांच या प्लास्टिक की बोतल में भर लें।"
+        ],
+        dosage: "2 से 2.5 लीटर ब्रह्मास्त्र को 100 लीटर पानी में मिलाकर प्रति एकड़ छिड़काव करें।",
+        precautions: "उबालते समय बर्तन पर ढक्कन रखें और धुएं से अपनी आंखों व चेहरे को बचाएं।"
+    },
+    {
+        id: "agniastra",
+        category: "pesticide",
+        badgeText: "🛡️ तीव्र कीटनाशक",
+        badgeClass: "badge-pesticide",
+        icon: "🔥",
+        title: "अग्निअस्त्र",
+        engTitle: "Agniastra (Extreme Caterpillar Killer)",
+        time: "24 घंटे",
+        cost: "₹40 - ₹60",
+        shelf: "3 महीने",
+        desc: "जब किसी साधारण कीटनाशक से इल्ली व कीट न मरें (जैसे तंबाकू इल्ली, बॉलवर्म, गर्डल बीटल), तब तीखा अग्निअस्त्र कीटों के तंत्रिका तंत्र पर सीधा प्रहार करता है।",
+        target: "अमेरिकन सुंडी, बॉलवर्म, तंबाकू इल्ली",
+        ingredients: [
+            "देशी गाय का गोमूत्र: 20 लीटर",
+            "नीम के पत्तों की चटनी: 5 किलोग्राम",
+            "तीखी हरी मिर्च का पेस्ट: 500 ग्राम",
+            "देशी लहसुन का पेस्ट: 500 ग्राम",
+            "तंबाकू पाउडर (या पत्ते): 500 ग्राम"
+        ],
+        steps: [
+            "20 लीटर गोमूत्र में नीम चटनी, पिसी हरी मिर्च, पिसा लहसुन और तंबाकू पाउडर मिलाएं।",
+            "बर्तन को आग पर रखकर धीमी आंच पर तब तक उबालें जब तक 4 बार उबाल न आ जाए।",
+            "आंच से उतारकर 48 घंटे तक छाया में ठंडा होने दें (रोज़ 2 बार हिलाएं)।",
+            "48 घंटे बाद कपड़े से छानकर सुरक्षित डिब्बे में भर लें।"
+        ],
+        dosage: "2 से 3 लीटर अग्निअस्त्र को 100 लीटर पानी में मिलाकर प्रति एकड़ छिड़कें।",
+        precautions: "यह अत्यंत तीखा होता है। बनाते व छिड़कते समय चेहरे पर मास्क व हाथों में दस्ताने अवश्य पहनें।"
+    },
+    {
+        id: "panchagavya",
+        category: "tonic",
+        badgeText: "⚡ सम्पूर्ण टॉनिक",
+        badgeClass: "badge-tonic",
+        icon: "✨",
+        title: "पंचगव्य",
+        engTitle: "Panchagavya (Organic Growth Promoter)",
+        time: "21 दिन",
+        cost: "₹100 - ₹150",
+        shelf: "6 महीने",
+        desc: "पौधों का अमृत! पत्तियों को गहरा हरा-भरा बनाता है, फूलों-फलों का गिरना रोकता है, रोग प्रतिरोधक क्षमता बढ़ाता है और उत्पादन 20-30% तक बढ़ाता है।",
+        target: "फूल व फल विकास, सभी फसलें",
+        ingredients: [
+            "देशी गाय का ताजा गोबर: 5 किग्रा + देशी घी: 500 ग्राम",
+            "देशी गाय का गोमूत्र: 3 लीटर + कच्चा दूध: 2 लीटर + खट्टा दही: 2 लीटर",
+            "गुड़: 500 ग्राम (पानी में घुला हुआ) + पके केले: 6 पीस",
+            "नारियल पानी: 3 लीटर"
+        ],
+        steps: [
+            "पहले दिन 5 किलो गोबर और 500 ग्राम घी को अच्छी तरह मिलाकर मटके में रखें और 3 दिन तक रोज़ हिलाएं।",
+            "चौथे दिन इसमें 3 लीटर गोमूत्र और 3 लीटर पानी मिलाकर 15 दिन तक रोज़ सुबह-शाम हिलाएं।",
+            "15 दिन बाद दूध, दही, नारियल पानी, गुड़ का घोल और मसले हुए पके केले डालें।",
+            "अगले 7 दिनों तक रोज़ दो बार हिलाएं। 21वें दिन पंचगव्य तैयार हो जाता है।"
+        ],
+        dosage: "300 मिली पंचगव्य प्रति 10 लीटर पानी (3% घोल) में मिलाकर 15-20 दिनों के अंतराल पर फसल पर छिड़कें।",
+        precautions: "मिश्रण को खुला न रखें, जालीदार कपड़े से बांधें ताकि मक्खियां अंडे न दे सकें।"
+    },
+    {
+        id: "dashaparni",
+        category: "pesticide",
+        badgeText: "🛡️ सर्व-कीट निवारक",
+        badgeClass: "badge-pesticide",
+        icon: "🍃",
+        title: "दशपर्णी अर्क",
+        engTitle: "Dashaparni Ark (10-Herbal Universal Pest Repellent)",
+        time: "30 से 40 दिन",
+        cost: "₹50",
+        shelf: "6 महीने",
+        desc: "10 प्रकार के कड़वे व औषधीय पौधों की पत्तियों से निर्मित महा-अर्क, जो किसी भी प्रकार के रस चूसक, छेदक या फफूंद जनित कीट को खेत में फटकने नहीं देता।",
+        target: "समस्त प्रकार के कीट व फफूंद",
+        ingredients: [
+            "गोमूत्र: 20 लीटर + गाय का गोबर: 2 किलोग्राम",
+            "10 कड़वे पत्ते (नीम, धतूरा, करंज, आक, शरीफा, बबूल, कनेर, बेल, तुलसी, पपीता): प्रत्येक 2 किग्रा",
+            "हल्दी पाउडर: 500 ग्राम + पिसा अदरक: 500 ग्राम + हींग: 10 ग्राम",
+            "पानी: 200 लीटर"
+        ],
+        steps: [
+            "200 लीटर पानी में 20 लीटर गोमूत्र और 2 किलो गोबर घोलें।",
+            "सभी 10 प्रकार के पत्तों को कुचलकर इस पानी में डाल दें।",
+            "हल्दी, पिसा अदरक और हींग भी मिला दें।",
+            "ड्रम को छाया में रखकर जूट की बोरी से ढकें और 30 से 40 दिन तक सड़ने दें (रोज़ एक बार हिलाएं)।",
+            "40 दिन बाद अर्क को कपड़े से छानकर बोतलों में भर लें।"
+        ],
+        dosage: "5 से 6 लीटर दशपर्णी अर्क को 200 लीटर पानी में मिलाकर 1 एकड़ में स्प्रे करें।",
+        precautions: "इसे तैयार होने में समय लगता है, इसलिए फसल चक्र शुरू होने से 1 माह पहले बना लें।"
+    },
+    {
+        id: "vermicompost",
+        category: "fertilizer",
+        badgeText: "🌿 सर्वोच्च जैविक खाद",
+        badgeClass: "badge-fertilizer",
+        icon: "🪱",
+        title: "वर्मीकम्पोस्ट (केंचुआ खाद)",
+        engTitle: "Vermicompost (Black Gold Organic Compost)",
+        time: "45 से 60 दिन",
+        cost: "₹200 - ₹300",
+        shelf: "1 वर्ष",
+        desc: "केंचुओं (Eisenia fetida) द्वारा कार्बनिक कचरे से तैयार सबसे उत्तम पोषक खाद। मिट्टी को भुरभुरा, जलधारण क्षमता युक्त और जैविक कार्बन से भरपूर बनाती है।",
+        target: "मिट्टी सुधार, सभी फसलें",
+        ingredients: [
+            "आंशिक रूप से सड़ा हुआ 15-20 दिन पुराना गोबर: 1000 किग्रा",
+            "सूखी पत्तियां, पराली, छिलके (कृषि अपशिष्ट): 300 किग्रा",
+            "आइसीनिया फेटिडा केंचुए: 2 से 3 किलोग्राम",
+            "छायादार बेड (3 फीट चौड़ा, 30 फीट लंबा, 2 फीट ऊंचा)"
+        ],
+        steps: [
+            "छायादार स्थान पर जमीन पर 3 इंच सूखी घास या पत्तियों की परत बिछाएं।",
+            "इसके ऊपर ठंडा गोबर 1.5 फीट की ऊंचाई तक ढेर बनाएं।",
+            "गोबर में 30-40% नमी बनाए रखने हेतु हल्का पानी छिड़कें।",
+            "ऊपर से केंचुए छोड़ दें और गीली बोरी या पराली से ढक दें।",
+            "रोज़ शाम को हल्का पानी छिड़कते रहें। 45-60 दिन में ऊपर चायपत्ती जैसी दानेदार खाद तैयार हो जाती है।"
+        ],
+        dosage: "1 से 2 टन प्रति एकड़ बुवाई या जुताई के समय खेत में मिलाएं। गमलों में 100 ग्राम प्रति पौधा दें।",
+        precautions: "बेड पर सीधी धूप न पड़ने दें। ताजा गर्म गोबर कभी न डालें, इससे केंचुए मर सकते हैं।"
+    },
+    {
+        id: "buttermilk",
+        category: "antifungal",
+        badgeText: "🍄 फंगस रोधक",
+        badgeClass: "badge-antifungal",
+        icon: "🥣",
+        title: "खट्टी छाछ स्प्रे",
+        engTitle: "Sour Buttermilk Spray (Antifungal & Antiviral)",
+        time: "7 से 10 दिन",
+        cost: "₹10 - ₹20",
+        shelf: "1 महीना",
+        desc: "पाउडरी मिल्ड्यू, डाउनी मिल्ड्यू, पत्ती झुलसा, रस्ट और मरोड़िया वायरस के रोकथाम हेतु सबसे सरल, सस्ती व असरदार प्राकृतिक देशी तकनीक।",
+        target: "फंगल रोग, ब्लाइट, पाउडरी मिल्ड्यू, मरोड़िया",
+        ingredients: [
+            "देशी गाय की पुरानी छाछ (मट्ठा): 5 लीटर",
+            "तांबे का टुकड़ा, तार या तांबे का बर्तन",
+            "साफ पानी: 100 लीटर"
+        ],
+        steps: [
+            "5 लीटर खट्टी छाछ को मिट्टी या प्लास्टिक के बर्तन में रखें।",
+            "इसमें एक साफ तांबे का टुकड़ा या तांबे का तार डाल दें।",
+            "बर्तन को 7 से 10 दिनों तक ढककर छाया में रखें।",
+            "10 दिन में छाछ का रंग हल्का नीला-हरा हो जाएगा और तीव्र कॉपर-फंगस रोधक तैयार हो जाएगा।",
+            "तांबे का टुकड़ा बाहर निकाल लें और छाछ को बारीक कपड़े से छान लें।"
+        ],
+        dosage: "1 लीटर तैयार खट्टी छाछ को 15 लीटर पानी के स्प्रे पंप में मिलाकर पत्तियों पर छिड़कें।",
+        precautions: "तांबे का टुकड़ा जंग लगा हुआ न हो, साफ हो। छिड़काव के बाद 24 घंटे बारिश न हो तो सर्वश्रेष्ठ परिणाम मिलता है।"
+    },
+    {
+        id: "matka_khad",
+        category: "tonic",
+        badgeText: "⚡ त्वरित तरल पोषण",
+        badgeClass: "badge-tonic",
+        icon: "🏺",
+        title: "मटका खाद",
+        engTitle: "Matka Khad (Instant Liquid Nutrient Booster)",
+        time: "7 से 10 दिन",
+        cost: "₹15 - ₹25",
+        shelf: "15 दिन",
+        desc: "सब्जियों, फूलों और बागवानी फसलों में तुरंत हरियाली, फुटाव व नई शाखाएं निकालने के लिए त्वरित नाइट्रोजन व सूक्ष्म पोषक तत्वों का प्राकृतिक टॉनिक।",
+        target: "सब्जियां, मिर्च, टमाटर, बैंगन, फूल",
+        ingredients: [
+            "मिट्टी का बड़ा मटका (घड़ा): 20 लीटर क्षमता",
+            "ताजा देशी गाय का गोबर: 5 किग्रा",
+            "देशी गाय का गोमूत्र: 5 लीटर",
+            "गुड़: 250 ग्राम + बेसन: 250 ग्राम",
+            "साफ पानी: 10 लीटर"
+        ],
+        steps: [
+            "मटके में 5 किलो गोबर और 5 लीटर गोमूत्र डालकर लकड़ी से फेंटें।",
+            "गुड़ और बेसन को थोड़े पानी में घोलकर मटके में मिलाएं।",
+            "10 लीटर पानी डालकर मटके का मुंह सूती कपड़े से बांध दें।",
+            "7 दिनों तक छाया में रखें और प्रतिदिन एक बार लकड़ी के डंडे से चलाएं।",
+            "7 दिन बाद यह गाढ़ा सजीव तरल खाद में बदल जाता है।"
+        ],
+        dosage: "1 लीटर मटका खाद को 10 लीटर पानी में घोलकर पौधों की जड़ों के पास डालें (Drenching)।",
+        precautions: "तैयार होने के 15 दिनों के अंदर इसका उपयोग कर लें। मटके को जमीन में आधा दबाकर रखने से तापमान अनुकूल रहता है।"
+    }
+];
+
+// Render Recipes Grid
+function renderRecipes(filter = 'all') {
+    const grid = document.getElementById('recipesGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const filtered = filter === 'all' 
+        ? ORGANIC_RECIPES 
+        : ORGANIC_RECIPES.filter(r => r.category === filter);
+
+    filtered.forEach(recipe => {
+        const card = document.createElement('div');
+        card.className = 'org-recipe-card';
+        card.onclick = () => openRecipeModal(recipe.id);
+
+        card.innerHTML = `
+            <div>
+                <div class="org-recipe-card-header">
+                    <div class="org-recipe-icon">${recipe.icon}</div>
+                    <span class="org-badge ${recipe.badgeClass}">${recipe.badgeText}</span>
+                </div>
+                <div class="org-recipe-name">${recipe.title}</div>
+                <div class="org-recipe-eng">${recipe.engTitle}</div>
+                <p class="org-recipe-desc">${recipe.desc}</p>
+            </div>
+            <div>
+                <div class="org-recipe-meta-row">
+                    <span><i class="fa-regular fa-clock" style="color:#059669;"></i> ${recipe.time}</span>
+                    <span><i class="fa-solid fa-coins" style="color:#D97706;"></i> ${recipe.cost}</span>
+                </div>
+                <button type="button" class="org-recipe-btn" onclick="event.stopPropagation(); openRecipeModal('${recipe.id}')">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> पूरी सामग्री व विधि देखें
+                </button>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+}
+
+// Filter Function
+function filterRecipes(category, btnEl) {
+    document.querySelectorAll('.org-filter-btn').forEach(b => b.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+    renderRecipes(category);
+}
+
+// Modal Functions
+function openRecipeModal(recipeId) {
+    const recipe = ORGANIC_RECIPES.find(r => r.id === recipeId);
+    if (!recipe) return;
+
+    document.getElementById('modalIcon').textContent = recipe.icon;
+    document.getElementById('modalBadge').textContent = recipe.badgeText;
+    document.getElementById('modalBadge').className = `org-badge ${recipe.badgeClass}`;
+    document.getElementById('modalTitle').textContent = recipe.title;
+    document.getElementById('modalEngTitle').textContent = recipe.engTitle;
+    document.getElementById('modalDesc').textContent = recipe.desc;
+    document.getElementById('modalTime').textContent = recipe.time;
+    document.getElementById('modalCost').textContent = recipe.cost;
+    document.getElementById('modalShelf').textContent = recipe.shelf;
+    document.getElementById('modalDosage').textContent = recipe.dosage;
+    document.getElementById('modalPrecautions').textContent = recipe.precautions;
+
+    // Ingredients List
+    const ingContainer = document.getElementById('modalIngredients');
+    ingContainer.innerHTML = '';
+    recipe.ingredients.forEach(ing => {
+        const div = document.createElement('div');
+        div.className = 'org-ing-item';
+        div.innerHTML = `<i class="fa-solid fa-circle-check" style="color:#059669;"></i> <span>${ing}</span>`;
+        ingContainer.appendChild(div);
+    });
+
+    // Steps List
+    const stepsContainer = document.getElementById('modalSteps');
+    stepsContainer.innerHTML = '';
+    recipe.steps.forEach((step, idx) => {
+        const div = document.createElement('div');
+        div.className = 'org-step-card';
+        div.innerHTML = `
+            <div class="org-step-num">${idx + 1}</div>
+            <div style="font-size:0.88rem;line-height:1.6;color:var(--org-text-sub);">${step}</div>
+        `;
+        stepsContainer.appendChild(div);
+    });
+
+    const modal = document.getElementById('recipeModal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeRecipeModal(e) {
+    if (e && e.target !== e.currentTarget && !e.target.classList.contains('org-modal-close-btn') && !e.target.closest('.org-modal-close-btn')) {
+        return;
+    }
+    const modal = document.getElementById('recipeModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Calculator Function
 function calcOrganic(e) {
     e.preventDefault();
     const acres = parseFloat(document.getElementById('acreage').value);
@@ -378,5 +1073,15 @@ function calcOrganic(e) {
     document.getElementById('resJeeva').textContent = (acres * 150).toFixed(0) + ' लीटर';
     document.getElementById('calcResult').style.display = 'block';
 }
+
+// Initialize on Load
+document.addEventListener('DOMContentLoaded', () => {
+    renderRecipes('all');
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeRecipeModal();
+    });
+});
 </script>
 {% endblock %}
