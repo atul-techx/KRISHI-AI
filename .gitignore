@@ -1,10 +1,26 @@
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
 instance/
 .env
 .DS_Store
 
+# Local SQLite databases
+krishi.db
+*.sqlite3
+
+# Uploads generated during runtime/testing
+static/uploads/ai_images/*
+!static/uploads/ai_images/.gitkeep
+
 # Dependencies and built files
-venv/
 node_modules/
+frontend/node_modules/
 .next/
+frontend/.next/
+frontend/out/

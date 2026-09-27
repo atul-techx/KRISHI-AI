@@ -8,6 +8,9 @@ RUN npm run build
 FROM python:3.11-slim
 WORKDIR /app
 
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx \
@@ -37,9 +40,13 @@ COPY --from=frontend-build /app/frontend/out ./frontend/out
 COPY deploy/nginx.conf /etc/nginx/sites-available/default
 COPY deploy/nginx.conf /etc/nginx/sites-enabled/default
 COPY deploy/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY deploy/entrypoint.sh /app/entrypoint.sh
+
+# Ensure proper execution permissions, linux line-endings, and upload directory
+RUN chmod +x /app/entrypoint.sh && sed -i 's/\r$//' /app/entrypoint.sh && mkdir -p /app/static/uploads/ai_images
 
 # Setup env variables for Next.js to reach FastAPI during runtime
 ENV NEXT_PUBLIC_API_URL=/api
 
-EXPOSE 80
-CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+EXPOSE 80 10000 8080
+ENTRYPOINT ["/app/entrypoint.sh"]

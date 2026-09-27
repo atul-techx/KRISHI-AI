@@ -14,11 +14,15 @@ AsyncSessionLocal = sessionmaker(
 
 Base = declarative_base()
 
+import os
+
 def use_sqlite_fallback():
     global engine, AsyncSessionLocal
-    sqlite_url = "sqlite+aiosqlite:///../krishi.db"
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    db_file = os.path.join(base_dir, "krishi.db").replace("\\", "/")
+    sqlite_url = f"sqlite+aiosqlite:///{db_file}"
     print(f"WARNING: Database connection failed. Switching to local SQLite database: {sqlite_url}", file=sys.stderr, flush=True)
-    engine = create_async_engine(sqlite_url, echo=True)
+    engine = create_async_engine(sqlite_url, echo=False)
     AsyncSessionLocal.configure(bind=engine)
 
 async def get_db():
