@@ -321,13 +321,20 @@ def _predict_soil_cv(image_path):
         "fertilizer_advice": " ".join(treatments[:2]) if treatments else "संतुलित NPK व 2 टन गोबर खाद का प्रयोग करें।"
     }
 
+def is_low_memory_env():
+    try:
+        import psutil
+        return psutil.virtual_memory().total < (1.5 * 1024 * 1024 * 1024)
+    except Exception:
+        return False
+
 def predict_soil(image_path):
     """
     Primary soil predictor.
     Uses ultra-fast local CV analysis with instant fallback so the user NEVER waits.
     """
-    # 1. Try local TensorFlow if installed
-    if TF_AVAILABLE:
+    # 1. Try local TensorFlow only on servers with sufficient RAM (>1.5GB)
+    if TF_AVAILABLE and not is_low_memory_env():
         try:
             model = get_model()
             img = image.load_img(image_path, target_size=(224, 224))

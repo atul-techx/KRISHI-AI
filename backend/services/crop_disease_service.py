@@ -209,13 +209,21 @@ def _predict_crop_disease_cv(image_path, user_crop=""):
         "cause": "स्वस्थ पत्ती" if is_healthy else ("फंगल संक्रमण या नमी के कारण धब्बे" if brown_ratio > yellow_ratio else "विषाणु या पोषक तत्वों की कमी")
     }
 
+def is_low_memory_env():
+    """Detect low RAM environments (<1.5GB, e.g. Render Free Tier) to avoid fatal OOM SIGKILL from loading a 255MB TF graph."""
+    try:
+        import psutil
+        return psutil.virtual_memory().total < (1.5 * 1024 * 1024 * 1024)
+    except Exception:
+        return False
+
 def predict_crop_disease(image_path, user_crop=""):
     """
     Primary crop disease predictor.
     Uses ultra-fast local CV analysis with instant fallback so the user NEVER waits.
     """
-    # 1. Try local TensorFlow if installed
-    if TF_AVAILABLE:
+    # 1. Try local TensorFlow only on servers with sufficient RAM (>1.5GB)
+    if TF_AVAILABLE and not is_low_memory_env():
         try:
             model = get_model()
             img = image.load_img(image_path, target_size=(224, 224))
