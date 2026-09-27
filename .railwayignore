@@ -1,0 +1,35 @@
+# Python virtual environments
+venv/
+env/
+ENV/
+.env
+
+# Git metadata
+.git/
+
+# Node modules & frontend artifacts
+node_modules/
+frontend/
+.next/
+
+# Databases
+*.db
+*.sqlite3
+
+# Large ML training artifacts & raw datasets
+models/Pest_Detection/runs/
+models/Pest_Detection/datasets/
+models/Pest_Detection/outputs/
+models/Pest_Detection/templates/
+models/Pest_Detection/uploads/
+models/Pest_Detection/train.ipynb
+models/Pest_Detection/*.mp4
+models/Pest_Detection/*.jpg
+models/Soil_Detection/Deployment.py
+models/Soil_Detection/Soil_Type_Detection.ipynb
+models/Crop_Disease/Deployment.py
+models/Crop_Disease/Crop_Disease_training.ipynb
+
+# Uploads
+static/uploads/ai_images/*
+!static/uploads/ai_images/.gitkeep
