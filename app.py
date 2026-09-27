@@ -354,7 +354,7 @@ def disease():
                 flash(error_msg, 'danger')
                 return redirect(request.url)
                 
-            result = predict_crop_disease(filepath, user_crop="")
+            result = predict_crop_disease(filepath, user_crop=crop)
             if "error" in result:
                 os.remove(filepath)
                 flash(result["error"], 'danger')
