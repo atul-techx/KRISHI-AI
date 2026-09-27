@@ -961,10 +961,19 @@ def voice():
     return render_template('voice.html')
 
 @app.route('/machinery')
-@login_required
 def machinery():
-    logger.info("Accessed Machinery page")
-    return render_template('machinery.html')
+    logger.info("Accessed Machinery Hub page")
+    user_name = getattr(current_user, 'name', '') if current_user.is_authenticated else ''
+    user_mobile = getattr(current_user, 'mobile_no', '') if current_user.is_authenticated else ''
+    user_district = getattr(current_user, 'district', '') if current_user.is_authenticated else 'Bareilly'
+    user_village = getattr(current_user, 'village', '') if current_user.is_authenticated else ''
+    return render_template(
+        'machinery.html',
+        user_name=user_name,
+        user_mobile=user_mobile,
+        user_district=user_district,
+        user_village=user_village
+    )
 
 @app.route('/api/market/live')
 def api_market_live():

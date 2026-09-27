@@ -1,79 +1,1826 @@
 {% extends "base.html" %}
-{% block title %}मशीनरी किराया - Krishi AI{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/cards.css') }}">{% endblock %}
+{% block title %}कृषि मशीनरी एवं उपकरण शेयरिंग हब - Krishi AI{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root, [data-theme="dark"] {
+    --mach-bg-card: rgba(18, 24, 38, 0.85);
+    --mach-border: rgba(255, 255, 255, 0.08);
+    --mach-border-hover: rgba(16, 185, 129, 0.35);
+    --mach-text-main: #F8FAFC;
+    --mach-text-muted: #94A3B8;
+    --mach-emerald: #10B981;
+    --mach-amber: #F59E0B;
+    --mach-blue: #38BDF8;
+    --mach-rose: #F43F5E;
+    --mach-radius: 16px;
+  }
+
+  [data-theme="light"] {
+    --mach-bg-card: #FFFFFF;
+    --mach-border: #E2E8F0;
+    --mach-border-hover: rgba(16, 185, 129, 0.5);
+    --mach-text-main: #0F172A;
+    --mach-text-muted: #64748B;
+    --mach-emerald: #059669;
+    --mach-amber: #D97706;
+    --mach-blue: #0284C7;
+  }
+
+  .mach-wrapper {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 1.25rem 1rem 3.5rem 1rem;
+    position: relative;
+  }
+
+  /* Ambient Glow */
+  .mach-glow {
+    position: fixed;
+    top: 12%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 750px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, rgba(16, 185, 129, 0.04) 50%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(90px);
+  }
+
+  /* Header Section */
+  .mach-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .mach-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .mach-brand-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(16, 185, 129, 0.2));
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    color: var(--mach-amber);
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.15);
+  }
+
+  .mach-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--mach-text-main);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .mach-subtitle {
+    font-size: 0.88rem;
+    color: var(--mach-text-muted);
+    margin: 0.25rem 0 0 0;
+  }
+
+  .btn-list-equipment {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: #FFFFFF !important;
+    border: none;
+    border-radius: 12px;
+    padding: 0.7rem 1.35rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+    transition: all 0.25s ease;
+  }
+
+  .btn-list-equipment:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 26px rgba(16, 185, 129, 0.45);
+  }
+
+  /* Metric Counters Bar */
+  .mach-stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (max-width: 900px) {
+    .mach-stats-bar {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 500px) {
+    .mach-stats-bar {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .mach-stat-card {
+    background: var(--mach-bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--mach-border);
+    border-radius: 14px;
+    padding: 1rem 1.15rem;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transition: all 0.25s ease;
+  }
+
+  .mach-stat-card:hover {
+    border-color: var(--mach-border-hover);
+    transform: translateY(-2px);
+  }
+
+  .mach-stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  .stat-icon-amber { background: rgba(245, 158, 11, 0.15); color: #F59E0B; }
+  .stat-icon-emerald { background: rgba(16, 185, 129, 0.15); color: #10B981; }
+  .stat-icon-blue { background: rgba(56, 189, 248, 0.15); color: #38BDF8; }
+  .stat-icon-purple { background: rgba(168, 85, 247, 0.15); color: #C084FC; }
+
+  .mach-stat-val {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--mach-text-main);
+    line-height: 1.2;
+  }
+
+  .mach-stat-lbl {
+    font-size: 0.76rem;
+    color: var(--mach-text-muted);
+    font-weight: 600;
+    display: block;
+    margin-top: 0.15rem;
+  }
+
+  /* Search & Controls Card */
+  .mach-controls-card {
+    background: var(--mach-bg-card);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--mach-border);
+    border-radius: var(--mach-radius);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    position: relative;
+    z-index: 1;
+  }
+
+  .mach-search-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .mach-search-input-box {
+    flex: 1;
+    min-width: 280px;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--mach-border);
+    border-radius: 12px;
+    padding: 0.65rem 1rem;
+    transition: border-color 0.2s;
+  }
+
+  [data-theme="light"] .mach-search-input-box {
+    background: #F8FAFC;
+    border-color: #CBD5E1;
+  }
+
+  .mach-search-input-box:focus-within {
+    border-color: var(--mach-emerald);
+  }
+
+  .mach-search-input-box input {
+    background: transparent;
+    border: none;
+    outline: none;
+    width: 100%;
+    color: var(--mach-text-main);
+    font-size: 0.92rem;
+  }
+
+  .mach-search-input-box input::placeholder {
+    color: #64748B;
+  }
+
+  .mach-search-clear {
+    background: none;
+    border: none;
+    color: #64748B;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: none;
+  }
+
+  /* Category Filter Pills */
+  .mach-category-scroll {
+    display: flex;
+    gap: 0.45rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    scrollbar-width: thin;
+  }
+
+  .mach-cat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.9rem;
+    border-radius: 30px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid var(--mach-border);
+    color: var(--mach-text-main);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+
+  [data-theme="light"] .mach-cat-pill {
+    background: #F1F5F9;
+    border-color: #CBD5E1;
+    color: #334155;
+  }
+
+  .mach-cat-pill:hover {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: var(--mach-emerald);
+    color: #10B981;
+  }
+
+  .mach-cat-pill.active {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: var(--mach-emerald);
+    color: #34D399;
+    box-shadow: 0 2px 10px rgba(16, 185, 129, 0.2);
+  }
+
+  [data-theme="light"] .mach-cat-pill.active {
+    background: rgba(16, 185, 129, 0.18);
+    color: #059669;
+    font-weight: 700;
+  }
+
+  /* Secondary Filter Dropdowns Row */
+  .mach-filters-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  [data-theme="light"] .mach-filters-row {
+    border-top-color: #E2E8F0;
+  }
+
+  .filter-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--mach-text-muted);
+  }
+
+  .mach-select {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--mach-border);
+    color: var(--mach-text-main);
+    padding: 0.4rem 0.85rem;
+    border-radius: 9px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+  }
+
+  [data-theme="light"] .mach-select {
+    background: #F8FAFC;
+    border-color: #CBD5E1;
+    color: #0F172A;
+  }
+
+  .mach-select option {
+    background: #0F172A;
+    color: #F8FAFC;
+  }
+
+  [data-theme="light"] .mach-select option {
+    background: #FFFFFF;
+    color: #0F172A;
+  }
+
+  .btn-reset-filters {
+    background: none;
+    border: 1px dashed var(--mach-border);
+    color: var(--mach-text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-left: auto;
+    transition: all 0.2s;
+  }
+
+  .btn-reset-filters:hover {
+    color: var(--mach-rose);
+    border-color: var(--mach-rose);
+  }
+
+  /* Machinery Grid */
+  .mach-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.25rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  @media (max-width: 420px) {
+    .mach-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Rich Equipment Card */
+  .mach-card {
+    background: var(--mach-bg-card);
+    backdrop-filter: blur(14px);
+    border: 1px solid var(--mach-border);
+    border-radius: var(--mach-radius);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.18);
+    transition: all 0.28s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mach-card:hover {
+    border-color: var(--mach-border-hover);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Card Badges Row */
+  .mach-card-badges {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.85rem;
+    gap: 0.5rem;
+  }
+
+  .badge-owner {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .badge-farmer {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34D399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+
+  .badge-fleet {
+    background: rgba(245, 158, 11, 0.15);
+    color: #FBBF24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+
+  .badge-status {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .status-avail {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34D399;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+  }
+
+  .status-inuse {
+    background: rgba(244, 63, 94, 0.2);
+    color: #FB7185;
+    border: 1px solid rgba(244, 63, 94, 0.4);
+  }
+
+  /* Card Header: Icon Avatar + Title */
+  .mach-card-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .mach-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .mach-title-block {
+    flex: 1;
+  }
+
+  .mach-item-title {
+    font-size: 1.08rem;
+    font-weight: 700;
+    color: var(--mach-text-main);
+    margin: 0 0 0.2rem 0;
+    line-height: 1.3;
+  }
+
+  .mach-cat-tag {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--mach-emerald);
+    display: inline-block;
+  }
+
+  /* Location & Distance */
+  .mach-loc-line {
+    font-size: 0.78rem;
+    color: var(--mach-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .mach-dist-pill {
+    background: rgba(56, 189, 248, 0.12);
+    color: #38BDF8;
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 0.72rem;
+  }
+
+  /* Price Highlight Box */
+  .mach-price-box {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 0.65rem 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.85rem;
+  }
+
+  [data-theme="light"] .mach-price-box {
+    background: #F8FAFC;
+    border-color: #E2E8F0;
+  }
+
+  .price-main {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #10B981;
+  }
+
+  .price-unit {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--mach-text-muted);
+  }
+
+  .price-hourly {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--mach-amber);
+    text-align: right;
+  }
+
+  /* Specs Chips List */
+  .mach-specs-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .spec-chip {
+    font-size: 0.72rem;
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    padding: 0.2rem 0.5rem;
+    color: #CBD5E1;
+  }
+
+  [data-theme="light"] .spec-chip {
+    background: #F1F5F9;
+    border-color: #E2E8F0;
+    color: #334155;
+  }
+
+  .operator-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #34D399;
+  }
+
+  /* Card Action Buttons */
+  .mach-card-actions {
+    display: flex;
+    gap: 0.45rem;
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  [data-theme="light"] .mach-card-actions {
+    border-top-color: #E2E8F0;
+  }
+
+  .btn-whatsapp {
+    flex: 1.3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    background: #25D366;
+    color: #FFFFFF !important;
+    border: none;
+    border-radius: 10px;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-whatsapp:hover {
+    background: #20BA57;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.35);
+  }
+
+  .btn-call {
+    width: 40px;
+    height: 38px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(56, 189, 248, 0.15);
+    color: #38BDF8 !important;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+  }
+
+  .btn-call:hover {
+    background: #38BDF8;
+    color: #FFFFFF !important;
+    transform: translateY(-1px);
+  }
+
+  .btn-info {
+    width: 40px;
+    height: 38px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--mach-text-main);
+    border: 1px solid var(--mach-border);
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+  }
+
+  .btn-info:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-1px);
+  }
+
+  /* My Listings Manage Bar (Shown only if item is added by user) */
+  .mach-my-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px dashed rgba(16, 185, 129, 0.3);
+    border-radius: 8px;
+    padding: 0.35rem 0.65rem;
+    margin-top: 0.6rem;
+    font-size: 0.74rem;
+  }
+
+  .btn-toggle-avail {
+    background: none;
+    border: none;
+    color: #34D399;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.74rem;
+  }
+
+  .btn-delete-listing {
+    background: none;
+    border: none;
+    color: var(--mach-rose);
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.74rem;
+  }
+
+  /* Empty State */
+  .mach-empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3.5rem 1.5rem;
+    background: var(--mach-bg-card);
+    border: 1px dashed var(--mach-border);
+    border-radius: var(--mach-radius);
+    color: var(--mach-text-muted);
+  }
+
+  .mach-empty-icon {
+    font-size: 3.5rem;
+    color: var(--mach-amber);
+    margin-bottom: 1rem;
+    display: inline-block;
+  }
+
+  .mach-empty-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--mach-text-main);
+    margin: 0 0 0.5rem 0;
+  }
+
+  /* Interactive Modals */
+  .mach-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 1rem;
+    overflow-y: auto;
+  }
+
+  .mach-modal-backdrop.open {
+    display: flex;
+  }
+
+  .mach-modal {
+    background: #0B1120;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    width: 100%;
+    max-width: 650px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    color: #F8FAFC;
+    position: relative;
+    padding: 1.75rem;
+  }
+
+  [data-theme="light"] .mach-modal {
+    background: #FFFFFF;
+    color: #0F172A;
+    border-color: #E2E8F0;
+  }
+
+  .mach-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  [data-theme="light"] .mach-modal-header {
+    border-bottom-color: #E2E8F0;
+  }
+
+  .modal-close-btn {
+    background: none;
+    border: none;
+    color: #94A3B8;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .modal-close-btn:hover {
+    color: #EF4444;
+  }
+
+  /* Form Layout */
+  .mach-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  @media (max-width: 550px) {
+    .mach-form-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .form-group.full-width {
+    grid-column: 1 / -1;
+  }
+
+  .form-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--mach-text-muted);
+  }
+
+  .form-control {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid var(--mach-border);
+    border-radius: 10px;
+    padding: 0.6rem 0.85rem;
+    color: #F8FAFC;
+    font-size: 0.88rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  [data-theme="light"] .form-control {
+    background: #F8FAFC;
+    border-color: #CBD5E1;
+    color: #0F172A;
+  }
+
+  .form-control:focus {
+    border-color: var(--mach-emerald);
+  }
+
+  .form-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .btn-submit-listing {
+    width: 100%;
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: #FFFFFF;
+    border: none;
+    border-radius: 12px;
+    padding: 0.8rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+    margin-top: 1rem;
+    transition: all 0.2s;
+  }
+
+  .btn-submit-listing:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.5);
+  }
+
+  /* Details Modal Specifics */
+  .details-spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+  }
+
+  .details-spec-table td {
+    padding: 0.6rem 0.5rem;
+    font-size: 0.85rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  [data-theme="light"] .details-spec-table td {
+    border-bottom-color: #E2E8F0;
+  }
+
+  .spec-key {
+    font-weight: 700;
+    color: var(--mach-text-muted);
+    width: 40%;
+  }
+
+  .spec-val {
+    color: var(--mach-text-main);
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="krishi-container">
-    <div class="page-header fade-in-up">
-        <h1 class="page-title"><i class="fa-solid fa-tractor"></i> मशीनरी किराया</h1>
-        <p class="page-sub">अपने नज़दीक ट्रैक्टर, हार्वेस्टर और अन्य मशीनें किराए पर लें</p>
+<div class="mach-wrapper">
+  <div class="mach-glow"></div>
+
+  <!-- Header -->
+  <header class="mach-header">
+    <div class="mach-header-left">
+      <div class="mach-brand-icon">
+        <i class="fa-solid fa-tractor"></i>
+      </div>
+      <div>
+        <h1 class="mach-title">
+          मशीनरी एवं उपकरण शेयरिंग हब
+        </h1>
+        <p class="mach-subtitle">
+          ट्रैक्टर, ड्रोन, रोटावेटर, हार्वेस्टर व कृषि उपकरण — साथी किसानों से 1-क्लिक में किराए पर लें या अपनी मशीन लिस्ट करें।
+        </p>
+      </div>
     </div>
-    <!-- Search + Filter -->
-    <div class="krishi-card search-filter-bar fade-in-up">
-        <form method="GET" action="{{ url_for('machinery') }}" class="search-form">
-            <div class="search-input-wrap">
-                <i class="fa-solid fa-search"></i>
-                <input type="text" name="q" class="krishi-input" placeholder="मशीन खोजें..." value="{{ request.args.get('q','') }}">
-            </div>
-            <select name="type" class="krishi-input mini-select">
-                <option value="">सभी मशीनें</option>
-                <option>ट्रैक्टर</option><option>हार्वेस्टर</option>
-                <option>रोटावेटर</option><option>स्प्रेयर</option>
-                <option>थ्रेशर</option>
-            </select>
-            <button type="submit" class="btn-krishi-primary">खोजें</button>
-        </form>
+    <div>
+      <button type="button" class="btn-list-equipment" id="openAddModalBtn">
+        <i class="fa-solid fa-plus-circle"></i>
+        <span>अपनी मशीनरी लिस्ट करें</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Key Metric Summary Bar -->
+  <div class="mach-stats-bar">
+    <div class="mach-stat-card">
+      <div class="mach-stat-icon stat-icon-amber">
+        <i class="fa-solid fa-tractor"></i>
+      </div>
+      <div>
+        <div class="mach-stat-val" id="statTotalEquip">10 / 10</div>
+        <span class="mach-stat-lbl">तुरंत बुकिंग हेतु उपलब्ध उपकरण</span>
+      </div>
     </div>
 
-    <!-- Machinery Cards Grid -->
-    <div class="machinery-grid fade-in-up delay-1">
-        {% if machinery_list %}
-        {% for m in machinery_list %}
-        <div class="machinery-card">
-            <div class="machinery-img-wrap">
-                <img src="{{ m.image_url if m.image_url else url_for('static', filename='img/tractor-placeholder.png') }}" alt="{{ m.name }}" class="machinery-img">
-                <span class="machinery-availability {{ 'avail-yes' if m.available else 'avail-no' }}">
-                    {{ 'उपलब्ध' if m.available else 'बुक' }}
-                </span>
-            </div>
-            <div class="machinery-info">
-                <h3 class="machinery-name">{{ m.name }}</h3>
-                <div class="machinery-meta">
-                    <span><i class="fa-solid fa-location-dot"></i> {{ m.location }}</span>
-                    <span><i class="fa-solid fa-star"></i> {{ m.rating }}</span>
-                </div>
-                <div class="machinery-price">
-                    <span class="price-amount">₹{{ m.price_per_day }}</span>
-                    <span class="price-unit">/दिन</span>
-                </div>
-                <div class="machinery-owner">
-                    <i class="fa-solid fa-user"></i> {{ m.owner_name }}
-                    <a href="tel:{{ m.mobile }}" class="machinery-call-btn">
-                        <i class="fa-solid fa-phone"></i> {{ m.mobile }}
-                    </a>
-                </div>
-                <div class="machinery-actions">
-                    <a href="{{ url_for('book_machinery', id=m.id) }}" class="btn-krishi-primary {% if not m.available %}btn-disabled{% endif %}">
-                        <i class="fa-solid fa-calendar-check"></i> Rent Now
-                    </a>
-                    <button class="btn-krishi-secondary" onclick="navigator.share({title:'{{ m.name }}', text:'{{ m.location }} - ₹{{ m.price_per_day }}/day', url: window.location.href})">
-                        <i class="fa-solid fa-share"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-        {% else %}
-        <div class="empty-state full-width">
-            <i class="fa-solid fa-tractor"></i>
-            <p>आपके क्षेत्र में कोई मशीन नहीं मिली</p>
-        </div>
-        {% endif %}
+    <div class="mach-stat-card">
+      <div class="mach-stat-icon stat-icon-emerald">
+        <i class="fa-solid fa-handshake-angle"></i>
+      </div>
+      <div>
+        <div class="mach-stat-val" id="statFarmerShare">6 किसान</div>
+        <span class="mach-stat-lbl">साथी किसान (P2P शेयरिंग)</span>
+      </div>
     </div>
 
-    <!-- Floating Add Button -->
-    <a href="{{ url_for('add_machinery') }}" class="fab-add-btn" title="मशीन जोड़ें">
-        <i class="fa-solid fa-plus"></i>
-        <span>मशीन जोड़ें</span>
-    </a>
+    <div class="mach-stat-card">
+      <div class="mach-stat-icon stat-icon-blue">
+        <i class="fa-solid fa-warehouse"></i>
+      </div>
+      <div>
+        <div class="mach-stat-val" id="statFleetHubs">4 हब</div>
+        <span class="mach-stat-lbl">कमर्शियल फ्लीट व कस्टम हायरिंग केंद्र</span>
+      </div>
+    </div>
+
+    <div class="mach-stat-card">
+      <div class="mach-stat-icon stat-icon-purple">
+        <i class="fa-solid fa-indian-rupee-sign"></i>
+      </div>
+      <div>
+        <div class="mach-stat-val" id="statMinRate">₹150 / दिन</div>
+        <span class="mach-stat-lbl">न्यूनतम दैनिक किराया दर</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <div class="mach-controls-card">
+    <!-- Keyword Search -->
+    <div class="mach-search-row">
+      <div class="mach-search-input-box">
+        <i class="fa-solid fa-magnifying-glass" style="color: #64748B;"></i>
+        <input type="text" id="machKeywordInput" placeholder="मशीन का नाम, मॉडल, किसान का नाम, गाँव या जिला खोजें... (e.g. Mahindra, Rotavator, Drone, Bareilly)" autocomplete="off">
+        <button type="button" class="mach-search-clear" id="machSearchClearBtn">✕</button>
+      </div>
+    </div>
+
+    <!-- Category Filter Pills -->
+    <div class="mach-category-scroll">
+      <button type="button" class="mach-cat-pill active" data-cat="all">
+        <i class="fa-solid fa-globe"></i> सभी मशीनरी (All)
+      </button>
+      <button type="button" class="mach-cat-pill" data-cat="tractors">
+        <i class="fa-solid fa-tractor"></i> ट्रैक्टर व जुताई
+      </button>
+      <button type="button" class="mach-cat-pill" data-cat="sprayers">
+        <i class="fa-solid fa-drone"></i> स्प्रेयर व ड्रोन
+      </button>
+      <button type="button" class="mach-cat-pill" data-cat="harvest">
+        <i class="fa-solid fa-wheat-awn"></i> हार्वेस्टर व थ्रेशर
+      </button>
+      <button type="button" class="mach-cat-pill" data-cat="seeding">
+        <i class="fa-solid fa-seedling"></i> बुवाई व रोपाई
+      </button>
+      <button type="button" class="mach-cat-pill" data-cat="pumps">
+        <i class="fa-solid fa-water"></i> पंप व सिंचाई
+      </button>
+      <button type="button" class="mach-cat-pill" data-cat="trolley">
+        <i class="fa-solid fa-truck-ramp-box"></i> ट्रॉली व ढुलाई
+      </button>
+    </div>
+
+    <!-- Secondary Filters Row (Radius, Owner Type, Availability, Sort) -->
+    <div class="mach-filters-row">
+      <span class="filter-label"><i class="fa-solid fa-filter"></i> फिल्टर:</span>
+
+      <select id="filterRadius" class="mach-select">
+        <option value="all">📍 सभी दूरियां (All Radius)</option>
+        <option value="5">5 किमी के भीतर (Within 5 km)</option>
+        <option value="15">15 किमी के भीतर (Within 15 km)</option>
+        <option value="30">30 किमी के भीतर (Within 30 km)</option>
+      </select>
+
+      <select id="filterOwner" class="mach-select">
+        <option value="all">👤 सभी मालिक (All Owners)</option>
+        <option value="farmer">🌾 साथी किसान (Fellow Farmers P2P)</option>
+        <option value="fleet">🚜 फ्लीट ओनर हब (Commercial Fleet)</option>
+        <option value="my_equipment">⭐ मेरी लिस्टेड मशीनें (My Equipment)</option>
+      </select>
+
+      <select id="filterAvail" class="mach-select">
+        <option value="all">उपलब्धता: सभी (All)</option>
+        <option value="available">केवल उपलब्ध (Only Available)</option>
+      </select>
+
+      <select id="filterSort" class="mach-select">
+        <option value="dist_asc">सॉर्ट: दूरी (Nearest First)</option>
+        <option value="price_asc">किराया: कम से ज्यादा (Price: Low to High)</option>
+        <option value="price_desc">किराया: ज्यादा से कम (Price: High to Low)</option>
+      </select>
+
+      <button type="button" class="btn-reset-filters" id="btnResetFilters">
+        <i class="fa-solid fa-rotate-left"></i> रीसेट
+      </button>
+    </div>
+  </div>
+
+  <!-- Machinery Grid -->
+  <div class="mach-grid" id="machineryCardsGrid">
+    <!-- Populated dynamically via JS -->
+  </div>
+
 </div>
+
+<!-- ── MODAL 1: "अपनी मशीनरी लिस्ट करें" (List My Equipment) ── -->
+<div class="mach-modal-backdrop" id="addListingModal">
+  <div class="mach-modal">
+    <div class="mach-modal-header">
+      <h3 style="margin: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="fa-solid fa-plus-circle" style="color: #10B981;"></i>
+        अपनी कृषि मशीनरी लिस्ट करें
+      </h3>
+      <button type="button" class="modal-close-btn" id="closeAddModalBtn">&times;</button>
+    </div>
+
+    <form id="addEquipmentForm" onsubmit="return false;">
+      <div class="mach-form-grid">
+        <div class="form-group full-width">
+          <label class="form-label">मशीन / उपकरण का नाम व मॉडल *</label>
+          <input type="text" id="addName" class="form-control" placeholder="उदा. महिंद्रा 575 DI (45 HP) + ट्रॉली" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">उपकरण श्रेणी (Category) *</label>
+          <select id="addCategory" class="form-control" required>
+            <option value="tractors">🚜 ट्रैक्टर व जुताई (Tractors & Tillage)</option>
+            <option value="sprayers">🛸 स्प्रेयर व ड्रोन (Sprayers & Drones)</option>
+            <option value="harvest">🌾 हार्वेस्टर व थ्रेशर (Harvest & Threshers)</option>
+            <option value="seeding">🌱 बुवाई व रोपाई (Seeding & Planting)</option>
+            <option value="pumps">💧 पंप व सिंचाई (Pumps & Irrigation)</option>
+            <option value="trolley">🚛 ट्रॉली व ढुलाई (Trolley & Haulage)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">लिस्टिंग प्रकार (Owner Type) *</label>
+          <select id="addOwnerType" class="form-control" required>
+            <option value="farmer">🌾 साथी किसान (Fellow Farmer P2P)</option>
+            <option value="fleet">🚜 फ्लीट ओनर / कस्टम हायरिंग हब</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">दैनिक किराया (₹ / दिन) *</label>
+          <input type="number" id="addDailyRate" class="form-control" placeholder="उदा. 1500" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">घंटेवार किराया (₹ / घंटा) - वैकल्पिक</label>
+          <input type="number" id="addHourlyRate" class="form-control" placeholder="उदा. 250">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">मालिक का नाम (Owner Name) *</label>
+          <input type="text" id="addOwnerName" class="form-control" value="{{ user_name }}" placeholder="उदा. रमेश कुमार" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">व्हाट्सएप नंबर (WhatsApp No) *</label>
+          <input type="tel" id="addWhatsapp" class="form-control" value="{{ user_mobile }}" placeholder="उदा. 9876543210" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">गाँव / कस्बा (Village / Town) *</label>
+          <input type="text" id="addVillage" class="form-control" value="{{ user_village }}" placeholder="उदा. फरीदपुर" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">जिला (District) *</label>
+          <input type="text" id="addDistrict" class="form-control" value="{{ user_district or 'Bareilly' }}" placeholder="उदा. Bareilly" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">अनुमानित दूरी (Approx Distance km)</label>
+          <input type="number" step="0.1" id="addDistance" class="form-control" placeholder="उदा. 4.5" value="3.5">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">सुरक्षा धरोहर / KYC नियम</label>
+          <input type="text" id="addSecurity" class="form-control" placeholder="उदा. आधार कार्ड कॉपी आवश्यक">
+        </div>
+
+        <div class="form-group full-width">
+          <div class="form-checkbox-row">
+            <input type="checkbox" id="addOperatorIncluded" style="width: 18px; height: 18px; accent-color: #10B981;">
+            <label for="addOperatorIncluded" style="font-size: 0.88rem; font-weight: 600; cursor: pointer;">
+              क्या ड्राइवर / ऑपरेटर साथ उपलब्ध है? (Driver / Operator Included)
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group full-width">
+          <label class="form-label">विशेषताएं व तकनीकी विवरण (Specs & Condition)</label>
+          <textarea id="addSpecs" class="form-control" rows="3" placeholder="उदा. 45 HP, पावर स्टीयरिंग, 2 साल पुराना, बेहतरीन स्थिति, डीजल किराएदार का होगा।"></textarea>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit-listing" id="submitEquipmentBtn">
+        <i class="fa-solid fa-check"></i> मशीनरी लिस्ट करें
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ── MODAL 2: "उपकरण विस्तृत जानकारी" (Equipment Detail Modal) ── -->
+<div class="mach-modal-backdrop" id="detailModal">
+  <div class="mach-modal">
+    <div class="mach-modal-header">
+      <h3 style="margin: 0; font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;" id="modalDetailTitle">
+        उपकरण विवरण
+      </h3>
+      <button type="button" class="modal-close-btn" id="closeDetailModalBtn">&times;</button>
+    </div>
+
+    <div id="modalDetailContent">
+      <!-- Populated via JS -->
+    </div>
+  </div>
+</div>
+
+<script>
+// ==============================================================
+// PRE-SEEDED AUTHENTIC MOCK DATA (10 Realistic Farm Machines)
+// ==============================================================
+const DEFAULT_MACHINERY = [
+  {
+    id: 'mach-1',
+    name: 'Mahindra 575 DI (45 HP) + Hydraulic Trolley',
+    category: 'tractors',
+    ownerType: 'farmer',
+    ownerName: 'रामेश्वर सिंह (Rameshwar Singh)',
+    whatsapp: '9876543210',
+    phone: '9876543210',
+    village: 'फरीदपुर',
+    district: 'Bareilly, UP',
+    distanceKm: 3.8,
+    dailyRate: 1500,
+    hourlyRate: 250,
+    isAvailable: true,
+    operatorIncluded: true,
+    securityDeposit: 'आधार कार्ड कॉपी + ₹500 टोकन',
+    specs: '45 HP महिंद्रा इंजन, पावर स्टीयरिंग, डबल क्लच, 5-टन हाइड्रोलिक ट्रॉली व 9-टाइन कल्टीवेटर अटैचमेंट उपलब्ध।',
+    avatar: '🚜',
+    isUserListing: false
+  },
+  {
+    id: 'mach-2',
+    name: 'Shaktiman 7ft Heavy Duty Rotavator',
+    category: 'tractors',
+    ownerType: 'farmer',
+    ownerName: 'सुखविंदर सिंह (Sukhwinder Singh)',
+    whatsapp: '9812345678',
+    phone: '9812345678',
+    village: 'नवाबगंज',
+    district: 'Bareilly, UP',
+    distanceKm: 5.2,
+    dailyRate: 900,
+    hourlyRate: 180,
+    isAvailable: true,
+    operatorIncluded: false,
+    securityDeposit: 'पहचान पत्र कॉपी',
+    specs: '48 L-टाइप बोरोन स्टील ब्लेड, मल्टीस्पीड गियरबॉक्स, कठोर व गीली दोनों तरह की मिट्टी की जुताई हेतु आदर्श।',
+    avatar: '⚙️',
+    isUserListing: false
+  },
+  {
+    id: 'mach-3',
+    name: '16L Agri Spray Drone + DGCA Pilot (Garuda Kisan)',
+    category: 'sprayers',
+    ownerType: 'fleet',
+    ownerName: 'किसान ड्रोन सेवा केंद्र (Kisan Drone Hub)',
+    whatsapp: '9988776655',
+    phone: '9988776655',
+    village: 'सीबीगंज',
+    district: 'Bareilly, UP',
+    distanceKm: 7.5,
+    dailyRate: 3200,
+    hourlyRate: 600,
+    isAvailable: true,
+    operatorIncluded: true,
+    securityDeposit: 'सरकारी एग्री ड्रोन लाइसेंस प्राप्त सेवा',
+    specs: '16 लीटर क्षमता, 10 मिनट में 1 एकड़ नैनो यूरिया व कीटनाशक छिड़काव, पानी की 90% बचत, ट्रेंड डीजीसीए पायलट साथ।',
+    avatar: '🛸',
+    isUserListing: false
+  },
+  {
+    id: 'mach-4',
+    name: 'Multi-Crop High-Speed Thresher (Paddy & Wheat)',
+    category: 'harvest',
+    ownerType: 'farmer',
+    ownerName: 'महेंद्र यादव (Mahendra Yadav)',
+    whatsapp: '9871122334',
+    phone: '9871122334',
+    village: 'आंवला',
+    district: 'Bareilly, UP',
+    distanceKm: 11.4,
+    dailyRate: 1800,
+    hourlyRate: 300,
+    isAvailable: true,
+    operatorIncluded: true,
+    securityDeposit: 'पहचान पत्र कॉपी',
+    specs: 'धान, गेहूं, सरसों व चना की तीव्र मड़ाई, दाना टूटने की दर <0.5%, डस्ट रिडक्शन ब्लोअर सिस्टम युक्त।',
+    avatar: '🌾',
+    isUserListing: false
+  },
+  {
+    id: 'mach-5',
+    name: 'Honda 5.5HP Portable Petrol Water Pump (3-inch)',
+    category: 'pumps',
+    ownerType: 'farmer',
+    ownerName: 'धर्मवीर गंगवार (Dharmveer Gangwar)',
+    whatsapp: '9634097766',
+    phone: '9634097766',
+    village: 'बहेड़ी',
+    district: 'Bareilly, UP',
+    distanceKm: 4.1,
+    dailyRate: 350,
+    hourlyRate: 60,
+    isAvailable: true,
+    operatorIncluded: false,
+    securityDeposit: '₹500 रिफंडेबल सिक्योरिटी',
+    specs: '3 इंच सक्शन व डिलीवरी नोजल, 1000 लीटर/मिनट डिस्चार्ज, 50 फीट डिलीवरी हौज पाइप साथ में उपलब्ध।',
+    avatar: '💧',
+    isUserListing: false
+  },
+  {
+    id: 'mach-6',
+    name: 'Shaktiman Super Seeder Drill (Rotary Disc)',
+    category: 'seeding',
+    ownerType: 'fleet',
+    ownerName: 'रोहिलखंड एग्री मशीनरी बैंक',
+    whatsapp: '9765432109',
+    phone: '9765432109',
+    village: 'फतेहगंज',
+    district: 'Bareilly, UP',
+    distanceKm: 8.9,
+    dailyRate: 2200,
+    hourlyRate: 400,
+    isAvailable: true,
+    operatorIncluded: true,
+    securityDeposit: 'अग्रिम बुकिंग पर्ची',
+    specs: 'बिना पराली जलाए सीधी गेहूं बुवाई, 9 टाइन रोटरी डिस्क व खाद/बीज अलग बॉक्स, 45+ HP ट्रैक्टर कम्पैटिबल।',
+    avatar: '🌱',
+    isUserListing: false
+  },
+  {
+    id: 'mach-7',
+    name: '16L Dual-Motor Battery Knapsack Sprayer',
+    category: 'sprayers',
+    ownerType: 'farmer',
+    ownerName: 'संजीव कुमार (Sanjeev Kumar)',
+    whatsapp: '9837112244',
+    phone: '9837112244',
+    village: 'रिठौरा',
+    district: 'Bareilly, UP',
+    distanceKm: 2.5,
+    dailyRate: 150,
+    hourlyRate: 30,
+    isAvailable: true,
+    operatorIncluded: false,
+    securityDeposit: 'आधार कार्ड सत्यापन',
+    specs: '12V 12Ah लेड-एसिड बैटरी, एक चार्ज में 6 घंटे निरंतर छिड़काव, 4 ब्रास नोजल व एक्स्टेंडेबल लांस।',
+    avatar: '⚡',
+    isUserListing: false
+  },
+  {
+    id: 'mach-8',
+    name: '5-Tonne Heavy Duty Hydraulic Trolley',
+    category: 'trolley',
+    ownerType: 'farmer',
+    ownerName: 'बलविंदर पाल (Balwinder Pal)',
+    whatsapp: '9897654321',
+    phone: '9897654321',
+    village: 'कैंट',
+    district: 'Bareilly, UP',
+    distanceKm: 6.0,
+    dailyRate: 750,
+    hourlyRate: 120,
+    isAvailable: true,
+    operatorIncluded: false,
+    securityDeposit: 'ड्राइविंग लाइसेंस',
+    specs: 'डबल जैक 3-वे हाइड्रोलिक टिपिंग, 12 फीट हेवी ड्यूटी चेसिस, अनाज व गन्ना मंडी ढुलाई के लिए उपयुक्त।',
+    avatar: '🚛',
+    isUserListing: false
+  },
+  {
+    id: 'mach-9',
+    name: 'Preet 987 Self-Propelled Combine Harvester (14ft)',
+    category: 'harvest',
+    ownerType: 'fleet',
+    ownerName: 'किसान हार्वेस्टर फ्लीट यूनियन',
+    whatsapp: '9811223344',
+    phone: '9811223344',
+    village: 'इज्जत नगर',
+    district: 'Bareilly, UP',
+    distanceKm: 14.2,
+    dailyRate: 7500,
+    hourlyRate: 1400,
+    isAvailable: false,
+    operatorIncluded: true,
+    securityDeposit: '₹1000 अग्रिम टोकन',
+    specs: '101 HP अशोक लेलैंड टर्बोचार्ज्ड इंजन, 14 फीट कटर बार, गेहूं व धान कटाई, 2 ट्रेंड ड्राइवर शामिल।',
+    avatar: '🚜',
+    isUserListing: false
+  },
+  {
+    id: 'mach-10',
+    name: 'Laser Land Leveler with Dual-Slope Transmitter',
+    category: 'tractors',
+    ownerType: 'fleet',
+    ownerName: 'आदर्श फार्म मशीनरी बैंक',
+    whatsapp: '9927112233',
+    phone: '9927112233',
+    village: 'मीरगंज',
+    district: 'Bareilly, UP',
+    distanceKm: 16.5,
+    dailyRate: 2800,
+    hourlyRate: 500,
+    isAvailable: true,
+    operatorIncluded: true,
+    securityDeposit: 'बुकिंग फॉर्म',
+    specs: '2 किमी ऑपरेटिंग रेंज लेजर कंट्रोल बॉक्स, 7 फीट हेवी बकेट, खेत को 100% समतल कर पानी की 30% बचत।',
+    avatar: '📐',
+    isUserListing: false
+  }
+];
+
+// Local Storage Key
+const STORAGE_KEY = 'krishi_machinery_listings';
+
+// State Management
+let machineryList = [];
+let currentCategory = 'all';
+
+// Initialize Data from LocalStorage with seed fallback
+function initData() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    try {
+      machineryList = JSON.parse(stored);
+    } catch(e) {
+      machineryList = DEFAULT_MACHINERY;
+      saveData();
+    }
+  } else {
+    machineryList = DEFAULT_MACHINERY;
+    saveData();
+  }
+}
+
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(machineryList));
+}
+
+// Format Phone for WhatsApp international prefix
+function cleanPhone(phone) {
+  let p = (phone || '').replace(/\D/g, '');
+  if (p.length === 10) p = '91' + p;
+  return p;
+}
+
+// Generate Pre-filled Regional WhatsApp URL
+function getWhatsAppLink(m) {
+  const phone = cleanPhone(m.whatsapp || m.phone);
+  const text = `नमस्ते ${m.ownerName} जी!\n\nमुझे Krishi AI मशीनरी हब पर आपका उपकरण '${m.name}' (किराया: ₹${m.dailyRate}/दिन) दिखा।\n\nमुझे इसे खेती के कार्य हेतु किराए पर लेना है। क्या यह आगामी दिनों के लिए उपलब्ध है? कृपया पुष्टि करें। धन्यवाद!`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+}
+
+// Update Metric Counters in Header Bar
+function updateStats(items) {
+  const total = items.length;
+  const avail = items.filter(m => m.isAvailable).length;
+  const farmers = items.filter(m => m.ownerType === 'farmer').length;
+  const fleets = items.filter(m => m.ownerType === 'fleet').length;
+
+  const rates = items.map(m => m.dailyRate).filter(r => r > 0);
+  const minRate = rates.length > 0 ? Math.min(...rates) : 150;
+
+  document.getElementById('statTotalEquip').textContent = `${avail} / ${total}`;
+  document.getElementById('statFarmerShare').textContent = `${farmers} किसान`;
+  document.getElementById('statFleetHubs').textContent = `${fleets} हब`;
+  document.getElementById('statMinRate').textContent = `₹${minRate} / दिन`;
+}
+
+// Category Mapping to Visual Badges
+const CATEGORY_NAMES = {
+  tractors: 'ट्रैक्टर व जुताई',
+  sprayers: 'स्प्रेयर व ड्रोन',
+  harvest: 'हार्वेस्टर व थ्रेशर',
+  seeding: 'बुवाई व रोपाई',
+  pumps: 'पंप व सिंचाई',
+  trolley: 'ट्रॉली व ढुलाई'
+};
+
+// Render Machinery Cards Grid
+function renderGrid() {
+  const grid = document.getElementById('machineryCardsGrid');
+  const keyword = (document.getElementById('machKeywordInput').value || '').trim().toLowerCase();
+  const radius = document.getElementById('filterRadius').value;
+  const owner = document.getElementById('filterOwner').value;
+  const avail = document.getElementById('filterAvail').value;
+  const sort = document.getElementById('filterSort').value;
+
+  // Filter Pipeline
+  let filtered = machineryList.filter(m => {
+    // 1. Category
+    if (currentCategory !== 'all' && m.category !== currentCategory) return false;
+
+    // 2. Keyword Search
+    if (keyword) {
+      const match = (
+        (m.name || '').toLowerCase().includes(keyword) ||
+        (m.ownerName || '').toLowerCase().includes(keyword) ||
+        (m.village || '').toLowerCase().includes(keyword) ||
+        (m.district || '').toLowerCase().includes(keyword) ||
+        (m.specs || '').toLowerCase().includes(keyword) ||
+        (CATEGORY_NAMES[m.category] || '').toLowerCase().includes(keyword)
+      );
+      if (!match) return false;
+    }
+
+    // 3. Radius Filter
+    if (radius !== 'all') {
+      const maxDist = parseFloat(radius);
+      if (m.distanceKm > maxDist) return false;
+    }
+
+    // 4. Owner Type
+    if (owner === 'farmer' && m.ownerType !== 'farmer') return false;
+    if (owner === 'fleet' && m.ownerType !== 'fleet') return false;
+    if (owner === 'my_equipment' && !m.isUserListing) return false;
+
+    // 5. Availability
+    if (avail === 'available' && !m.isAvailable) return false;
+
+    return true;
+  });
+
+  // Sorting
+  if (sort === 'dist_asc') {
+    filtered.sort((a, b) => a.distanceKm - b.distanceKm);
+  } else if (sort === 'price_asc') {
+    filtered.sort((a, b) => a.dailyRate - b.dailyRate);
+  } else if (sort === 'price_desc') {
+    filtered.sort((a, b) => b.dailyRate - a.dailyRate);
+  }
+
+  // Update Stats
+  updateStats(filtered);
+
+  // Render HTML
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="mach-empty-state">
+        <div class="mach-empty-icon"><i class="fa-solid fa-tractor"></i></div>
+        <h3 class="mach-empty-title">कोई मशीनरी नहीं मिली</h3>
+        <p style="font-size: 0.88rem; margin-bottom: 1.25rem;">आपके चुने गए फिल्टर के अनुसार इस क्षेत्र में कोई उपकरण उपलब्ध नहीं है।</p>
+        <button type="button" class="btn-list-equipment" onclick="document.getElementById('openAddModalBtn').click();">
+          <i class="fa-solid fa-plus-circle"></i> अपनी मशीनरी यहाँ लिस्ट करें
+        </button>
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(m => {
+    const ownerBadge = m.ownerType === 'farmer' 
+      ? `<span class="badge-owner badge-farmer"><i class="fa-solid fa-user-tag"></i> साथी किसान P2P</span>`
+      : `<span class="badge-owner badge-fleet"><i class="fa-solid fa-building-wheat"></i> फ्लीट ओनर हब</span>`;
+
+    const statusBadge = m.isAvailable
+      ? `<span class="badge-status status-avail"><i class="fa-solid fa-circle-check"></i> उपलब्ध</span>`
+      : `<span class="badge-status status-inuse"><i class="fa-solid fa-circle-xmark"></i> उपयोग में</span>`;
+
+    const opText = m.operatorIncluded 
+      ? `<span class="operator-badge"><i class="fa-solid fa-user-check"></i> ऑपरेटर / ड्राइवर शामिल</span>`
+      : `<span style="font-size:0.72rem; color:#94A3B8;"><i class="fa-solid fa-user-gear"></i> स्वयं संचालित (Self-Operated)</span>`;
+
+    const hourlyHtml = m.hourlyRate 
+      ? `<div class="price-hourly">₹${m.hourlyRate}<span style="font-size:0.7rem; font-weight:500;">/घंटा</span></div>` 
+      : ``;
+
+    const waLink = getWhatsAppLink(m);
+    const callLink = `tel:${m.phone || m.whatsapp}`;
+
+    const userManageBar = m.isUserListing ? `
+      <div class="mach-my-bar">
+        <span>⭐ मेरी लिस्टिंग</span>
+        <div style="display:flex; gap:0.6rem;">
+          <button type="button" class="btn-toggle-avail" onclick="toggleAvailability('${m.id}')">
+            ${m.isAvailable ? 'उपयोग में चिन्हित करें' : 'उपलब्ध चिन्हित करें'}
+          </button>
+          <button type="button" class="btn-delete-listing" onclick="deleteListing('${m.id}')">
+            हटाएं
+          </button>
+        </div>
+      </div>
+    ` : '';
+
+    return `
+      <div class="mach-card" id="card-${m.id}">
+        <!-- Top Badges -->
+        <div class="mach-card-badges">
+          ${ownerBadge}
+          ${statusBadge}
+        </div>
+
+        <!-- Head -->
+        <div class="mach-card-head">
+          <div class="mach-avatar">${m.avatar || '🚜'}</div>
+          <div class="mach-title-block">
+            <h3 class="mach-item-title">${m.name}</h3>
+            <span class="mach-cat-tag">${CATEGORY_NAMES[m.category] || m.category}</span>
+          </div>
+        </div>
+
+        <!-- Location -->
+        <div class="mach-loc-line">
+          <i class="fa-solid fa-location-dot" style="color:#EF4444;"></i>
+          <span>${m.village}, ${m.district}</span>
+          <span class="mach-dist-pill">~${m.distanceKm} किमी</span>
+        </div>
+
+        <!-- Price Highlight Box -->
+        <div class="mach-price-box">
+          <div>
+            <span class="price-main">₹${m.dailyRate}</span>
+            <span class="price-unit">/दिन</span>
+          </div>
+          ${hourlyHtml}
+        </div>
+
+        <!-- Specs Chips -->
+        <div class="mach-specs-chips">
+          ${opText}
+          ${m.securityDeposit ? `<span class="spec-chip"><i class="fa-solid fa-shield-halved" style="color:#F59E0B; margin-right:3px;"></i>${m.securityDeposit}</span>` : ''}
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mach-card-actions">
+          <a href="${waLink}" target="_blank" class="btn-whatsapp" title="व्हाट्सएप पर बात करें">
+            <i class="fa-brands fa-whatsapp" style="font-size:1.1rem;"></i>
+            <span>व्हाट्सएप बुक</span>
+          </a>
+          <a href="${callLink}" class="btn-call" title="कॉल करें">
+            <i class="fa-solid fa-phone"></i>
+          </a>
+          <button type="button" class="btn-info" onclick="showDetails('${m.id}')" title="पूरी जानकारी">
+            <i class="fa-solid fa-circle-info"></i>
+          </button>
+        </div>
+
+        ${userManageBar}
+      </div>
+    `;
+  }).join('');
+}
+
+// Toggle Availability for User-added Items
+window.toggleAvailability = function(id) {
+  const item = machineryList.find(m => m.id === id);
+  if (item) {
+    item.isAvailable = !item.isAvailable;
+    saveData();
+    renderGrid();
+  }
+};
+
+// Delete User-added Item
+window.deleteListing = function(id) {
+  if (confirm("क्या आप इस मशीनरी लिस्टिंग को हटाना चाहते हैं?")) {
+    machineryList = machineryList.filter(m => m.id !== id);
+    saveData();
+    renderGrid();
+  }
+};
+
+// Open Detail Modal
+window.showDetails = function(id) {
+  const m = machineryList.find(item => item.id === id);
+  if (!m) return;
+
+  const modal = document.getElementById('detailModal');
+  const titleEl = document.getElementById('modalDetailTitle');
+  const contentEl = document.getElementById('modalDetailContent');
+
+  titleEl.innerHTML = `<span style="font-size:1.5rem; margin-right:6px;">${m.avatar || '🚜'}</span> ${m.name}`;
+
+  const waLink = getWhatsAppLink(m);
+  const callLink = `tel:${m.phone || m.whatsapp}`;
+
+  contentEl.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+      <span class="mach-cat-tag" style="font-size:0.85rem;">श्रेणी: ${CATEGORY_NAMES[m.category] || m.category}</span>
+      <span class="badge-status ${m.isAvailable ? 'status-avail' : 'status-inuse'}">
+        ${m.isAvailable ? '● बुकिंग हेतु उपलब्ध' : '✕ वर्तमान में उपयोग में'}
+      </span>
+    </div>
+
+    <div class="mach-price-box" style="margin-bottom:1.25rem;">
+      <div>
+        <span class="price-main" style="font-size:1.6rem;">₹${m.dailyRate}</span>
+        <span class="price-unit">/दिन (Daily Rent)</span>
+      </div>
+      ${m.hourlyRate ? `<div class="price-hourly" style="font-size:1rem;">₹${m.hourlyRate} / घंटा</div>` : ''}
+    </div>
+
+    <table class="details-spec-table">
+      <tr>
+        <td class="spec-key">मालिक का नाम:</td>
+        <td class="spec-val"><strong>${m.ownerName}</strong> (${m.ownerType === 'farmer' ? 'साथी किसान' : 'फ्लीट ओनर'})</td>
+      </tr>
+      <tr>
+        <td class="spec-key">स्थान व दूरी:</td>
+        <td class="spec-val">📍 ${m.village}, ${m.district} (~${m.distanceKm} किमी दूर)</td>
+      </tr>
+      <tr>
+        <td class="spec-key">ऑपरेटर स्थिति:</td>
+        <td class="spec-val">${m.operatorIncluded ? '✓ ड्राइवर / प्रशिक्षित ऑपरेटर साथ मिलेगा' : '✕ स्वयं संचालित (स्वयं चलाना होगा)'}</td>
+      </tr>
+      <tr>
+        <td class="spec-key">धरोहर / KYC नियम:</td>
+        <td class="spec-val">${m.securityDeposit || 'आपसी बातचीत के अनुसार'}</td>
+      </tr>
+      <tr>
+        <td class="spec-key">तकनीकी विवरण व स्थिति:</td>
+        <td class="spec-val" style="line-height:1.4;">${m.specs || 'बेहतरीन कार्यशील स्थिति में उपलब्ध।'}</td>
+      </tr>
+    </table>
+
+    <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+      <a href="${waLink}" target="_blank" class="btn-whatsapp" style="padding:0.75rem; font-size:0.95rem;">
+        <i class="fa-brands fa-whatsapp" style="font-size:1.2rem;"></i>
+        <span>व्हाट्सएप पर तुरंत बुकिंग बात करें</span>
+      </a>
+      <a href="${callLink}" class="btn-call" style="width:48px; height:46px; font-size:1.15rem;" title="सीधे कॉल करें">
+        <i class="fa-solid fa-phone"></i>
+      </a>
+    </div>
+  `;
+
+  modal.classList.add('open');
+};
+
+// DOM Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+  initData();
+
+  // Search Input
+  const searchInput = document.getElementById('machKeywordInput');
+  const clearBtn = document.getElementById('machSearchClearBtn');
+
+  searchInput.addEventListener('input', () => {
+    clearBtn.style.display = searchInput.value ? 'inline-block' : 'none';
+    renderGrid();
+  });
+
+  clearBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    clearBtn.style.display = 'none';
+    renderGrid();
+  });
+
+  // Category Pills Click
+  document.querySelectorAll('.mach-cat-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.mach-cat-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentCategory = pill.dataset.cat;
+      renderGrid();
+    });
+  });
+
+  // Secondary Filters
+  document.getElementById('filterRadius').addEventListener('change', renderGrid);
+  document.getElementById('filterOwner').addEventListener('change', renderGrid);
+  document.getElementById('filterAvail').addEventListener('change', renderGrid);
+  document.getElementById('filterSort').addEventListener('change', renderGrid);
+
+  // Reset Filters
+  document.getElementById('btnResetFilters').addEventListener('click', () => {
+    searchInput.value = '';
+    clearBtn.style.display = 'none';
+    currentCategory = 'all';
+    document.querySelectorAll('.mach-cat-pill').forEach(p => p.classList.remove('active'));
+    document.querySelector('.mach-cat-pill[data-cat="all"]').classList.add('active');
+
+    document.getElementById('filterRadius').value = 'all';
+    document.getElementById('filterOwner').value = 'all';
+    document.getElementById('filterAvail').value = 'all';
+    document.getElementById('filterSort').value = 'dist_asc';
+
+    renderGrid();
+  });
+
+  // Add Listing Modal Handlers
+  const addModal = document.getElementById('addListingModal');
+  const openAddBtn = document.getElementById('openAddModalBtn');
+  const closeAddBtn = document.getElementById('closeAddModalBtn');
+
+  openAddBtn.addEventListener('click', () => addModal.classList.add('open'));
+  closeAddBtn.addEventListener('click', () => addModal.classList.remove('open'));
+
+  // Close Detail Modal
+  const detailModal = document.getElementById('detailModal');
+  const closeDetailBtn = document.getElementById('closeDetailModalBtn');
+  closeDetailBtn.addEventListener('click', () => detailModal.classList.remove('open'));
+
+  // Backdrop click to close modals
+  window.addEventListener('click', (e) => {
+    if (e.target === addModal) addModal.classList.remove('open');
+    if (e.target === detailModal) detailModal.classList.remove('open');
+  });
+
+  // Submit New Equipment Listing Form
+  const addForm = document.getElementById('addEquipmentForm');
+  addForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('addName').value.trim();
+    const category = document.getElementById('addCategory').value;
+    const ownerType = document.getElementById('addOwnerType').value;
+    const dailyRate = parseFloat(document.getElementById('addDailyRate').value);
+    const hourlyRate = parseFloat(document.getElementById('addHourlyRate').value) || 0;
+    const ownerName = document.getElementById('addOwnerName').value.trim();
+    const whatsapp = document.getElementById('addWhatsapp').value.trim();
+    const village = document.getElementById('addVillage').value.trim();
+    const district = document.getElementById('addDistrict').value.trim();
+    const distanceKm = parseFloat(document.getElementById('addDistance').value) || 3.0;
+    const security = document.getElementById('addSecurity').value.trim();
+    const operatorIncluded = document.getElementById('addOperatorIncluded').checked;
+    const specs = document.getElementById('addSpecs').value.trim();
+
+    if (!name || !dailyRate || !ownerName || !whatsapp || !village) {
+      alert("कृपया सभी आवश्यक फ़ील्ड (*) भरें।");
+      return;
+    }
+
+    const categoryAvatars = {
+      tractors: '🚜',
+      sprayers: '🛸',
+      harvest: '🌾',
+      seeding: '🌱',
+      pumps: '💧',
+      trolley: '🚛'
+    };
+
+    const newListing = {
+      id: 'mach-user-' + Date.now(),
+      name: name,
+      category: category,
+      ownerType: ownerType,
+      ownerName: ownerName,
+      whatsapp: whatsapp,
+      phone: whatsapp,
+      village: village,
+      district: district || 'Bareilly',
+      distanceKm: distanceKm,
+      dailyRate: dailyRate,
+      hourlyRate: hourlyRate,
+      isAvailable: true,
+      operatorIncluded: operatorIncluded,
+      securityDeposit: security || 'आपसी बातचीत के अनुसार',
+      specs: specs || 'उपकरण उत्कृष्ट कार्यशील स्थिति में है।',
+      avatar: categoryAvatars[category] || '🚜',
+      isUserListing: true
+    };
+
+    // Prepend new listing so it shows up at top
+    machineryList.unshift(newListing);
+    saveData();
+
+    // Reset and close
+    addForm.reset();
+    addModal.classList.remove('open');
+
+    // Switch owner filter to 'my_equipment' or 'all' to show new item
+    renderGrid();
+
+    if (window.KrishiToast) {
+      window.KrishiToast.show("आपकी मशीनरी सफलतापूर्वक लिस्ट हो गई!", "success");
+    } else {
+      alert("आपकी मशीनरी सफलतापूर्वक लिस्ट हो गई!");
+    }
+  });
+
+  // Initial Grid Render
+  renderGrid();
+});
+</script>
 {% endblock %}
