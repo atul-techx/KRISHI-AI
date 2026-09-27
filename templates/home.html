@@ -1,332 +1,1472 @@
 {% extends "base.html" %}
-{% block title %}Krishi AI - स्मार्ट कृषि समाधान{% endblock %}
+{% block title %}Krishi AI - Smart Farming Powered by AI & IoT{% endblock %}
+
 {% block extra_css %}
 <style>
-/* Services section */
-.services-section { padding: 3rem 1.5rem 4rem; }
-.services-header { text-align: center; margin-bottom: 3rem; }
-.services-main-title {
-    font-size: clamp(1.8rem, 4vw, 2.8rem);
+/* ─────────────────────────────────────────────────────────────
+   KRISHI AI — FLAGSHIP HOMEPAGE STYLING (Based on design mockup)
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+    --kai-green-dark: #062315;
+    --kai-green-mid: #0D3E26;
+    --kai-emerald: #10B981;
+    --kai-emerald-bright: #34D399;
+    --kai-emerald-dark: #059669;
+    --kai-gold: #F59E0B;
+    --kai-gold-light: #FBBF24;
+    --kai-bg-mint: #F4FAF6;
+    --kai-card-border: rgba(16, 185, 129, 0.16);
+    --kai-text-dark: #0F172A;
+    --kai-text-muted: #64748B;
+}
+
+body {
+    padding-bottom: 0 !important;
+}
+
+.kai-landing {
+    width: 100%;
+    overflow-x: hidden;
+    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--kai-text-dark);
+    background-color: #F4FAF6;
+}
+
+/* ── Section Tag / Pill Badge ── */
+.kai-pill-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 1.1rem;
+    border-radius: 9999px;
+    font-size: 0.78rem;
     font-weight: 800;
-    background: linear-gradient(to right, #ffffff 30%, #9CA3AF);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.28);
+    margin-bottom: 1rem;
+}
+
+.kai-section-head {
+    text-align: center;
+    max-width: 760px;
+    margin: 0 auto 3.5rem auto;
+}
+
+.kai-section-title {
+    font-size: clamp(2rem, 3.8vw, 3rem);
+    font-weight: 800;
+    color: #062315;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+    margin-bottom: 0.85rem;
+}
+
+.kai-section-sub {
+    font-size: 1.05rem;
+    color: #64748B;
+    line-height: 1.65;
+    margin: 0 auto;
+}
+
+/* ═════════════════════════════════════════════════════════════
+   1. HERO SECTION
+   ═════════════════════════════════════════════════════════════ */
+.kai-hero {
+    position: relative;
+    width: 100%;
+    min-height: 88vh;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(180deg, rgba(6, 35, 21, 0.76) 0%, rgba(4, 22, 13, 0.88) 100%),
+                url("{{ url_for('static', filename='img/hero_farm_bg.jpg') }}") center/cover no-repeat;
+    padding: 6rem 1.5rem 5rem;
+    color: #FFFFFF;
+}
+
+.kai-hero-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+    z-index: 2;
+}
+
+.kai-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 0.45rem 1.15rem;
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #A7F3D0;
+    text-transform: uppercase;
+    margin-bottom: 1.75rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.kai-hero-badge .pulse-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #34D399;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #34D399;
+    animation: kaiPulse 2s infinite;
+}
+
+@keyframes kaiPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+}
+
+.kai-hero-title,
+.kai-hero h1,
+[data-theme] .kai-landing .kai-hero-title,
+[data-theme] .kai-landing .kai-hero h1 {
+    font-size: clamp(2.5rem, 5.5vw, 4.4rem) !important;
+    font-weight: 800 !important;
+    line-height: 1.15 !important;
+    letter-spacing: -1px !important;
+    max-width: 850px !important;
+    margin-bottom: 1.25rem !important;
+    color: #FFFFFF !important;
+}
+
+.kai-hero-title .gradient-text {
+    background: linear-gradient(135deg, #FBBF24 20%, #34D399 80%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin-bottom: 0.75rem;
-    letter-spacing: -0.5px;
 }
-.services-main-sub { color: rgba(255,255,255,0.5); font-size: 1.05rem; line-height: 1.7; }
 
-/* ── 4-column premium cards grid ── */
-.premium-cards-grid {
+.kai-hero-sub,
+.kai-hero p,
+[data-theme] .kai-landing .kai-hero-sub,
+[data-theme] .kai-landing .kai-hero p {
+    font-size: clamp(1.05rem, 2vw, 1.25rem) !important;
+    line-height: 1.65 !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    max-width: 680px !important;
+    margin-bottom: 2.5rem !important;
+    font-weight: 400 !important;
+}
+
+.kai-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 4rem;
+}
+
+.btn-hero-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: #FFFFFF !important;
+    font-size: 1.05rem;
+    font-weight: 700;
+    padding: 0.95rem 2rem;
+    border-radius: 9999px;
+    text-decoration: none;
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.45);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-hero-primary:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 15px 38px rgba(16, 185, 129, 0.6);
+    color: #FFFFFF !important;
+}
+
+.btn-hero-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: #FFFFFF !important;
+    font-size: 1.05rem;
+    font-weight: 700;
+    padding: 0.95rem 1.85rem;
+    border-radius: 9999px;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-hero-secondary:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+    color: #FFFFFF !important;
+}
+
+/* Floating Hero Stat Badges */
+.kai-hero-stats-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.25rem;
+    align-self: flex-end;
+    margin-top: auto;
+}
+
+.kai-hero-stat-badge {
+    background: rgba(6, 35, 21, 0.78);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(52, 211, 153, 0.35);
+    border-radius: 16px;
+    padding: 0.85rem 1.4rem;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    min-width: 120px;
+    transition: transform 0.3s ease;
+}
+
+.kai-hero-stat-badge:hover {
+    transform: translateY(-3px);
+    border-color: #34D399;
+}
+
+.kai-hero-stat-num {
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: #34D399;
+    line-height: 1.1;
+    display: block;
+}
+
+.kai-hero-stat-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.75);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+    display: block;
+}
+
+/* ═════════════════════════════════════════════════════════════
+   2. FEATURES SECTION ("WHAT WE PROVIDE")
+   ═════════════════════════════════════════════════════════════ */
+.kai-features-section {
+    padding: 6.5rem 1.5rem 5.5rem;
+    background-color: #F4FAF6 !important;
+}
+
+.kai-features-container {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.kai-features-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.85rem;
 }
-@media (max-width: 1199px) { .premium-cards-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 599px)  { .premium-cards-grid { grid-template-columns: 1fr; } }
 
-/* ── Base card ── */
-.pcard {
-    position: relative;
+@media (max-width: 992px) {
+    .kai-features-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .kai-features-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.kai-feature-card {
+    background: #FFFFFF !important;
+    border: 1px solid rgba(16, 185, 129, 0.16) !important;
+    border-radius: 20px;
+    padding: 2.25rem 2rem;
+    box-shadow: 0 8px 30px rgba(16, 185, 129, 0.07) !important;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
-    border-radius: 20px;
-    overflow: hidden;
     text-decoration: none;
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.10);
-    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), box-shadow 0.35s cubic-bezier(0.4,0,0.2,1), border-color 0.35s ease;
-    cursor: pointer;
+    position: relative;
+    overflow: hidden;
 }
-.pcard:hover { transform: translateY(-10px) scale(1.015); }
 
-/* Per-card backgrounds */
-.pcard--disease { background: linear-gradient(160deg, #0c2218, #0a1a10); }
-.pcard--disease:hover { box-shadow: 0 20px 60px rgba(16,185,129,0.30); border-color: rgba(16,185,129,0.45); }
-.pcard--soil { background: linear-gradient(160deg, #1e1105, #120d02); }
-.pcard--soil:hover { box-shadow: 0 20px 60px rgba(217,119,6,0.30); border-color: rgba(217,119,6,0.45); }
-.pcard--pest { background: linear-gradient(160deg, #081a0a, #060e08); }
-.pcard--pest:hover { box-shadow: 0 20px 60px rgba(34,197,94,0.30); border-color: rgba(34,197,94,0.45); }
-.pcard--weather { background: linear-gradient(160deg, #060e1e, #04090f); }
-.pcard--weather:hover { box-shadow: 0 20px 60px rgba(59,130,246,0.30); border-color: rgba(59,130,246,0.45); }
-.pcard--market { background: linear-gradient(160deg, #1a0d02, #110802); }
-.pcard--market:hover { box-shadow: 0 20px 60px rgba(249,115,22,0.30); border-color: rgba(249,115,22,0.45); }
-.pcard--schemes { background: linear-gradient(160deg, #02131a, #020e10); }
-.pcard--schemes:hover { box-shadow: 0 20px 60px rgba(6,182,212,0.30); border-color: rgba(6,182,212,0.45); }
-.pcard--voice { background: linear-gradient(160deg, #130b1e, #0d0814); }
-.pcard--voice:hover { box-shadow: 0 20px 60px rgba(139,92,246,0.30); border-color: rgba(139,92,246,0.45); }
-.pcard--organic { background: linear-gradient(160deg, #061a10, #04100b); }
-.pcard--organic:hover { box-shadow: 0 20px 60px rgba(16,185,129,0.30); border-color: rgba(16,185,129,0.45); }
-
-/* Corner badge */
-.pcard__corner-badge {
-    position: absolute; top: 14px; right: 14px; z-index: 20;
-    background: linear-gradient(135deg, #10B981, #059669);
-    color: #fff; font-size: 0.65rem; font-weight: 800;
-    letter-spacing: 0.5px; padding: 0.28rem 0.6rem;
-    border-radius: 30px; text-transform: uppercase;
-    box-shadow: 0 4px 14px rgba(16,185,129,0.45);
+.kai-feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 45px rgba(16, 185, 129, 0.16) !important;
+    border-color: rgba(16, 185, 129, 0.45) !important;
 }
-.pcard__corner-badge--soil   { background: linear-gradient(135deg, #D97706, #B45309); box-shadow: 0 4px 14px rgba(217,119,6,0.45); }
-.pcard__corner-badge--pest   { background: linear-gradient(135deg, #22C55E, #16A34A); box-shadow: 0 4px 14px rgba(34,197,94,0.45); }
-.pcard__corner-badge--voice  { background: linear-gradient(135deg, #9333EA, #7C3AED); box-shadow: 0 4px 14px rgba(139,92,246,0.45); }
-.pcard__corner-badge--organic{ background: linear-gradient(135deg, #10B981, #059669); box-shadow: 0 4px 14px rgba(16,185,129,0.45); }
 
-/* Image */
-.pcard__img-wrap { width: 100%; height: 188px; overflow: hidden; flex-shrink: 0; background: rgba(0,0,0,0.25); }
-.pcard__img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.55s cubic-bezier(0.4,0,0.2,1); }
-.pcard:hover .pcard__img { transform: scale(1.08); }
-
-/* SVG fallback wrapper */
-.pcard__img-wrap--svg { display: flex; align-items: center; justify-content: center; }
-.pcard__svg { width: 100%; height: 100%; transition: transform 0.55s; }
-.pcard:hover .pcard__svg { transform: scale(1.06); }
-
-/* Body */
-.pcard__body { display: flex; flex-direction: column; flex: 1; padding: 1.25rem 1.35rem 1.35rem; }
-.pcard__title { font-size: 1.18rem; font-weight: 800; color: #fff; margin-bottom: 0.55rem; line-height: 1.3; letter-spacing: -0.2px; }
-.pcard__desc { font-size: 0.84rem; color: rgba(255,255,255,0.60); line-height: 1.65; flex: 1; margin-bottom: 1.15rem; }
-
-/* Footer */
-.pcard__footer { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
-.pcard__btn {
-    display: inline-flex; align-items: center; gap: 0.5rem;
-    padding: 0.6rem 1.25rem; border-radius: 10px; font-size: 0.85rem; font-weight: 700;
+.kai-feature-icon-wrap {
+    width: 58px;
+    height: 58px;
+    border-radius: 16px;
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
     transition: all 0.3s ease;
-    background: rgba(16,185,129,0.12); color: #10B981; border: 1px solid rgba(16,185,129,0.25);
 }
-.pcard__btn i { transition: transform 0.3s; }
-.pcard:hover .pcard__btn i { transform: translateX(4px); }
-.pcard:hover .pcard__btn { background: rgba(16,185,129,0.22); border-color: rgba(16,185,129,0.5); }
 
-.pcard__btn--soil    { background: rgba(217,119,6,0.12);  color: #F59E0B; border-color: rgba(217,119,6,0.25); }
-.pcard:hover .pcard__btn--soil    { background: rgba(217,119,6,0.22);  border-color: rgba(217,119,6,0.5); }
-.pcard__btn--pest    { background: rgba(34,197,94,0.12);  color: #22C55E; border-color: rgba(34,197,94,0.25); }
-.pcard:hover .pcard__btn--pest    { background: rgba(34,197,94,0.22);  border-color: rgba(34,197,94,0.5); }
-.pcard__btn--weather { background: rgba(59,130,246,0.12); color: #60A5FA; border-color: rgba(59,130,246,0.25); }
-.pcard:hover .pcard__btn--weather { background: rgba(59,130,246,0.22); border-color: rgba(59,130,246,0.5); }
-.pcard__btn--market  { background: rgba(249,115,22,0.12); color: #FB923C; border-color: rgba(249,115,22,0.25); }
-.pcard:hover .pcard__btn--market  { background: rgba(249,115,22,0.22); border-color: rgba(249,115,22,0.5); }
-.pcard__btn--schemes { background: rgba(6,182,212,0.12);  color: #22D3EE; border-color: rgba(6,182,212,0.25); }
-.pcard:hover .pcard__btn--schemes { background: rgba(6,182,212,0.22);  border-color: rgba(6,182,212,0.5); }
-.pcard__btn--voice   { background: rgba(139,92,246,0.12); color: #A78BFA; border-color: rgba(139,92,246,0.25); }
-.pcard:hover .pcard__btn--voice   { background: rgba(139,92,246,0.22); border-color: rgba(139,92,246,0.5); }
-.pcard__btn--organic { background: rgba(16,185,129,0.12); color: #34D399; border-color: rgba(16,185,129,0.25); }
-.pcard:hover .pcard__btn--organic { background: rgba(16,185,129,0.22); border-color: rgba(16,185,129,0.5); }
-
-/* Icon circle */
-.pcard__icon {
-    width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    font-size: 0.95rem; flex-shrink: 0; transition: transform 0.3s;
-    background: rgba(16,185,129,0.12); color: #10B981; border: 1px solid rgba(16,185,129,0.20);
+.kai-feature-card:hover .kai-feature-icon-wrap {
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: #FFFFFF;
+    transform: scale(1.08) rotate(6deg);
 }
-.pcard:hover .pcard__icon { transform: rotate(15deg) scale(1.1); }
-.pcard__icon--soil    { background: rgba(217,119,6,0.12);  color: #F59E0B; border-color: rgba(217,119,6,0.20); }
-.pcard__icon--pest    { background: rgba(34,197,94,0.12);  color: #22C55E; border-color: rgba(34,197,94,0.20); }
-.pcard__icon--weather { background: rgba(59,130,246,0.12); color: #60A5FA; border-color: rgba(59,130,246,0.20); }
-.pcard__icon--market  { background: rgba(249,115,22,0.12); color: #FB923C; border-color: rgba(249,115,22,0.20); }
-.pcard__icon--schemes { background: rgba(6,182,212,0.12);  color: #22D3EE; border-color: rgba(6,182,212,0.20); }
-.pcard__icon--voice   { background: rgba(139,92,246,0.12); color: #A78BFA; border-color: rgba(139,92,246,0.20); }
-.pcard__icon--organic { background: rgba(16,185,129,0.12); color: #34D399; border-color: rgba(16,185,129,0.20); }
+
+.kai-feature-title {
+    font-size: 1.28rem;
+    font-weight: 700;
+    color: #062315 !important;
+    margin-bottom: 0.75rem;
+    line-height: 1.3;
+}
+
+.kai-feature-desc {
+    font-size: 0.95rem;
+    color: #64748B !important;
+    line-height: 1.65;
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
+}
+
+.kai-feature-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #059669 !important;
+    margin-top: auto;
+    transition: gap 0.25s ease;
+}
+
+.kai-feature-card:hover .kai-feature-link {
+    gap: 0.75rem;
+}
+
+/* ═════════════════════════════════════════════════════════════
+   3. PROCESS SECTION ("HOW KRISHI AI WORKS")
+   ═════════════════════════════════════════════════════════════ */
+.kai-process-section {
+    padding: 6.5rem 1.5rem 5.5rem;
+    background: linear-gradient(180deg, #EBF6EF 0%, #F4FAF6 100%) !important;
+}
+
+.kai-process-container {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.kai-process-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    position: relative;
+}
+
+@media (max-width: 860px) {
+    .kai-process-grid {
+        grid-template-columns: 1fr;
+        max-width: 480px;
+        margin: 0 auto;
+    }
+}
+
+.kai-process-card {
+    background: #FFFFFF !important;
+    border-radius: 22px;
+    padding: 3.5rem 2.2rem 2.5rem;
+    box-shadow: 0 10px 35px rgba(16, 185, 129, 0.08) !important;
+    border: 1px solid rgba(16, 185, 129, 0.16) !important;
+    text-align: center;
+    position: relative;
+    transition: all 0.35s ease;
+}
+
+.kai-process-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 22px 50px rgba(16, 185, 129, 0.18) !important;
+    border-color: #10B981 !important;
+}
+
+.kai-process-step-num {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: #FFFFFF;
+    font-size: 1.35rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: -5.4rem auto 1.5rem auto;
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+    border: 4px solid #FFFFFF;
+}
+
+.kai-process-icon {
+    font-size: 2.2rem;
+    color: #059669;
+    margin-bottom: 1.2rem;
+}
+
+.kai-process-card-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #062315 !important;
+    margin-bottom: 0.85rem;
+}
+
+.kai-process-card-desc {
+    font-size: 0.95rem;
+    color: #64748B !important;
+    line-height: 1.65;
+}
+
+/* ═════════════════════════════════════════════════════════════
+   4. IMPACT SECTION ("THE NUMBERS SPEAK FOR THEMSELVES")
+   ═════════════════════════════════════════════════════════════ */
+.kai-impact-section {
+    padding: 6.5rem 1.5rem;
+    background-color: #FFFFFF !important;
+}
+
+.kai-impact-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+}
+
+@media (max-width: 992px) {
+    .kai-impact-container {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
+}
+
+.kai-impact-left {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.kai-impact-title {
+    font-size: clamp(2.2rem, 3.8vw, 3rem);
+    font-weight: 800;
+    color: #062315 !important;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+    margin-bottom: 1rem;
+}
+
+.kai-impact-sub {
+    font-size: 1.05rem;
+    color: #64748B !important;
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+}
+
+.kai-metrics-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    width: 100%;
+}
+
+.kai-metric-item {
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+    border-bottom: 1px solid rgba(16, 185, 129, 0.16);
+    padding-bottom: 1.25rem;
+}
+
+.kai-metric-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #059669;
+    letter-spacing: -1px;
+    min-width: 155px;
+    line-height: 1;
+}
+
+.kai-metric-label {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #334155 !important;
+    line-height: 1.4;
+}
+
+.kai-impact-right {
+    position: relative;
+}
+
+.kai-impact-img-card {
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(6, 35, 21, 0.18);
+    position: relative;
+    border: 3px solid #FFFFFF;
+}
+
+.kai-impact-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+    transition: transform 0.6s ease;
+}
+
+.kai-impact-img-card:hover .kai-impact-img {
+    transform: scale(1.04);
+}
+
+/* ═════════════════════════════════════════════════════════════
+   5. TESTIMONIALS SECTION ("WHAT FARMERS ARE SAYING")
+   ═════════════════════════════════════════════════════════════ */
+.kai-testimonials-section {
+    padding: 6.5rem 1.5rem;
+    background: #F4FAF6 !important;
+}
+
+.kai-testimonials-container {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.kai-testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+@media (max-width: 992px) {
+    .kai-testimonials-grid {
+        grid-template-columns: 1fr;
+        max-width: 520px;
+        margin: 0 auto;
+    }
+}
+
+.kai-testimonial-card {
+    background: #FFFFFF !important;
+    border-radius: 20px;
+    padding: 2.25rem 2rem;
+    border: 1px solid rgba(16, 185, 129, 0.16) !important;
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.06) !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.3s ease;
+}
+
+.kai-testimonial-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 18px 45px rgba(16, 185, 129, 0.15) !important;
+    border-color: #10B981 !important;
+}
+
+.kai-stars-row {
+    color: #F59E0B;
+    font-size: 1.15rem;
+    letter-spacing: 2px;
+    margin-bottom: 1.25rem;
+}
+
+.kai-testimonial-quote {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: #334155 !important;
+    font-style: italic;
+    margin-bottom: 1.75rem;
+    flex-grow: 1;
+}
+
+.kai-testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-top: 1px solid rgba(16, 185, 129, 0.14);
+    padding-top: 1.25rem;
+}
+
+.kai-author-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: #FFFFFF;
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.kai-author-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #062315 !important;
+    margin-bottom: 2px;
+}
+
+.kai-author-role {
+    font-size: 0.82rem;
+    color: #64748B !important;
+}
+
+/* ═════════════════════════════════════════════════════════════
+   6. CTA BANNER ("READY TO TRANSFORM YOUR FARM?")
+   ═════════════════════════════════════════════════════════════ */
+.kai-cta-banner-section {
+    padding: 3rem 1.5rem 5rem;
+    background: #F4FAF6 !important;
+}
+
+.kai-cta-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.kai-cta-card {
+    background: linear-gradient(135deg, #0A4325 0%, #062816 100%) !important;
+    border-radius: 28px;
+    padding: 4.5rem 2.5rem;
+    text-align: center;
+    color: #FFFFFF !important;
+    box-shadow: 0 25px 60px rgba(6, 35, 21, 0.3);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.kai-cta-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(52, 211, 153, 0.15) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.kai-cta-badge {
+    display: inline-block;
+    padding: 0.4rem 1.1rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #A7F3D0;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+}
+
+.kai-cta-title,
+.kai-cta-card h2,
+[data-theme] .kai-landing .kai-cta-card h2,
+[data-theme] .kai-landing .kai-cta-title {
+    font-size: clamp(2.2rem, 4vw, 3.2rem) !important;
+    font-weight: 800 !important;
+    color: #FFFFFF !important;
+    margin-bottom: 1rem !important;
+    line-height: 1.2 !important;
+}
+
+.kai-cta-sub,
+[data-theme] .kai-landing .kai-cta-sub {
+    font-size: 1.12rem !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    max-width: 650px !important;
+    margin: 0 auto 2.5rem auto !important;
+    line-height: 1.65 !important;
+}
+
+.kai-cta-btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.25rem;
+    position: relative;
+    z-index: 2;
+}
+
+.btn-cta-gold {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    background: linear-gradient(135deg, #F59E0B, #D97706);
+    color: #FFFFFF !important;
+    font-size: 1.05rem;
+    font-weight: 700;
+    padding: 0.95rem 2.25rem;
+    border-radius: 9999px;
+    text-decoration: none;
+    box-shadow: 0 10px 28px rgba(245, 158, 11, 0.4);
+    transition: all 0.3s ease;
+}
+
+.btn-cta-gold:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 14px 35px rgba(245, 158, 11, 0.55);
+    color: #FFFFFF !important;
+}
+
+.btn-cta-glass {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: #FFFFFF !important;
+    font-size: 1.05rem;
+    font-weight: 700;
+    padding: 0.95rem 2rem;
+    border-radius: 9999px;
+    text-decoration: none;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.btn-cta-glass:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+    color: #FFFFFF !important;
+}
+
+/* ═════════════════════════════════════════════════════════════
+   7. PARTNERS / SUPPORTED BY SECTION
+   ═════════════════════════════════════════════════════════════ */
+.kai-partners-section {
+    padding: 3.5rem 1.5rem 4.5rem;
+    background-color: #FFFFFF !important;
+    text-align: center;
+}
+
+.kai-partners-head {
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #94A3B8;
+    margin-bottom: 2rem;
+}
+
+.kai-partners-flex {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 2.5rem 4rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.kai-partner-item {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #64748B;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    transition: all 0.3s ease;
+}
+
+.kai-partner-item i {
+    font-size: 1.35rem;
+    color: #10B981;
+}
+
+.kai-partner-item:hover {
+    color: #059669;
+    transform: scale(1.05);
+}
+
+/* ═════════════════════════════════════════════════════════════
+   8. FOOTER SECTION
+   ═════════════════════════════════════════════════════════════ */
+.kai-footer {
+    background-color: #04140C !important;
+    color: #F8FAFC !important;
+    padding: 5rem 1.5rem 2rem;
+    border-top: 1px solid rgba(52, 211, 153, 0.15);
+}
+
+.kai-footer-container {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.kai-footer-top {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 3.5rem;
+    margin-bottom: 4rem;
+}
+
+@media (max-width: 992px) {
+    .kai-footer-top {
+        grid-template-columns: 1fr 1fr;
+        gap: 2.5rem;
+    }
+}
+
+@media (max-width: 580px) {
+    .kai-footer-top {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+}
+
+.kai-footer-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.kai-footer-logo {
+    height: 48px;
+    width: auto;
+    margin-bottom: 1.25rem;
+}
+
+.kai-footer-desc {
+    font-size: 0.92rem;
+    color: #94A3B8 !important;
+    line-height: 1.65;
+    max-width: 320px;
+    margin-bottom: 1.5rem;
+}
+
+.kai-footer-socials {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.kai-social-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #E2E8F0 !important;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.kai-social-icon:hover {
+    background: #10B981;
+    color: #FFFFFF !important;
+    border-color: #10B981;
+    transform: translateY(-3px);
+}
+
+.kai-footer-col h4,
+[data-theme] .kai-landing .kai-footer-col h4 {
+    font-size: 1.05rem !important;
+    font-weight: 700 !important;
+    color: #FFFFFF !important;
+    margin-bottom: 1.25rem !important;
+    letter-spacing: -0.2px !important;
+}
+
+.kai-footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.kai-footer-link {
+    font-size: 0.9rem;
+    color: #94A3B8 !important;
+    text-decoration: none;
+    transition: all 0.25s ease;
+}
+
+.kai-footer-link:hover {
+    color: #34D399 !important;
+    padding-left: 4px;
+}
+
+/* Newsletter Bar */
+.kai-newsletter-box {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(52, 211, 153, 0.2);
+    border-radius: 20px;
+    padding: 2rem 2.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 3.5rem;
+}
+
+.kai-newsletter-text h4,
+[data-theme] .kai-landing .kai-newsletter-text h4 {
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    color: #FFFFFF !important;
+    margin-bottom: 0.35rem !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.kai-newsletter-text p {
+    font-size: 0.9rem;
+    color: #94A3B8 !important;
+    margin: 0;
+}
+
+.kai-newsletter-form {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-grow: 1;
+    max-width: 440px;
+}
+
+.kai-newsletter-input {
+    flex-grow: 1;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+    color: #FFFFFF;
+    outline: none;
+    transition: border-color 0.25s ease;
+}
+
+.kai-newsletter-input:focus {
+    border-color: #34D399;
+}
+
+.kai-newsletter-btn {
+    background: linear-gradient(135deg, #10B981, #059669);
+    border: none;
+    border-radius: 9999px;
+    padding: 0.75rem 1.6rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.kai-newsletter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.kai-footer-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 2rem;
+    font-size: 0.85rem;
+    color: #64748B !important;
+}
+
+.kai-footer-bottom-links {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.kai-footer-bottom-links a {
+    color: #64748B !important;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.kai-footer-bottom-links a:hover {
+    color: #34D399 !important;
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<section class="services-section">
-    <div class="services-header fade-in-up">
-        <h2 class="services-main-title">स्मार्ट कृषि समाधान</h2>
-        <p class="services-main-sub">एआई-संचालित 8 शक्तिशाली उपकरण — बेहतर फसल, बेहतर जीवन</p>
-    </div>
+<div class="kai-landing">
 
-    <div class="premium-cards-grid">
-
-        <!-- Card 1: Crop Disease Detection -->
-        <a href="{{ url_for('disease') }}" class="pcard pcard--disease fade-in-up">
-            <div class="pcard__corner-badge">AI</div>
-            <div class="pcard__img-wrap">
-                <img src="{{ url_for('static', filename='img/crop_disease.png') }}" alt="Crop Disease Detection" class="pcard__img">
+    <!-- ══════════════════════════════════════════════════════════
+         1. HERO SECTION
+         ══════════════════════════════════════════════════════════ -->
+    <section class="kai-hero">
+        <div class="kai-hero-inner">
+            <!-- Pill Badge -->
+            <div class="kai-hero-badge fade-in-up">
+                <span class="pulse-dot"></span>
+                <span>🌱 EMPOWERING 100,000+ FARMERS IN INDIA</span>
             </div>
-            <div class="pcard__body">
-                <h3 class="pcard__title">फसल रोग पहचान</h3>
-                <p class="pcard__desc">पत्ती की फोटो अपलोड करें और तुरंत रोग निदान व उपचार सलाह पाएं।</p>
-                <div class="pcard__footer">
-                    <span class="pcard__btn">जांच करें <i class="fa-solid fa-arrow-right"></i></span>
-                    <span class="pcard__icon"><i class="fa-solid fa-leaf"></i></span>
+
+            <!-- Big Impact Title -->
+            <h1 class="kai-hero-title fade-in-up delay-1" style="color: #FFFFFF !important;">
+                Smart Farming Powered by <span class="gradient-text">AI & IoT</span>
+            </h1>
+
+            <!-- Subtitle -->
+            <p class="kai-hero-sub fade-in-up delay-2" style="color: rgba(255, 255, 255, 0.9) !important;">
+                Helping 10,000+ Indian farmers grow more with less. Get real-time soil, crop health, pest alerts and hyper-local weather access.
+            </p>
+
+            <!-- Action Buttons -->
+            <div class="kai-hero-actions fade-in-up delay-3">
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('dashboard') }}" class="btn-hero-primary">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Go to Dashboard</span>
+                </a>
+                {% else %}
+                <a href="{{ url_for('register') }}" class="btn-hero-primary">
+                    <i class="fa-solid fa-rocket"></i>
+                    <span>Explore Platform</span>
+                </a>
+                {% endif %}
+
+                <a href="#how-it-works" class="btn-hero-secondary">
+                    <i class="fa-solid fa-play"></i>
+                    <span>Watch Demo</span>
+                </a>
+            </div>
+
+            <!-- Hero Floating Stat Badges -->
+            <div class="kai-hero-stats-row fade-in-up delay-4">
+                <div class="kai-hero-stat-badge">
+                    <span class="kai-hero-stat-num">1,250+</span>
+                    <span class="kai-hero-stat-label">Farmers</span>
+                </div>
+                <div class="kai-hero-stat-badge">
+                    <span class="kai-hero-stat-num">38%</span>
+                    <span class="kai-hero-stat-label">Yield Increase</span>
+                </div>
+                <div class="kai-hero-stat-badge">
+                    <span class="kai-hero-stat-num">400+</span>
+                    <span class="kai-hero-stat-label">Villages</span>
                 </div>
             </div>
-        </a>
+        </div>
+    </section>
 
-        <!-- Card 2: Soil Analysis -->
-        <a href="{{ url_for('soil') }}" class="pcard pcard--soil fade-in-up delay-1">
-            <div class="pcard__corner-badge pcard__corner-badge--soil">Lab</div>
-            <div class="pcard__img-wrap">
-                <img src="{{ url_for('static', filename='img/soil_analysis.png') }}" alt="Soil Analysis" class="pcard__img">
+    <!-- ══════════════════════════════════════════════════════════
+         2. WHAT WE PROVIDE (Features Grid)
+         ══════════════════════════════════════════════════════════ -->
+    <section class="kai-features-section" id="features">
+        <div class="kai-features-container">
+            <div class="kai-section-head">
+                <span class="kai-pill-tag">WHAT WE PROVIDE</span>
+                <h2 class="kai-section-title">Everything a Modern Farmer Needs</h2>
+                <p class="kai-section-sub">
+                    A full suite of AI-first tools and smart hardware to power your farm from seed to harvest.
+                </p>
             </div>
-            <div class="pcard__body">
-                <h3 class="pcard__title">मृदा स्वास्थ्य जाँच</h3>
-                <p class="pcard__desc">मिट्टी के प्रकार, पोषक तत्व जानें और उर्वरक सिफारिशें पाएं।</p>
-                <div class="pcard__footer">
-                    <span class="pcard__btn pcard__btn--soil">जांच करें <i class="fa-solid fa-arrow-right"></i></span>
-                    <span class="pcard__icon pcard__icon--soil"><i class="fa-solid fa-flask"></i></span>
+
+            <div class="kai-features-grid">
+                <!-- Feature 1 -->
+                <a href="{{ url_for('soil') }}" class="kai-feature-card">
+                    <div class="kai-feature-icon-wrap">
+                        <i class="fa-solid fa-flask-vial"></i>
+                    </div>
+                    <h3 class="kai-feature-title">IoT Soil Monitoring</h3>
+                    <p class="kai-feature-desc">
+                        Real-time soil pH, moisture, and temperature readings from wireless sensors placed directly in your farm.
+                    </p>
+                    <span class="kai-feature-link">Explore Soil Analysis <i class="fa-solid fa-arrow-right"></i></span>
+                </a>
+
+                <!-- Feature 2 -->
+                <a href="{{ url_for('pest') }}" class="kai-feature-card">
+                    <div class="kai-feature-icon-wrap">
+                        <i class="fa-solid fa-bug"></i>
+                    </div>
+                    <h3 class="kai-feature-title">AI Pest Detection</h3>
+                    <p class="kai-feature-desc">
+                        Upload plant photos to identify pests & diseases in seconds with AI-guided organic & chemical remedies.
+                    </p>
+                    <span class="kai-feature-link">Detect Pests Now <i class="fa-solid fa-arrow-right"></i></span>
+                </a>
+
+                <!-- Feature 3 -->
+                <a href="{{ url_for('machinery') }}" class="kai-feature-card">
+                    <div class="kai-feature-icon-wrap">
+                        <i class="fa-solid fa-microchip"></i>
+                    </div>
+                    <h3 class="kai-feature-title">Offline Smart Devices</h3>
+                    <p class="kai-feature-desc">
+                        Hardware works with or without internet. Stores data locally and syncs automatically when connectivity is available.
+                    </p>
+                    <span class="kai-feature-link">View Smart Devices <i class="fa-solid fa-arrow-right"></i></span>
+                </a>
+
+                <!-- Feature 4 -->
+                <a href="{{ url_for('disease') }}" class="kai-feature-card">
+                    <div class="kai-feature-icon-wrap">
+                        <i class="fa-solid fa-spray-can-sparkles"></i>
+                    </div>
+                    <h3 class="kai-feature-title">Smart Spray Systems</h3>
+                    <p class="kai-feature-desc">
+                        Automate precision pesticide & fertilizer spraying, reducing chemical use and protecting your family's health.
+                    </p>
+                    <span class="kai-feature-link">Precision Spraying <i class="fa-solid fa-arrow-right"></i></span>
+                </a>
+
+                <!-- Feature 5 -->
+                <a href="{{ url_for('weather') }}" class="kai-feature-card">
+                    <div class="kai-feature-icon-wrap">
+                        <i class="fa-solid fa-seedling"></i>
+                    </div>
+                    <h3 class="kai-feature-title">Crop Advisory</h3>
+                    <p class="kai-feature-desc">
+                        Personalized crop calendar, fertilizer guidance, and irrigation advice tailored to your soil & weather.
+                    </p>
+                    <span class="kai-feature-link">Get Crop Advisory <i class="fa-solid fa-arrow-right"></i></span>
+                </a>
+
+                <!-- Feature 6 -->
+                <a href="{{ url_for('voice') }}" class="kai-feature-card">
+                    <div class="kai-feature-icon-wrap">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <h3 class="kai-feature-title">Farmer Training</h3>
+                    <p class="kai-feature-desc">
+                        Interactive vernacular tutorials and voice audio guidance in Hindi and regional languages for every farmer.
+                    </p>
+                    <span class="kai-feature-link">Audio Voice Assistant <i class="fa-solid fa-arrow-right"></i></span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         3. HOW KRISHI AI WORKS (Process Steps)
+         ══════════════════════════════════════════════════════════ -->
+    <section class="kai-process-section" id="how-it-works">
+        <div class="kai-process-container">
+            <div class="kai-section-head">
+                <span class="kai-pill-tag">SIMPLE PROCESS</span>
+                <h2 class="kai-section-title">How Krishi AI Works</h2>
+                <p class="kai-section-sub">
+                    Go from setup to yield boost in three simple steps. No complex tech training required.
+                </p>
+            </div>
+
+            <div class="kai-process-grid">
+                <!-- Step 01 -->
+                <div class="kai-process-card">
+                    <div class="kai-process-step-num">01</div>
+                    <div class="kai-process-icon">
+                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                    </div>
+                    <h3 class="kai-process-card-title">Install the Device</h3>
+                    <p class="kai-process-card-desc">
+                        Place wireless sensors in your field or simply open the Krishi AI web app to scan crops with your mobile phone camera.
+                    </p>
+                </div>
+
+                <!-- Step 02 -->
+                <div class="kai-process-card">
+                    <div class="kai-process-step-num">02</div>
+                    <div class="kai-process-icon">
+                        <i class="fa-solid fa-chart-pie"></i>
+                    </div>
+                    <h3 class="kai-process-card-title">Receive AI Insights</h3>
+                    <p class="kai-process-card-desc">
+                        Get daily actionable insights, pest alerts, and irrigation schedules delivered directly in Hindi or your preferred language.
+                    </p>
+                </div>
+
+                <!-- Step 03 -->
+                <div class="kai-process-card">
+                    <div class="kai-process-step-num">03</div>
+                    <div class="kai-process-icon">
+                        <i class="fa-solid fa-wheat-awn"></i>
+                    </div>
+                    <h3 class="kai-process-card-title">Increase Your Yield</h3>
+                    <p class="kai-process-card-desc">
+                        Harvest 25-40% higher yields with lower input costs and sell directly at best market prices through Mandi radar.
+                    </p>
                 </div>
             </div>
-        </a>
+        </div>
+    </section>
 
-        <!-- Card 3: Pest Detection -->
-        <a href="{{ url_for('pest') }}" class="pcard pcard--pest fade-in-up delay-2">
-            <div class="pcard__corner-badge pcard__corner-badge--pest">AI</div>
-            <div class="pcard__img-wrap">
-                <img src="{{ url_for('static', filename='img/pest_detection.png') }}" alt="Pest Detection" class="pcard__img">
-            </div>
-            <div class="pcard__body">
-                <h3 class="pcard__title">कीट पहचान</h3>
-                <p class="pcard__desc">कीट पहचानने के लिए फसल की फोटो अपलोड करें और एआई समाधान पाएं।</p>
-                <div class="pcard__footer">
-                    <span class="pcard__btn pcard__btn--pest">पहचानें <i class="fa-solid fa-arrow-right"></i></span>
-                    <span class="pcard__icon pcard__icon--pest"><i class="fa-solid fa-bug"></i></span>
+    <!-- ══════════════════════════════════════════════════════════
+         4. IMPACT SECTION ("THE NUMBERS SPEAK FOR THEMSELVES")
+         ══════════════════════════════════════════════════════════ -->
+    <section class="kai-impact-section" id="impact">
+        <div class="kai-impact-container">
+            <!-- Left: Text & Key Metrics -->
+            <div class="kai-impact-left">
+                <span class="kai-pill-tag">IMPACT THAT MATTERS</span>
+                <h2 class="kai-impact-title">The Numbers Speak for Themselves</h2>
+                <p class="kai-impact-sub">
+                    Thousands of farmers across India trust Krishi AI to modernize their farming, reduce input costs, and protect their livelihoods.
+                </p>
+
+                <div class="kai-metrics-list">
+                    <div class="kai-metric-item">
+                        <div class="kai-metric-value">38%</div>
+                        <div class="kai-metric-label">Average yield increase in the first season</div>
+                    </div>
+                    <div class="kai-metric-item">
+                        <div class="kai-metric-value">₹12,400</div>
+                        <div class="kai-metric-label">Extra monthly income per participating farmer</div>
+                    </div>
+                    <div class="kai-metric-item">
+                        <div class="kai-metric-value">50%</div>
+                        <div class="kai-metric-label">Reduction in pesticide usage and chemical expenses</div>
+                    </div>
+                    <div class="kai-metric-item">
+                        <div class="kai-metric-value">92%</div>
+                        <div class="kai-metric-label">Crop disease detection and diagnosis accuracy</div>
+                    </div>
                 </div>
             </div>
-        </a>
 
-        <!-- Card 4: Weather Forecast -->
-        <a href="{{ url_for('weather') }}" class="pcard pcard--weather fade-in-up delay-3">
-            <div class="pcard__img-wrap">
-                <img src="{{ url_for('static', filename='img/weather_forecast.png') }}" alt="Weather Forecast" class="pcard__img">
-            </div>
-            <div class="pcard__body">
-                <h3 class="pcard__title">मौसम पूर्वानुमान</h3>
-                <p class="pcard__desc">खेत के स्थान के लिए लाइव मौसम और 5 दिनों का पूर्वानुमान देखें।</p>
-                <div class="pcard__footer">
-                    <span class="pcard__btn pcard__btn--weather">मौसम देखें <i class="fa-solid fa-arrow-right"></i></span>
-                    <span class="pcard__icon pcard__icon--weather"><i class="fa-solid fa-location-dot"></i></span>
+            <!-- Right: Beautiful Organic Harvest Image -->
+            <div class="kai-impact-right">
+                <div class="kai-impact-img-card">
+                    <img src="{{ url_for('static', filename='img/fresh_harvest_produce.jpg') }}" alt="Fresh Farm Harvest" class="kai-impact-img">
                 </div>
             </div>
-        </a>
+        </div>
+    </section>
 
-        <!-- Card 5: Mandi Market Price -->
-        <a href="{{ url_for('market') }}" class="pcard pcard--market fade-in-up">
-            <div class="pcard__img-wrap">
-                <img src="{{ url_for('static', filename='img/mandi_price.png') }}" alt="Mandi Market Price" class="pcard__img">
+    <!-- ══════════════════════════════════════════════════════════
+         5. TESTIMONIALS SECTION ("WHAT FARMERS ARE SAYING")
+         ══════════════════════════════════════════════════════════ -->
+    <section class="kai-testimonials-section" id="testimonials">
+        <div class="kai-testimonials-container">
+            <div class="kai-section-head">
+                <span class="kai-pill-tag">TESTIMONIALS</span>
+                <h2 class="kai-section-title">What Farmers Are Saying</h2>
+                <p class="kai-section-sub">
+                    Real stories from farmers whose lives and crop yields were transformed by Krishi AI.
+                </p>
             </div>
-            <div class="pcard__body">
-                <h3 class="pcard__title">मंडी बाजार भाव</h3>
-                <p class="pcard__desc">रियल-टाइम मंडी भाव, MSP और मूल्य प्रवृत्ति ट्रैक करें।</p>
-                <div class="pcard__footer">
-                    <span class="pcard__btn pcard__btn--market">भाव देखें <i class="fa-solid fa-arrow-right"></i></span>
-                    <span class="pcard__icon pcard__icon--market"><i class="fa-solid fa-indian-rupee-sign"></i></span>
+
+            <div class="kai-testimonials-grid">
+                <!-- Testimonial 1 -->
+                <div class="kai-testimonial-card">
+                    <div>
+                        <div class="kai-stars-row">★★★★★</div>
+                        <p class="kai-testimonial-quote">
+                            "The pest detection feature saved my 4-acre tomato crop from early blight. The instant remedy worked within 48 hours without expensive sprays!"
+                        </p>
+                    </div>
+                    <div class="kai-testimonial-author">
+                        <div class="kai-author-avatar">RP</div>
+                        <div>
+                            <div class="kai-author-name">Ramesh Patel</div>
+                            <div class="kai-author-role">Wheat & Tomato Farmer · Bareilly, UP</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 2 -->
+                <div class="kai-testimonial-card">
+                    <div>
+                        <div class="kai-stars-row">★★★★★</div>
+                        <p class="kai-testimonial-quote">
+                            "Soil testing and fertilizer recommendations cut my DAP costs in half while my mustard output hit an all-time high this winter."
+                        </p>
+                    </div>
+                    <div class="kai-testimonial-author">
+                        <div class="kai-author-avatar" style="background:linear-gradient(135deg,#D97706,#B45309);">SD</div>
+                        <div>
+                            <div class="kai-author-name">Sunita Devi</div>
+                            <div class="kai-author-role">Mustard & Grain Farmer · Aligarh, UP</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 3 -->
+                <div class="kai-testimonial-card">
+                    <div>
+                        <div class="kai-stars-row">★★★★★</div>
+                        <p class="kai-testimonial-quote">
+                            "Mandi price alerts and weather warnings helped me sell my potato produce at peak prices before heavy rainfall damaged local roads."
+                        </p>
+                    </div>
+                    <div class="kai-testimonial-author">
+                        <div class="kai-author-avatar" style="background:linear-gradient(135deg,#3B82F6,#1D4ED8);">RS</div>
+                        <div>
+                            <div class="kai-author-name">Rajesh Singh</div>
+                            <div class="kai-author-role">Vegetable Grower · Indore, MP</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </a>
+        </div>
+    </section>
 
-        <!-- Card 6: Government Schemes -->
-        <a href="{{ url_for('schemes') }}" class="pcard pcard--schemes fade-in-up delay-1">
-            <div class="pcard__img-wrap">
-                <img src="{{ url_for('static', filename='img/government_schemes.png') }}" alt="Government Schemes" class="pcard__img">
-            </div>
-            <div class="pcard__body">
-                <h3 class="pcard__title">सरकारी योजनाएं</h3>
-                <p class="pcard__desc">PM-KISAN, KCC, PMFBY और अन्य सरकारी सब्सिडी योजनाएं देखें।</p>
-                <div class="pcard__footer">
-                    <span class="pcard__btn pcard__btn--schemes">योजनाएं देखें <i class="fa-solid fa-arrow-right"></i></span>
-                    <span class="pcard__icon pcard__icon--schemes"><i class="fa-solid fa-landmark"></i></span>
+    <!-- ══════════════════════════════════════════════════════════
+         6. CTA BANNER ("READY TO TRANSFORM YOUR FARM?")
+         ══════════════════════════════════════════════════════════ -->
+    <section class="kai-cta-banner-section">
+        <div class="kai-cta-container">
+            <div class="kai-cta-card">
+                <span class="kai-cta-badge">GET STARTED TODAY</span>
+                <h2 class="kai-cta-title" style="color: #FFFFFF !important;">Ready to Transform Your Farm?</h2>
+                <p class="kai-cta-sub" style="color: rgba(255, 255, 255, 0.9) !important;">
+                    Join 10,000+ Indian farmers growing smarter with Krishi AI. Free to start, cancel anytime.
+                </p>
+                <div class="kai-cta-btn-group">
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('dashboard') }}" class="btn-cta-gold">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Open Farmer Dashboard</span>
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('register') }}" class="btn-cta-gold">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>Get Free Trial</span>
+                    </a>
+                    {% endif %}
+                    <a href="tel:18001801551" class="btn-cta-glass">
+                        <i class="fa-solid fa-phone"></i>
+                        <span>Talk to an Advisor</span>
+                    </a>
                 </div>
             </div>
-        </a>
+        </div>
+    </section>
 
-        <!-- Card 7: Voice Advisory — SVG illustration -->
-        <a href="{{ url_for('voice') }}" class="pcard pcard--voice fade-in-up delay-2">
-            <div class="pcard__corner-badge pcard__corner-badge--voice">
-                <i class="fa-solid fa-microphone" style="font-size:0.6rem;"></i>
+    <!-- ══════════════════════════════════════════════════════════
+         7. PARTNERS / SUPPORTED BY SECTION
+         ══════════════════════════════════════════════════════════ -->
+    <section class="kai-partners-section" id="partners">
+        <div class="kai-partners-head">TRUSTED & SUPPORTED BY</div>
+        <div class="kai-partners-flex">
+            <div class="kai-partner-item"><i class="fa-solid fa-building-columns"></i> <span>NABARD</span></div>
+            <div class="kai-partner-item"><i class="fa-solid fa-wheat-awn"></i> <span>ICAR</span></div>
+            <div class="kai-partner-item"><i class="fa-solid fa-landmark"></i> <span>Ministry of Agriculture</span></div>
+            <div class="kai-partner-item"><i class="fa-solid fa-network-wired"></i> <span>Digital India</span></div>
+            <div class="kai-partner-item"><i class="fa-solid fa-award"></i> <span>Krishi Vigyan Kendra</span></div>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         8. MEGA FOOTER SECTION
+         ══════════════════════════════════════════════════════════ -->
+    <footer class="kai-footer" id="contact">
+        <div class="kai-footer-container">
+            <!-- Newsletter Bar -->
+            <div class="kai-newsletter-box">
+                <div class="kai-newsletter-text">
+                    <h4 style="color: #FFFFFF !important;"><i class="fa-solid fa-paper-plane" style="color:#34D399;"></i> Stay Updated with Krishi AI</h4>
+                    <p style="color: #94A3B8 !important;">Get weekly farming insights, weather advisories & mandi alerts directly in your inbox.</p>
+                </div>
+                <form class="kai-newsletter-form" onsubmit="event.preventDefault(); alert('धन्यवाद! आप Krishi AI न्यूज़लेटर से जुड़ चुके हैं।');">
+                    <input type="email" class="kai-newsletter-input" placeholder="Enter your email / phone" required>
+                    <button type="submit" class="kai-newsletter-btn">Subscribe</button>
+                </form>
             </div>
-            <div class="pcard__img-wrap pcard__img-wrap--svg">
-                <svg viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg" class="pcard__svg">
-                    <defs>
-                        <radialGradient id="vGlow" cx="50%" cy="50%" r="50%">
-                            <stop offset="0%" stop-color="#9333ea" stop-opacity="0.35"/>
-                            <stop offset="100%" stop-color="#9333ea" stop-opacity="0"/>
-                        </radialGradient>
-                        <linearGradient id="micBody" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#c084fc"/><stop offset="100%" stop-color="#7c3aed"/>
-                        </linearGradient>
-                        <linearGradient id="micHead" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stop-color="#e879f9"/><stop offset="100%" stop-color="#9333ea"/>
-                        </linearGradient>
-                        <filter id="glow"><feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                        </filter>
-                    </defs>
-                    <ellipse cx="140" cy="110" rx="80" ry="75" fill="url(#vGlow)"/>
-                    <path d="M55 80 Q40 110 55 140" stroke="#a855f7" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.7" filter="url(#glow)"/>
-                    <path d="M68 65 Q45 110 68 155" stroke="#c084fc" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.5"/>
-                    <path d="M225 80 Q240 110 225 140" stroke="#a855f7" stroke-width="3.5" fill="none" stroke-linecap="round" opacity="0.7" filter="url(#glow)"/>
-                    <path d="M212 65 Q235 110 212 155" stroke="#c084fc" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.5"/>
-                    <rect x="130" y="148" width="20" height="30" rx="4" fill="url(#micBody)"/>
-                    <rect x="108" y="172" width="64" height="10" rx="5" fill="url(#micBody)"/>
-                    <rect x="114" y="50" width="52" height="100" rx="26" fill="url(#micHead)" filter="url(#glow)"/>
-                    <line x1="114" y1="85" x2="166" y2="85" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
-                    <line x1="114" y1="100" x2="166" y2="100" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
-                    <line x1="114" y1="115" x2="166" y2="115" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
-                    <line x1="114" y1="130" x2="166" y2="130" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
-                    <ellipse cx="130" cy="68" rx="8" ry="12" fill="rgba(255,255,255,0.18)" transform="rotate(-10 130 68)"/>
-                </svg>
-            </div>
-            <div class="pcard__body">
-                <h3 class="pcard__title">ध्वनि सलाहकार</h3>
-                <p class="pcard__desc">हिंदी में बोलकर खेती के सवाल पूछें और तुरंत आवाज़ में जवाब पाएं।</p>
-                <div class="pcard__footer">
-                    <span class="pcard__btn pcard__btn--voice">बोलें <i class="fa-solid fa-arrow-right"></i></span>
-                    <span class="pcard__icon pcard__icon--voice"><i class="fa-solid fa-waveform-lines"></i></span>
+
+            <!-- Main Footer Links Grid -->
+            <div class="kai-footer-top">
+                <div class="kai-footer-brand">
+                    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Krishi AI" class="kai-footer-logo">
+                    <p class="kai-footer-desc">
+                        Empowering Indian agriculture with cutting-edge AI and IoT solutions for higher yields and sustainable farming.
+                    </p>
+                    <div class="kai-footer-socials">
+                        <a href="https://facebook.com" target="_blank" rel="noopener" class="kai-social-icon" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="https://twitter.com" target="_blank" rel="noopener" class="kai-social-icon" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+                        <a href="https://instagram.com" target="_blank" rel="noopener" class="kai-social-icon" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="https://youtube.com" target="_blank" rel="noopener" class="kai-social-icon" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+                        <a href="https://linkedin.com" target="_blank" rel="noopener" class="kai-social-icon" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+
+                <div class="kai-footer-col">
+                    <h4 style="color: #FFFFFF !important;">Product</h4>
+                    <ul class="kai-footer-links">
+                        <li><a href="{{ url_for('soil') }}" class="kai-footer-link">Soil Monitoring</a></li>
+                        <li><a href="{{ url_for('pest') }}" class="kai-footer-link">AI Pest Detection</a></li>
+                        <li><a href="{{ url_for('disease') }}" class="kai-footer-link">Crop Health Scan</a></li>
+                        <li><a href="{{ url_for('market') }}" class="kai-footer-link">Mandi Market Prices</a></li>
+                        <li><a href="{{ url_for('weather') }}" class="kai-footer-link">Weather Radar</a></li>
+                        <li><a href="{{ url_for('machinery') }}" class="kai-footer-link">Machinery Hub</a></li>
+                    </ul>
+                </div>
+
+                <div class="kai-footer-col">
+                    <h4 style="color: #FFFFFF !important;">Resources</h4>
+                    <ul class="kai-footer-links">
+                        <li><a href="{{ url_for('schemes') }}" class="kai-footer-link">Government Schemes</a></li>
+                        <li><a href="{{ url_for('organic') }}" class="kai-footer-link">Organic Farming</a></li>
+                        <li><a href="{{ url_for('voice') }}" class="kai-footer-link">Voice Assistant</a></li>
+                        <li><a href="{{ url_for('chatbot') }}" class="kai-footer-link">Krishi AI Chat</a></li>
+                        <li><a href="#how-it-works" class="kai-footer-link">Farmer Tutorials</a></li>
+                    </ul>
+                </div>
+
+                <div class="kai-footer-col">
+                    <h4 style="color: #FFFFFF !important;">Company</h4>
+                    <ul class="kai-footer-links">
+                        <li><a href="#features" class="kai-footer-link">About Us</a></li>
+                        <li><a href="#testimonials" class="kai-footer-link">Success Stories</a></li>
+                        <li><a href="tel:18001801551" class="kai-footer-link">Kisan Helpline (1800-180-1551)</a></li>
+                        <li><a href="#impact" class="kai-footer-link">Impact Report</a></li>
+                        <li><a href="#features" class="kai-footer-link">Privacy Policy</a></li>
+                    </ul>
                 </div>
             </div>
-        </a>
 
-        <!-- Card 8: Organic Farming — SVG illustration -->
-        <a href="{{ url_for('organic') }}" class="pcard pcard--organic fade-in-up delay-3">
-            <div class="pcard__corner-badge pcard__corner-badge--organic">
-                <i class="fa-solid fa-leaf" style="font-size:0.6rem;"></i>
-            </div>
-            <div class="pcard__img-wrap pcard__img-wrap--svg">
-                <svg viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg" class="pcard__svg">
-                    <defs>
-                        <radialGradient id="oGlow2" cx="50%" cy="60%" r="55%">
-                            <stop offset="0%" stop-color="#10b981" stop-opacity="0.4"/>
-                            <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
-                        </radialGradient>
-                        <linearGradient id="plantGreen2" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#059669"/>
-                        </linearGradient>
-                        <linearGradient id="soilBrown2" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stop-color="#78350f"/><stop offset="100%" stop-color="#3d1a02"/>
-                        </linearGradient>
-                        <filter id="plantGlow2"><feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-                            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                        </filter>
-                    </defs>
-                    <ellipse cx="140" cy="130" rx="90" ry="70" fill="url(#oGlow2)"/>
-                    <ellipse cx="140" cy="158" rx="65" ry="18" fill="#1c0a00" opacity="0.8"/>
-                    <path d="M75 145 Q140 175 205 145 L200 158 Q140 188 80 158 Z" fill="url(#soilBrown2)"/>
-                    <ellipse cx="140" cy="145" rx="65" ry="18" fill="#78350f"/>
-                    <ellipse cx="140" cy="143" rx="60" ry="15" fill="#92400e" opacity="0.7"/>
-                    <path d="M140 145 L140 70" stroke="url(#plantGreen2)" stroke-width="7" stroke-linecap="round" filter="url(#plantGlow2)"/>
-                    <path d="M140 95 Q95 55 112 108 Q126 108 140 95Z" fill="url(#plantGreen2)" filter="url(#plantGlow2)"/>
-                    <path d="M140 80 Q185 40 168 92 Q154 92 140 80Z" fill="url(#plantGreen2)" filter="url(#plantGlow2)"/>
-                    <path d="M140 72 Q112 52 120 75 Q130 75 140 72Z" fill="#34d399" opacity="0.8"/>
-                    <circle cx="90" cy="100" r="3.5" fill="#34d399" opacity="0.8" filter="url(#plantGlow2)"/>
-                    <circle cx="195" cy="85" r="2.5" fill="#6ee7b7" opacity="0.7" filter="url(#plantGlow2)"/>
-                    <circle cx="210" cy="115" r="3" fill="#34d399" opacity="0.7" filter="url(#plantGlow2)"/>
-                </svg>
-            </div>
-            <div class="pcard__body">
-                <h3 class="pcard__title">जैविक खेती संवर्धन</h3>
-                <p class="pcard__desc">प्रमाणन गाइड, जैविक खाद रेसिपी और बेहतर पैदावार के सर्वोत्तम तरीके।</p>
-                <div class="pcard__footer">
-                    <span class="pcard__btn pcard__btn--organic">सीखें <i class="fa-solid fa-arrow-right"></i></span>
-                    <span class="pcard__icon pcard__icon--organic"><i class="fa-solid fa-seedling"></i></span>
+            <!-- Footer Bottom Bar -->
+            <div class="kai-footer-bottom">
+                <div>
+                    © 2026 Krishi AI. Made with <span style="color:#EF4444;">❤️</span> for Indian Farmers. All rights reserved.
+                </div>
+                <div class="kai-footer-bottom-links">
+                    <a href="#features">Privacy Policy</a>
+                    <a href="#how-it-works">Terms of Service</a>
+                    <a href="#contact">Contact Support</a>
                 </div>
             </div>
-        </a>
+        </div>
+    </footer>
 
-    </div>
-</section>
+</div>
 {% endblock %}

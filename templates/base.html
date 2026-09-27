@@ -30,8 +30,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/cards.css') }}?v=4.2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}?v=4.2">
 
-    {% block extra_css %}{% endblock %}
-
     <style>
         /* Theme Variables & Layout Settings */
         :root, [data-theme="dark"] {
@@ -195,6 +193,8 @@
         .goog-text-highlight { background-color: transparent !important; border: none !important; box-shadow: none !important; }
         body { top: 0 !important; }
     </style>
+
+    {% block extra_css %}{% endblock %}
 </head>
 <body>
 
@@ -202,13 +202,14 @@
     <nav class="krishi-navbar" id="mainNavbar">
         <div class="navbar-inner">
             <!-- Brand / Logo -->
-            <a href="{{ url_for('dashboard' if current_user.is_authenticated else 'home') }}" class="navbar-brand">
+            <a href="{{ url_for('home') }}" class="navbar-brand">
                 <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Krishi AI Logo" class="brand-logo-img">
             </a>
 
             <!-- Nav Links List -->
             <ul class="navbar-links" id="navLinks">
                 {% if current_user.is_authenticated %}
+                <li><a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}"><i class="fa-solid fa-house"></i> <span>होम</span></a></li>
                 <li><a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}"><i class="fa-solid fa-chart-line"></i> <span>डैशबोर्ड</span></a></li>
                 <li><a href="{{ url_for('disease') }}" class="nav-link {% if request.endpoint == 'disease' %}active{% endif %}"><i class="fa-solid fa-microscope"></i> <span>रोग पहचान</span></a></li>
                 <li><a href="{{ url_for('pest') }}" class="nav-link {% if request.endpoint == 'pest' %}active{% endif %}"><i class="fa-solid fa-bug"></i> <span>कीट</span></a></li>
@@ -219,6 +220,13 @@
                 <li><a href="{{ url_for('schemes') }}" class="nav-link {% if request.endpoint == 'schemes' %}active{% endif %}"><i class="fa-solid fa-file-invoice"></i> <span>योजनाएं</span></a></li>
                 <li><a href="{{ url_for('organic') }}" class="nav-link {% if request.endpoint == 'organic' %}active{% endif %}"><i class="fa-solid fa-leaf"></i> <span>जैविक</span></a></li>
                 <li><a href="{{ url_for('profile') }}" class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}"><i class="fa-solid fa-user"></i> <span>प्रोफाइल</span></a></li>
+                {% else %}
+                <li><a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' or request.endpoint == 'index' %}active{% endif %}"><i class="fa-solid fa-house"></i> <span>Home</span></a></li>
+                <li><a href="{{ url_for('home') }}#features" class="nav-link"><i class="fa-solid fa-layer-group"></i> <span>Features</span></a></li>
+                <li><a href="{{ url_for('home') }}#how-it-works" class="nav-link"><i class="fa-solid fa-diagram-project"></i> <span>How It Works</span></a></li>
+                <li><a href="{{ url_for('home') }}#impact" class="nav-link"><i class="fa-solid fa-chart-line"></i> <span>Impact</span></a></li>
+                <li><a href="{{ url_for('home') }}#testimonials" class="nav-link"><i class="fa-solid fa-comments"></i> <span>Testimonials</span></a></li>
+                <li><a href="{{ url_for('home') }}#contact" class="nav-link"><i class="fa-solid fa-envelope"></i> <span>Contact</span></a></li>
                 {% endif %}
             </ul>
 

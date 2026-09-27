@@ -302,12 +302,9 @@ def logout():
 
 @app.route('/')
 def index():
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
-    return redirect(url_for('login'))
+    return render_template('home.html')
 
 @app.route('/home')
-@login_required
 def home():
     logger.info("Accessed Home page")
     return render_template('home.html')
