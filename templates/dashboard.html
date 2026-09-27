@@ -107,14 +107,14 @@
             <span class="dash-stat-sub" style="color:#10B981;">85% healthy</span>
         </div>
     </div>
-    <div class="dash-stat">
-        <div class="dash-stat-icon" style="background:rgba(245,158,11,0.1);color:#F59E0B;"><i class="fa-solid fa-cloud-rain"></i></div>
+    <a href="{{ url_for('weather') }}" class="dash-stat dash-stat-weather" style="text-decoration:none; color:inherit; cursor:pointer;" title="लाइव मौसम एवं वर्षा राडार देखें">
+        <div class="dash-stat-icon" id="dashWeatherIcon" style="background:rgba(56,189,248,0.12);color:#38BDF8;"><i class="fa-solid fa-cloud-sun"></i></div>
         <div>
-            <span class="dash-stat-label">मौसम</span>
-            <span class="dash-stat-value">28°C</span>
-            <span class="dash-stat-sub" style="color:#F59E0B;">बादल + बारिश संभव</span>
+            <span class="dash-stat-label" id="dashWeatherCity"><i class="fa-solid fa-location-dot" style="font-size:0.75rem; color:#38BDF8;"></i> मौसम ({{ user_district or 'Bareilly' }})</span>
+            <span class="dash-stat-value" id="dashWeatherTemp">--°C</span>
+            <span class="dash-stat-sub" id="dashWeatherCond" style="color:#38BDF8;">लाइव मौसम लोड हो रहा है...</span>
         </div>
-    </div>
+    </a>
     <div class="dash-stat">
         <div class="dash-stat-icon" style="background:rgba(59,130,246,0.1);color:#3B82F6;"><i class="fa-solid fa-rupee-sign"></i></div>
         <div>
@@ -310,4 +310,85 @@
 
     </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const tempEl = document.getElementById('dashWeatherTemp');
+    const condEl = document.getElementById('dashWeatherCond');
+    const cityEl = document.getElementById('dashWeatherCity');
+    const iconEl = document.getElementById('dashWeatherIcon');
+
+    // 1. Instant display from sessionStorage cache if available
+    try {
+        const cached = sessionStorage.getItem('krishi_live_weather');
+        if (cached) {
+            const d = JSON.parse(cached);
+            updateWeatherCard(d);
+        }
+    } catch(e){}
+
+    // 2. Fetch live accurate weather (AccuWeather backend proxy)
+    async function fetchLiveWeather(lat = '28.3670', lon = '79.4304') {
+        try {
+            const res = await fetch(`/api/weather/live?lat=${lat}&lon=${lon}`);
+            if (res.ok) {
+                const data = await res.json();
+                sessionStorage.setItem('krishi_live_weather', JSON.stringify(data));
+                updateWeatherCard(data);
+            }
+        } catch (err) {
+            console.warn("Live weather fetch error:", err);
+        }
+    }
+
+    function updateWeatherCard(data) {
+        const curr = data.current || {};
+        const temp = Math.round(curr.temperature_2m !== undefined ? curr.temperature_2m : 23);
+        if (tempEl) tempEl.textContent = `${temp}°C`;
+
+        const city = (data.location_name || 'Bareilly').split(',')[0];
+        if (cityEl) cityEl.innerHTML = `<i class="fa-solid fa-location-dot" style="font-size:0.75rem; color:#38BDF8;"></i> मौसम (${city})`;
+
+        const text = curr.weather_text || 'साफ मौसम';
+        const rain = curr.precipitation || 0;
+        let sub = text;
+        if (rain > 0) sub += ` • ${rain.toFixed(1)} mm बारिश`;
+        if (condEl) {
+            condEl.textContent = sub;
+            condEl.style.color = (rain > 0 || text.toLowerCase().includes('rain')) ? '#60A5FA' : '#F59E0B';
+        }
+
+        if (iconEl) {
+            const isRain = rain > 0 || text.toLowerCase().includes('rain') || text.toLowerCase().includes('shower');
+            const isCloud = text.toLowerCase().includes('cloud');
+            if (isRain) {
+                iconEl.innerHTML = `<i class="fa-solid fa-cloud-showers-heavy"></i>`;
+                iconEl.style.color = '#60A5FA';
+                iconEl.style.background = 'rgba(96,165,250,0.15)';
+            } else if (isCloud) {
+                iconEl.innerHTML = `<i class="fa-solid fa-cloud"></i>`;
+                iconEl.style.color = '#94A3B8';
+                iconEl.style.background = 'rgba(148,163,184,0.15)';
+            } else {
+                iconEl.innerHTML = `<i class="fa-solid fa-sun"></i>`;
+                iconEl.style.color = '#F59E0B';
+                iconEl.style.background = 'rgba(245,158,11,0.15)';
+            }
+        }
+    }
+
+    // Attempt browser GPS if available, else fetch default / profile district
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => fetchLiveWeather(pos.coords.latitude, pos.coords.longitude),
+            () => fetchLiveWeather('28.3670', '79.4304'),
+            { timeout: 5000 }
+        );
+    } else {
+        fetchLiveWeather('28.3670', '79.4304');
+    }
+});
+</script>
 {% endblock %}

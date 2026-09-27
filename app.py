@@ -120,9 +120,24 @@ class ChatMessage(db.Model):
     image_data = db.Column(db.Text, nullable=True) # Base64 string
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+_USER_CACHE = {}
+
 @login_manager.user_loader
 def load_user(user_id):
-    return Farmer.query.get(int(user_id))
+    try:
+        uid = int(user_id)
+        now = time.time()
+        if uid in _USER_CACHE:
+            entry = _USER_CACHE[uid]
+            if now - entry['ts'] < 120:
+                return entry['user']
+        user = Farmer.query.get(uid)
+        if user:
+            _USER_CACHE[uid] = {'user': user, 'ts': now}
+        return user
+    except Exception as e:
+        logger.error(f"Error loading user {user_id}: {e}")
+        return None
 
 # Create database tables
 with app.app_context():
@@ -301,7 +316,9 @@ def home():
 @login_required
 def dashboard():
     logger.info("Accessed Dashboard page")
-    return render_template('dashboard.html')
+    user_district = getattr(current_user, 'district', None) or 'Bareilly'
+    user_state = getattr(current_user, 'state', None) or 'Uttar Pradesh'
+    return render_template('dashboard.html', user_district=user_district, user_state=user_state)
 
 @app.route('/disease', methods=['GET', 'POST'])
 @login_required

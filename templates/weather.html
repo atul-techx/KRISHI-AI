@@ -4,7 +4,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 <style>
-  :root {
+  :root, [data-theme="dark"] {
     --wx-bg-card: rgba(18, 24, 38, 0.75);
     --wx-border: rgba(255, 255, 255, 0.08);
     --wx-border-hover: rgba(16, 185, 129, 0.35);
@@ -15,6 +15,74 @@
     --wx-amber: #F59E0B;
     --wx-rose: #F43F5E;
     --wx-radius: 16px;
+  }
+
+  [data-theme="light"] {
+    --wx-bg-card: #FFFFFF;
+    --wx-border: #E2E8F0;
+    --wx-border-hover: rgba(16, 185, 129, 0.5);
+    --wx-text-main: #0F172A;
+    --wx-text-muted: #64748B;
+    --wx-emerald: #059669;
+    --wx-blue: #0284C7;
+  }
+
+  [data-theme="light"] .wx-card,
+  [data-theme="light"] .wx-search-bar {
+    background: #FFFFFF !important;
+    border-color: #E2E8F0 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05) !important;
+  }
+  [data-theme="light"] .wx-search-input-group {
+    background: #F8FAFC !important;
+    border-color: #E2E8F0 !important;
+  }
+  [data-theme="light"] .wx-search-input-group input {
+    color: #0F172A !important;
+  }
+  [data-theme="light"] .wx-stat-box,
+  [data-theme="light"] .wx-hourly-item,
+  [data-theme="light"] .wx-daily-item {
+    background: #F8FAFC !important;
+    border-color: #E2E8F0 !important;
+  }
+  [data-theme="light"] .wx-temp-big,
+  [data-theme="light"] .wx-hour-temp,
+  [data-theme="light"] .wx-daily-day,
+  [data-theme="light"] .wx-daily-temp-range,
+  [data-theme="light"] .wx-stat-val,
+  [data-theme="light"] .wx-title,
+  [data-theme="light"] .wx-loc-title {
+    color: #0F172A !important;
+  }
+  [data-theme="light"] .wx-condition-pill {
+    background: #F1F5F9 !important;
+    border-color: #CBD5E1 !important;
+    color: #1E293B !important;
+  }
+  [data-theme="light"] .wx-advisory-alert {
+    background: #F1F5F9 !important;
+    color: #1E293B !important;
+  }
+  [data-theme="light"] .wx-chip {
+    background: #F1F5F9 !important;
+    border-color: #E2E8F0 !important;
+    color: #334155 !important;
+  }
+  [data-theme="light"] .wx-chip.active {
+    background: rgba(16, 185, 129, 0.15) !important;
+    border-color: #10B981 !important;
+    color: #059669 !important;
+  }
+  [data-theme="light"] .wx-factor-pill {
+    background: #F1F5F9 !important;
+    border-color: #CBD5E1 !important;
+    color: #334155 !important;
+  }
+  [data-theme="light"] .wx-radar-btn {
+    background: #F1F5F9 !important;
+    border-color: #E2E8F0 !important;
+    color: #0F172A !important;
   }
 
   .wx-wrapper {

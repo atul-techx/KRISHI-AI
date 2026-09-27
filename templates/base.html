@@ -7,80 +7,117 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <title>{% block title %}Krishi AI - किसान सुविधा{% endblock %}</title>
 
+    <!-- Early Theme Init to Prevent Flicker -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('krishi_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        })();
+    </script>
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js (Deferred) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 
     <!-- Core Styles -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}?v=4.1">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}?v=4.1">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/cards.css') }}?v=4.1">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}?v=4.1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}?v=4.2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}?v=4.2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cards.css') }}?v=4.2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}?v=4.2">
 
     {% block extra_css %}{% endblock %}
 
     <style>
-        /* Extra custom styles for high visibility and top navbar layout */
+        /* Theme Variables & Layout Settings */
+        :root, [data-theme="dark"] {
+            --bg-body: #030712;
+            --bg-nav: rgba(3, 7, 18, 0.90);
+            --border-nav: rgba(255, 255, 255, 0.08);
+            --bg-card: rgba(18, 24, 38, 0.85);
+            --bg-card-hover: rgba(30, 41, 59, 0.9);
+            --border-card: rgba(255, 255, 255, 0.08);
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --nav-link-color: rgba(255, 255, 255, 0.82);
+        }
+
+        [data-theme="light"] {
+            --bg-body: #F8FAFC;
+            --bg-nav: rgba(255, 255, 255, 0.94);
+            --border-nav: #E2E8F0;
+            --bg-card: #FFFFFF;
+            --bg-card-hover: #F8FAFC;
+            --border-card: #E2E8F0;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --nav-link-color: #334155;
+        }
+
         body {
-            padding-top: 104px; /* offset for fixed double-navbar */
+            padding-top: 76px;
             padding-bottom: 70px;
-            background-color: #030712;
-            color: #F3F4F6;
-        }
-        
-        .auth-page ~ .krishi-navbar,
-    body.auth-bg .krishi-navbar {
-    background: rgba(3, 7, 18, 0.35) !important;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 4px 30px rgba(0,0,0,0.35);
-}
-        .navbar-inner {
-            height: 70px;
-            max-width: 1350px;
-            margin: 0 auto;
-            padding: 0 1.5rem;
-        
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            transition: background-color 0.25s ease, color 0.25s ease;
         }
 
-    .nav-link{
-    display: flex;
-    align-items: center;      /* Vertical center */
-    justify-content: center;
-    gap: 0.45rem;
-    font-size: 1.5rem;
-    line-height: 1;
-    padding: 0.75rem 0.9rem;
-}
-
-        .nav-link:hover {
-            color: #34D399 !important;
-            background: rgba(16, 185, 129, 0.1);
+        /* Light Theme Overrides */
+        [data-theme="light"] body {
+            background-color: #F8FAFC !important;
+            color: #0F172A !important;
         }
 
-        .nav-link.active {
-            color: #34D399 !important;
+        [data-theme="light"] h1, [data-theme="light"] h2, [data-theme="light"] h3,
+        [data-theme="light"] h4, [data-theme="light"] h5, [data-theme="light"] h6 {
+            color: #0F172A !important;
+        }
+
+        [data-theme="light"] p, [data-theme="light"] label, [data-theme="light"] li {
+            color: #334155;
+        }
+
+        [data-theme="light"] .dash-stat, [data-theme="light"] .pcard, [data-theme="light"] .wx-card,
+        [data-theme="light"] .service-card, [data-theme="light"] .disease-card, [data-theme="light"] .market-card {
+            background: #FFFFFF !important;
+            border-color: #E2E8F0 !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        [data-theme="light"] .dash-stat-value, [data-theme="light"] .pcard__title, [data-theme="light"] .services-main-title {
+            color: #0F172A !important;
+        }
+
+        [data-theme="light"] .dash-stat-label, [data-theme="light"] .pcard__desc, [data-theme="light"] .services-main-sub {
+            color: #64748B !important;
+        }
+
+        [data-theme="light"] .krishi-navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-bottom-color: #E2E8F0 !important;
+            box-shadow: 0 2px 14px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        [data-theme="light"] .nav-link {
+            color: #334155 !important;
+        }
+
+        [data-theme="light"] .nav-link:hover {
+            color: #059669 !important;
+            background: rgba(16, 185, 129, 0.1) !important;
+        }
+
+        [data-theme="light"] .nav-link.active {
+            color: #059669 !important;
             background: rgba(16, 185, 129, 0.15) !important;
-            border: 1px solid rgba(16, 185, 129, 0.3) !important;
+            border-color: rgba(16, 185, 129, 0.35) !important;
         }
 
-        .navbar-brand .brand-text {
-            font-size: 1.45rem;
-            font-weight: 800;
-            color: #34D399;
-        }
-
-        .navbar-brand .brand-text span {
-            color: #F59E0B;
-        }
-
-        /* Float Buttons */
+        /* Floating Help & Voice Buttons */
         .floating-ai-btn {
             position: fixed;
             bottom: 1.5rem;
@@ -149,98 +186,7 @@
             animation: pulse 2s infinite;
         }
 
-        /* Adjust content container to centered wide layout */
-        .krishi-container {
-            max-width: 1300px;
-            margin: 0 auto;
-            padding: 1.5rem;
-        }
-
-        /* Force high contrast font colors */
-        h1, h2, h3, h4, h5, h6 {
-            color: #FFFFFF !important;
-            font-family: 'Outfit', sans-serif;
-        }
-
-        p, span, label, li, td, th {
-            color: #E5E7EB;
-        }
-        
-        .text-muted {
-            color: #9CA3AF !important;
-        }
-
-        /* Responsive Navbar link alignment */
-        @media (max-width: 1150px) {
-            .navbar-links span {
-                display: none; /* Hide labels, show only icons to save space on tablets */
-            }
-            .nav-link {
-                padding: 0.5rem 0.7rem;
-            }
-        }
-        @media (max-width: 899px) {
-            body {
-                padding-top: 90px;
-            }
-        }
-
-        /* --- Custom Language Selector --- */
-        .lang-selector-container {
-            position: absolute;
-            right: 1.5rem;
-            top: 14px;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15));
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            border-radius: 50px;
-            padding: 6px 16px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        .lang-selector-container:hover {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.25));
-            border-color: rgba(16, 185, 129, 0.5);
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-        }
-        .lang-icon {
-            color: #34D399;
-            font-size: 1.35rem;
-            margin-right: 8px;
-        }
-        #custom_lang_select {
-            background: transparent;
-            color: #F3F4F6;
-            border: none;
-            outline: none;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            appearance: none;
-            -webkit-appearance: none;
-            padding-right: 18px;
-        }
-        #custom_lang_select option {
-            background: #1e293b;
-            color: #fff;
-            font-weight: 500;
-        }
-        .lang-selector-container::after {
-            content: '\f0d7';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-            color: #34D399;
-            font-size: 0.9rem;
-            position: absolute;
-            right: 14px;
-            pointer-events: none;
-        }
-
-        /* Hide Google Translate Default Elements & Pop-ups */
+        /* Hide Google Translate Default Pop-ups */
         #google_translate_element { display: none !important; }
         .goog-te-banner-frame.skiptranslate { display: none !important; }
         iframe.skiptranslate { display: none !important; }
@@ -252,34 +198,15 @@
 </head>
 <body>
 
-    <!-- ── Top Navbar ── -->
+    <!-- ── Top Navbar (Clean Single-Row Layout) ── -->
     <nav class="krishi-navbar" id="mainNavbar">
-        <!-- Language strip -->
-        <div class="navbar-top-bar">
-            <div class="lang-selector-container notranslate" translate="no">
-                <i class="fa-solid fa-language lang-icon"></i>
-                <select id="custom_lang_select" class="notranslate" onchange="doCustomTranslation(this.value)">
-                    <option value="hi">हिन्दी (Hindi)</option>
-                    <option value="en">English</option>
-                    <option value="ne">Garhwali/Kumaoni (Nepali)</option>
-                    <option value="sa">संस्कृत (Sanskrit)</option>
-                    <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
-                    <option value="gu">ગુજરાતી (Gujarati)</option>
-                    <option value="mr">मराठी (Marathi)</option>
-                    <option value="bn">বাংলা (Bengali)</option>
-                    <option value="ta">தமிழ் (Tamil)</option>
-                    <option value="te">తెలుగు (Telugu)</option>
-                    <option value="ur">اردو (Urdu)</option>
-                </select>
-            </div>
-            <div id="google_translate_element"></div>
-        </div>
-
         <div class="navbar-inner">
-            <a href="{{ url_for('home') }}" class="navbar-brand">
-                <img src="{{ url_for('static', filename='img/logo.png') }}"alt="Krishi AI Logo"
-                style="height: 58px; width: auto; object-fit: contain; border-radius: 10px;">
-</a>
+            <!-- Brand / Logo -->
+            <a href="{{ url_for('dashboard' if current_user.is_authenticated else 'home') }}" class="navbar-brand">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Krishi AI Logo" class="brand-logo-img">
+            </a>
+
+            <!-- Nav Links List -->
             <ul class="navbar-links" id="navLinks">
                 {% if current_user.is_authenticated %}
                 <li><a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}"><i class="fa-solid fa-chart-line"></i> <span>डैशबोर्ड</span></a></li>
@@ -294,18 +221,51 @@
                 {% endif %}
             </ul>
 
+            <!-- Navbar Actions: Theme Toggle + Language + Alerts + Logout/Login -->
             <div class="navbar-actions">
+                <!-- Light / Dark Mode Toggle -->
+                <button type="button" class="theme-toggle-btn" id="themeToggleBtn" title="थीम बदलें (Light/Dark Mode)" aria-label="Toggle Theme">
+                    <i class="fa-solid fa-moon" id="themeIcon"></i>
+                </button>
+
+                <!-- Compact Language Selector -->
+                <div class="lang-selector-pill notranslate" translate="no">
+                    <i class="fa-solid fa-globe lang-icon"></i>
+                    <select id="custom_lang_select" class="notranslate" onchange="doCustomTranslation(this.value)">
+                        <option value="hi">हिन्दी</option>
+                        <option value="en">English</option>
+                        <option value="ne">Garhwali/Kumaoni</option>
+                        <option value="sa">संस्कृत</option>
+                        <option value="pa">ਪੰਜਾਬੀ</option>
+                        <option value="gu">ગુજરાતી</option>
+                        <option value="mr">मराठी</option>
+                        <option value="bn">বাংলা</option>
+                        <option value="ta">தமிழ்</option>
+                        <option value="te">తెలుగు</option>
+                        <option value="ur">اردو</option>
+                    </select>
+                </div>
+                <div id="google_translate_element"></div>
+
                 {% if current_user.is_authenticated %}
-                <a href="{{ url_for('alerts') }}" class="nav-alert-btn" title="Alerts" style="margin-right: 8px;">
+                <!-- Alerts Bell -->
+                <a href="{{ url_for('alerts') }}" class="nav-action-icon-btn" title="अलर्ट्स">
                     <i class="fa-solid fa-bell"></i>
                     <span class="alert-dot"></span>
                 </a>
-                <a href="{{ url_for('logout') }}" class="nav-link logout-btn" style="color: #F87171 !important; font-weight: 600; text-decoration: none; padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(248, 113, 113, 0.3); background: rgba(239, 68, 68, 0.08); transition: 0.3s; display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.9rem;"><i class="fa-solid fa-right-from-bracket"></i> <span>लॉगआउट</span></a>
+
+                <!-- Logout Button -->
+                <a href="{{ url_for('logout') }}" class="nav-btn-logout" title="लॉगआउट">
+                    <i class="fa-solid fa-power-off"></i>
+                    <span>लॉगआउट</span>
+                </a>
                 {% else %}
-                <a href="{{ url_for('login') }}" class="nav-link" style="color: #34D399 !important; font-weight: 600; text-decoration: none; margin-right: 12px; font-size: 0.95rem;"><i class="fa-solid fa-user-lock"></i> <span>लॉगिन</span></a>
-                <a href="{{ url_for('register') }}" class="nav-link" style="background: #10B981 !important; color: #fff !important; padding: 7px 16px; border-radius: 8px; font-weight: 600; text-decoration: none; box-shadow: 0 4px 10px rgba(16,185,129,0.25); font-size: 0.95rem;"><i class="fa-solid fa-user-plus"></i> <span>रजिस्टर</span></a>
+                <a href="{{ url_for('login') }}" class="nav-link-login"><i class="fa-solid fa-user-lock"></i> <span>लॉगिन</span></a>
+                <a href="{{ url_for('register') }}" class="nav-link-register"><i class="fa-solid fa-user-plus"></i> <span>रजिस्टर</span></a>
                 {% endif %}
-                <button class="hamburger" id="hamburger" aria-label="Menu" style="margin-left: 10px;">
+
+                <!-- Mobile Hamburger Button -->
+                <button class="hamburger" id="hamburger" aria-label="Menu">
                     <span></span><span></span><span></span>
                 </button>
             </div>
@@ -337,12 +297,14 @@
     <!-- Mobile Bottom Navigation -->
     <nav class="mobile-bottom-nav">
         {% if current_user.is_authenticated %}
-       
         <a href="{{ url_for('dashboard') }}" class="mobile-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
             <i class="fa-solid fa-chart-pie"></i><span>डैशबोर्ड</span>
         </a>
         <a href="{{ url_for('disease') }}" class="mobile-nav-item {% if request.endpoint == 'disease' %}active{% endif %}">
             <i class="fa-solid fa-microscope"></i><span>रोग</span>
+        </a>
+        <a href="{{ url_for('weather') }}" class="mobile-nav-item {% if request.endpoint == 'weather' %}active{% endif %}">
+            <i class="fa-solid fa-cloud-sun"></i><span>मौसम</span>
         </a>
         <a href="{{ url_for('market') }}" class="mobile-nav-item {% if request.endpoint == 'market' %}active{% endif %}">
             <i class="fa-solid fa-store"></i><span>मंडी</span>
@@ -351,32 +313,61 @@
             <i class="fa-solid fa-user"></i><span>प्रोफाइल</span>
         </a>
         {% else %}
-        <a href="{{ url_for('login') }}" class="mobile-nav-item {% if request.endpoint == 'login' %}active{% endif %}">
+        <a href="{{ url_for('login') }}" class="mobile-nav-item">
             <i class="fa-solid fa-user-lock"></i><span>लॉगिन</span>
         </a>
-        <a href="{{ url_for('register') }}" class="mobile-nav-item {% if request.endpoint == 'register' %}active{% endif %}">
+        <a href="{{ url_for('register') }}" class="mobile-nav-item">
             <i class="fa-solid fa-user-plus"></i><span>रजिस्टर</span>
         </a>
         {% endif %}
     </nav>
 
-    <!-- Floating AI Assistant Button -->
-    {% if current_user.is_authenticated and request.endpoint not in ['chatbot', 'voice'] %}
-    <button class="floating-ai-btn" id="floatingAI" onclick="window.location='{{ url_for('chatbot') }}'">
+    <!-- Floating AI Chatbot Button -->
+    {% if current_user.is_authenticated and request.endpoint != 'chatbot' %}
+    <a href="{{ url_for('chatbot') }}" class="floating-ai-btn" title="Ask Krishi AI Assistant">
         <div class="ai-pulse"></div>
-        <img src="{{ url_for('static', filename='img/robot.jpg') }}" alt="AI" onerror="this.outerHTML='<i class=\'fa-solid fa-robot\'></i>'">
+        <img src="{{ url_for('static', filename='img/robot.jpg') }}" alt="AI Bot">
         <span>AI Help</span>
-    </button>
-
-    <!-- Floating Voice Button -->
-    <button class="floating-voice-btn" id="floatingVoice" onclick="window.location='{{ url_for('voice') }}'" title="Voice Advisory">
-        <i class="fa-solid fa-microphone"></i>
-    </button>
+    </a>
+    <a href="{{ url_for('voice') }}" class="floating-voice-btn" title="Voice Farming Assistant">
+        <i class="fa-solid fa-microphone-lines"></i>
+    </a>
     {% endif %}
 
-    <!-- Hamburger Menu Script -->
+    <!-- Scripts: Theme + Navigation + Translation -->
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+            // Theme Toggle Logic
+            const themeBtn = document.getElementById('themeToggleBtn');
+            const themeIcon = document.getElementById('themeIcon');
+            const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+
+            function updateThemeDisplay(t) {
+                if (!themeIcon) return;
+                if (t === 'light') {
+                    themeIcon.className = 'fa-solid fa-moon';
+                    themeIcon.style.color = '#6366F1';
+                    if (themeBtn) themeBtn.title = 'डार्क मोड पर स्विच करें (Switch to Dark)';
+                } else {
+                    themeIcon.className = 'fa-solid fa-sun';
+                    themeIcon.style.color = '#FBBF24';
+                    if (themeBtn) themeBtn.title = 'लाइट मोड पर स्विच करें (Switch to Light)';
+                }
+            }
+
+            updateThemeDisplay(currentTheme);
+
+            if (themeBtn) {
+                themeBtn.addEventListener('click', () => {
+                    const activeTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+                    const newTheme = activeTheme === 'dark' ? 'light' : 'dark';
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    localStorage.setItem('krishi_theme', newTheme);
+                    updateThemeDisplay(newTheme);
+                });
+            }
+
+            // Mobile Hamburger
             const hamburger = document.getElementById('hamburger');
             const navLinks = document.getElementById('navLinks');
             const navOverlay = document.getElementById('navOverlay');
@@ -396,11 +387,9 @@
                     navOverlay.classList.remove('open');
                 });
             }
+        });
 
-        // Custom JS removed, replaced by Google Translate
-    });
-    </script>
-    <script type="text/javascript">
+        // Google Translate Non-Blocking Integration
         function googleTranslateElementInit() {
             new google.translate.TranslateElement({
                 pageLanguage: 'hi',
@@ -410,23 +399,22 @@
         }
         
         function doCustomTranslation(langCode) {
-            var select = document.querySelector(".goog-te-combo");
+            const select = document.querySelector(".goog-te-combo");
             if (select) {
                 select.value = langCode;
                 select.dispatchEvent(new Event("change"));
             }
         }
         
-        // Sync custom dropdown with current selected language on load
         setTimeout(() => {
-            var select = document.querySelector(".goog-te-combo");
-            var customSelect = document.getElementById("custom_lang_select");
+            const select = document.querySelector(".goog-te-combo");
+            const customSelect = document.getElementById("custom_lang_select");
             if (select && select.value && customSelect) {
                 customSelect.value = select.value;
             }
         }, 1500);
     </script>
-    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
     <script src="{{ url_for('static', filename='js/global.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>
