@@ -367,6 +367,67 @@
             animation: pulse 2s infinite;
         }
 
+        /* Mobile specific position above the 62px bottom app bar */
+        @media (max-width: 899px) {
+            .floating-ai-btn {
+                bottom: 74px !important;
+                right: 12px !important;
+                padding: 0.5rem 0.85rem !important;
+                font-size: 0.82rem !important;
+                z-index: 980 !important;
+            }
+            .floating-voice-btn {
+                bottom: 126px !important;
+                right: 12px !important;
+                width: 42px !important;
+                height: 42px !important;
+                font-size: 1.15rem !important;
+                z-index: 980 !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .floating-ai-btn {
+                width: 42px !important;
+                height: 42px !important;
+                border-radius: 50% !important;
+                padding: 0 !important;
+                justify-content: center !important;
+            }
+            .floating-ai-btn .ai-btn-label {
+                display: none !important;
+            }
+            .floating-ai-btn img {
+                width: 24px !important;
+                height: 24px !important;
+            }
+        }
+
+        .mobile-only-drawer-item {
+            display: none;
+        }
+        @media (max-width: 900px) {
+            .mobile-only-drawer-item {
+                display: block;
+                margin-top: 0.6rem;
+                padding-top: 0.6rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            [data-theme="light"] .mobile-only-drawer-item {
+                border-top-color: #E2E8F0;
+            }
+            .mobile-logout-link {
+                color: #EF4444 !important;
+                background: rgba(239, 68, 68, 0.12) !important;
+                border: 1px solid rgba(239, 68, 68, 0.25) !important;
+                justify-content: center !important;
+                font-weight: 700 !important;
+            }
+            .mobile-logout-link:hover {
+                background: rgba(239, 68, 68, 0.22) !important;
+            }
+        }
+
         /* Hide Google Translate Default Pop-ups */
         #google_translate_element { display: none !important; }
         .goog-te-banner-frame.skiptranslate { display: none !important; }
@@ -403,6 +464,7 @@
                 <li><a href="{{ url_for('schemes') }}" class="nav-link {% if request.endpoint == 'schemes' %}active{% endif %}"><i class="fa-solid fa-file-invoice"></i> <span>योजनाएं</span></a></li>
                 <li><a href="{{ url_for('organic') }}" class="nav-link {% if request.endpoint == 'organic' %}active{% endif %}"><i class="fa-solid fa-leaf"></i> <span>जैविक</span></a></li>
                 <li><a href="{{ url_for('profile') }}" class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}"><i class="fa-solid fa-user"></i> <span>प्रोफाइल</span></a></li>
+                <li class="mobile-only-drawer-item"><a href="{{ url_for('logout') }}" class="nav-link mobile-logout-link"><i class="fa-solid fa-power-off"></i> <span>लॉगआउट (Logout)</span></a></li>
                 {% else %}
                 <li><a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' or request.endpoint == 'index' %}active{% endif %}"><i class="fa-solid fa-house"></i> <span>Home</span></a></li>
                 <li><a href="{{ url_for('home') }}#features" class="nav-link"><i class="fa-solid fa-layer-group"></i> <span>Features</span></a></li>
@@ -426,7 +488,7 @@
                     <select id="custom_lang_select" class="notranslate" onchange="doCustomTranslation(this.value)">
                         <option value="hi">हिन्दी</option>
                         <option value="en">English</option>
-                        <option value="ne">Garhwali/Kumaoni</option>
+                        <option value="ne">Garhwali</option>
                         <option value="sa">संस्कृत</option>
                         <option value="pa">ਪੰਜਾਬੀ</option>
                         <option value="gu">ગુજરાતી</option>
@@ -446,7 +508,7 @@
                     <span class="alert-dot"></span>
                 </a>
 
-                <!-- Logout Button -->
+                <!-- Logout Button (Desktop / Tablet) -->
                 <a href="{{ url_for('logout') }}" class="nav-btn-logout" title="लॉगआउट">
                     <i class="fa-solid fa-power-off"></i>
                     <span>लॉगआउट</span>
@@ -519,7 +581,7 @@
     <a href="{{ url_for('chatbot') }}" class="floating-ai-btn" title="Ask Krishi AI Assistant">
         <div class="ai-pulse"></div>
         <img src="{{ url_for('static', filename='img/robot.jpg') }}" alt="AI Bot">
-        <span>AI Help</span>
+        <span class="ai-btn-label">AI Help</span>
     </a>
     <a href="{{ url_for('voice') }}" class="floating-voice-btn" title="Voice Farming Assistant">
         <i class="fa-solid fa-microphone-lines"></i>
