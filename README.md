@@ -13,6 +13,12 @@
 
 ---
 
+<p align="center">
+  <img src="static/img/krishi_ai_homepage.png" alt="Krishi AI Homepage" width="100%" />
+</p>
+
+---
+
 ## 🌾 The Challenge & Vision
 
 Smallholder Indian farmers lose up to **35% of crop yields annually** due to delayed pest identification, misdiagnosed crop blights, lack of soil-specific fertilizer advisory, and unpredictable local rainfall. Existing digital farming apps suffer from:
@@ -133,6 +139,8 @@ KRISHI-AI/
 │   │   ├── global.css                 # Theme variables & typography
 │   │   ├── navbar.css                 # Responsive navbar & bottom mobile nav
 │   │   └── responsive.css             # Fluid mobile queries (300px - 1200px)
+│   ├── img/                           # Platform imagery & UI previews
+│   │   └── krishi_ai_homepage.png     # Platform homepage preview
 │   ├── js/                            # Client-side scripts
 │   └── uploads/                       # User-uploaded & AI-annotated media
 ├── requirements.txt                   # Project dependencies
