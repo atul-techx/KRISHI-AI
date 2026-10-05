@@ -824,14 +824,15 @@ body {
 
 .kai-footer-watermark {
     position: absolute;
-    bottom: 5px;
+    bottom: 0px;
     left: 50%;
     transform: translateX(-50%);
     font-family: var(--font-display, 'Outfit', sans-serif);
-    font-size: clamp(2.2rem, 8vw, 7.2rem);
+    font-size: clamp(3.5rem, 11vw, 9.5rem);
     font-weight: 900;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     color: rgba(255, 255, 255, 0.045);
+    -webkit-text-stroke: 1.5px rgba(52, 211, 153, 0.16);
     user-select: none;
     pointer-events: none;
     white-space: nowrap;
@@ -839,12 +840,13 @@ body {
     line-height: 1;
     text-transform: uppercase;
     width: auto;
-    max-width: 90vw;
+    max-width: 95vw;
     text-align: center;
 }
 
 [data-theme="light"] .kai-footer-watermark {
-    color: rgba(0, 0, 0, 0.04);
+    color: rgba(255, 255, 255, 0.045);
+    -webkit-text-stroke: 1.5px rgba(52, 211, 153, 0.16);
 }
 
 .kai-footer-container {
