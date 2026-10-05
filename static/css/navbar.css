@@ -79,21 +79,41 @@
 }
 
 .nav-link:hover {
-    color: #10B981 !important;
-    background: rgba(16, 185, 129, 0.10);
+    color: var(--color-primary, #15803D) !important;
+    background: rgba(21, 128, 61, 0.08);
     transform: translateY(-1px);
 }
 
 .nav-link.active {
-    color: #34D399 !important;
-    background: rgba(16, 185, 129, 0.16) !important;
-    border: 1px solid rgba(16, 185, 129, 0.30);
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+    color: #FFFFFF !important;
+    background: var(--color-primary, #15803D) !important;
+    border: 1px solid var(--color-primary, #15803D);
+    box-shadow: 0 2px 8px rgba(21, 128, 61, 0.20);
 }
 
 .nav-link.active i {
     opacity: 1;
-    color: #34D399;
+    color: #FFFFFF !important;
+}
+
+[data-theme="light"] .nav-link {
+    color: #334155;
+}
+
+[data-theme="light"] .nav-link:hover {
+    color: #15803D !important;
+    background: rgba(21, 128, 61, 0.08);
+}
+
+[data-theme="light"] .nav-link.active {
+    color: #FFFFFF !important;
+    background: #15803D !important;
+    border: 1px solid #15803D;
+    box-shadow: 0 2px 8px rgba(21, 128, 61, 0.20);
+}
+
+[data-theme="light"] .nav-link.active i {
+    color: #FFFFFF !important;
 }
 
 /* Navbar Actions */

@@ -4,20 +4,20 @@
 
 /* --- CSS Custom Properties --- */
 :root {
-    --color-primary: #10B981;
-    --color-primary-light: #34D399;
-    --color-secondary: #059669;
-    --color-secondary-light: #6EE7B7;
+    --color-primary: #15803D;
+    --color-primary-light: #22C55E;
+    --color-secondary: #166534;
+    --color-secondary-light: #4ADE80;
     --color-bg: #030712;
-    --color-bg-card: rgba(17, 24, 39, 0.6);
+    --color-bg-card: rgba(17, 24, 39, 0.7);
     --color-text: #F3F4F6;
     --color-text-muted: #9CA3AF;
     --color-danger: #EF4444;
     --color-danger-light: rgba(239, 68, 68, 0.15);
-    --color-warning: #F59E0B;
-    --color-warning-light: rgba(245, 158, 11, 0.15);
-    --color-success: #10B981;
-    --color-success-light: rgba(16, 185, 129, 0.15);
+    --color-warning: #D97706;
+    --color-warning-light: rgba(217, 119, 6, 0.15);
+    --color-success: #15803D;
+    --color-success-light: rgba(21, 128, 61, 0.15);
     --color-info: #3B82F6;
     --color-info-light: rgba(59, 130, 246, 0.15);
 
@@ -27,7 +27,7 @@
     --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
     --shadow-md: 0 4px 20px rgba(0,0,0,0.5);
     --shadow-lg: 0 10px 40px rgba(0,0,0,0.6);
-    --shadow-green: 0 4px 20px rgba(16,185,129,0.25);
+    --shadow-green: 0 3px 12px rgba(21, 128, 61, 0.20);
 
     --radius-sm: 6px;
     --radius-md: 12px;
@@ -42,18 +42,20 @@
 }
 
 [data-theme="light"] {
-    --color-primary: #059669;
-    --color-primary-light: #10B981;
-    --color-secondary: #047857;
-    --color-secondary-light: #34D399;
+    --color-primary: #15803D;
+    --color-primary-light: #16A34A;
+    --color-secondary: #166534;
+    --color-secondary-light: #22C55E;
     --color-bg: #F8FAFC;
     --color-bg-card: #FFFFFF;
     --color-text: #0F172A;
     --color-text-muted: #64748B;
+    --color-success: #15803D;
+    --color-success-light: rgba(21, 128, 61, 0.10);
     --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
     --shadow-md: 0 4px 20px rgba(15, 23, 42, 0.07);
     --shadow-lg: 0 10px 40px rgba(15, 23, 42, 0.1);
-    --shadow-green: 0 4px 16px rgba(5, 150, 105, 0.2);
+    --shadow-green: 0 2px 8px rgba(21, 128, 61, 0.15);
 }
 
 /* --- Reset & Base --- */
@@ -169,7 +171,7 @@ ul { list-style: none; }
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+    background: var(--color-primary);
     color: #fff;
     padding: 0.55rem 1.15rem;
     border-radius: var(--radius-full);
@@ -178,13 +180,13 @@ ul { list-style: none; }
     border: none;
     cursor: pointer;
     transition: var(--transition);
-    box-shadow: var(--shadow-green);
+    box-shadow: 0 2px 8px rgba(21, 128, 61, 0.2);
     white-space: nowrap;
 }
 .btn-krishi-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(46,125,50,0.35);
-    background: linear-gradient(135deg, #1B5E20, var(--color-primary));
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(21, 128, 61, 0.25);
+    background: var(--color-secondary);
 }
 .btn-krishi-primary:active { transform: scale(0.97); }
 
@@ -566,4 +568,58 @@ ul { list-style: none; }
     background: var(--color-primary);
     color: #fff;
     border-color: var(--color-primary);
+}
+
+/* --- Global Light Theme Green Glare Reduction & Accessibility --- */
+[data-theme="light"] {
+    --color-primary: #15803D !important;
+    --color-primary-light: #16A34A !important;
+    --color-secondary: #166534 !important;
+    --color-success: #15803D !important;
+}
+
+[data-theme="light"] .price-value,
+[data-theme="light"] .price-amount,
+[data-theme="light"] .after-col h4,
+[data-theme="light"] .comparison-stat strong.up,
+[data-theme="light"] .scheme-benefit strong {
+    color: #15803D !important;
+}
+
+[data-theme="light"] .crop-name,
+[data-theme="light"] .machinery-name,
+[data-theme="light"] .scheme-name {
+    color: #0F172A !important;
+}
+
+[data-theme="light"] .avail-yes,
+[data-theme="light"] .summary-badge.safe,
+[data-theme="light"] .status-safe,
+[data-theme="light"] .advisory-item.safe,
+[data-theme="light"] .scheme-category-tag.financial,
+[data-theme="light"] .price-up {
+    background: #DCFCE7 !important;
+    border: 1px solid #86EFAC !important;
+    color: #166534 !important;
+}
+
+[data-theme="light"] .btn-krishi-primary {
+    background: #15803D !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 2px 8px rgba(21, 128, 61, 0.2) !important;
+}
+
+[data-theme="light"] .btn-krishi-primary:hover {
+    background: #166534 !important;
+    box-shadow: 0 4px 12px rgba(21, 128, 61, 0.25) !important;
+}
+
+[data-theme="light"] .btn-krishi-secondary {
+    color: #15803D !important;
+    border-color: #15803D !important;
+}
+
+[data-theme="light"] .btn-krishi-secondary:hover {
+    background: #15803D !important;
+    color: #FFFFFF !important;
 }

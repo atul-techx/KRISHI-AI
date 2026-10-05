@@ -1,34 +1,147 @@
 {% extends "base.html" %}
 {% block title %}मंडी भाव - Krishi AI{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/cards.css') }}">{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cards.css') }}">
+<style>
+.mkt-chips-bar {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+[data-theme="light"] .mkt-chips-bar {
+    border-top-color: #E2E8F0;
+}
+.mkt-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-full, 99px);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+[data-theme="light"] .mkt-chip {
+    background: #F8FAFC;
+    border: 1px solid #CBD5E1;
+    color: #334155;
+}
+.mkt-chip:hover, .mkt-chip.active {
+    background: rgba(21, 128, 61, 0.15);
+    border-color: #15803D;
+    color: #15803D;
+    transform: translateY(-1px);
+}
+[data-theme="light"] .mkt-chip:hover, [data-theme="light"] .mkt-chip.active {
+    background: #DCFCE7;
+    border-color: #15803D;
+    color: #15803D;
+    box-shadow: 0 2px 6px rgba(21, 128, 61, 0.12);
+}
+.mkt-source-tag {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.45);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+[data-theme="light"] .mkt-source-tag {
+    color: #64748B;
+}
+.mkt-badge-msp-good {
+    background: rgba(21, 128, 61, 0.12);
+    border: 1px solid rgba(21, 128, 61, 0.25);
+    color: #15803D;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+[data-theme="light"] .mkt-badge-msp-good {
+    background: #DCFCE7;
+    border: 1px solid #86EFAC;
+    color: #166534;
+}
+.mkt-badge-msp-low {
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #DC2626;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+[data-theme="light"] .mkt-badge-msp-low {
+    background: #FEE2E2;
+    border: 1px solid #FCA5A5;
+    color: #991B1B;
+}
+</style>
+{% endblock %}
 {% block content %}
 <div class="krishi-container">
     <div class="page-header fade-in-up">
         <h1 class="page-title"><i class="fa-solid fa-store"></i> मंडी भाव</h1>
-        <p class="page-sub">आज के लाइव बाज़ार भाव — सही समय पर बेचें और कमाएं</p>
+        <p class="page-sub">आज के लाइव बाज़ार भाव — वास्तविक APMC मंडियां, वास्तविक मूल्य व सरकारी MSP</p>
     </div>
 
-    <!-- Market Search -->
+    <!-- Market Search & Quick Filter Bar -->
     <div class="krishi-card search-filter-bar fade-in-up">
         <form method="GET" action="{{ url_for('market') }}" class="search-form">
             <div class="search-input-wrap">
                 <i class="fa-solid fa-search"></i>
-                <input type="text" name="crop" class="krishi-input" placeholder="फसल खोजें..." value="{{ request.args.get('crop','') }}">
+                <input type="text" name="crop" class="krishi-input" placeholder="फसल का नाम (जैसे: Rice, Wheat, धान, गेहूं, सरसों...)" value="{{ request.args.get('crop','') }}">
             </div>
             <select name="state" class="krishi-input mini-select">
                 <option value="">सभी राज्य</option>
-                <option>Uttar Pradesh</option><option>Punjab</option>
-                <option>Haryana</option><option>Bihar</option>
-                <option>Madhya Pradesh</option><option>Rajasthan</option>
+                <option value="Uttarakhand" {% if request.args.get('state') == 'Uttarakhand' %}selected{% endif %}>Uttarakhand (उत्तराखंड)</option>
+                <option value="Uttar Pradesh" {% if request.args.get('state') == 'Uttar Pradesh' %}selected{% endif %}>Uttar Pradesh (उत्तर प्रदेश)</option>
+                <option value="Punjab" {% if request.args.get('state') == 'Punjab' %}selected{% endif %}>Punjab (पंजाब)</option>
+                <option value="Haryana" {% if request.args.get('state') == 'Haryana' %}selected{% endif %}>Haryana (हरियाणा)</option>
+                <option value="Madhya Pradesh" {% if request.args.get('state') == 'Madhya Pradesh' %}selected{% endif %}>Madhya Pradesh (मध्य प्रदेश)</option>
+                <option value="Rajasthan" {% if request.args.get('state') == 'Rajasthan' %}selected{% endif %}>Rajasthan (राजस्थान)</option>
+                <option value="Bihar" {% if request.args.get('state') == 'Bihar' %}selected{% endif %}>Bihar (बिहार)</option>
+                <option value="Maharashtra" {% if request.args.get('state') == 'Maharashtra' %}selected{% endif %}>Maharashtra (महाराष्ट्र)</option>
             </select>
-            <button type="submit" class="btn-krishi-primary">देखें</button>
+            <button type="submit" class="btn-krishi-primary"><i class="fa-solid fa-magnifying-glass"></i> देखें</button>
+            {% if request.args.get('crop') or request.args.get('state') %}
+            <a href="{{ url_for('market') }}" class="btn-krishi-secondary" style="text-decoration:none; padding:0.6rem 1rem; border-radius:var(--radius-md);"><i class="fa-solid fa-rotate-left"></i> सभी देखें</a>
+            {% endif %}
         </form>
+
+        <!-- Quick Filter Chips -->
+        <div class="mkt-chips-bar">
+            <span style="font-size:0.8rem; color:rgba(255,255,255,0.5); display:flex; align-items:center; gap:0.3rem;"><i class="fa-solid fa-bolt"></i> लोकप्रिय:</span>
+            <a href="{{ url_for('market', crop='Rice') }}" class="mkt-chip {% if 'rice' in request.args.get('crop','').lower() %}active{% endif %}">🌾 धान / Rice</a>
+            <a href="{{ url_for('market', crop='Wheat') }}" class="mkt-chip {% if 'wheat' in request.args.get('crop','').lower() %}active{% endif %}">🌾 गेहूं / Wheat</a>
+            <a href="{{ url_for('market', crop='Mustard') }}" class="mkt-chip {% if 'mustard' in request.args.get('crop','').lower() %}active{% endif %}">🌻 सरसों / Mustard</a>
+            <a href="{{ url_for('market', crop='Maize') }}" class="mkt-chip {% if 'maize' in request.args.get('crop','').lower() %}active{% endif %}">🌽 मक्का / Maize</a>
+            <a href="{{ url_for('market', crop='Potato') }}" class="mkt-chip {% if 'potato' in request.args.get('crop','').lower() %}active{% endif %}">🥔 आलू / Potato</a>
+            <a href="{{ url_for('market', crop='Tomato') }}" class="mkt-chip {% if 'tomato' in request.args.get('crop','').lower() %}active{% endif %}">🍅 टमाटर / Tomato</a>
+            <a href="{{ url_for('market', crop='Onion') }}" class="mkt-chip {% if 'onion' in request.args.get('crop','').lower() %}active{% endif %}">🧅 प्याज / Onion</a>
+            <a href="{{ url_for('market', crop='Chana') }}" class="mkt-chip {% if 'chana' in request.args.get('crop','').lower() %}active{% endif %}">🟡 चना / Gram</a>
+            <a href="{{ url_for('market', crop='Soybean') }}" class="mkt-chip {% if 'soybean' in request.args.get('crop','').lower() %}active{% endif %}">🌱 सोयाबीन / Soybean</a>
+        </div>
     </div>
 
-    <!-- Last Updated -->
-    <div class="market-update-bar fade-in-up">
-        <i class="fa-solid fa-clock"></i> अंतिम अपडेट: {{ last_updated if last_updated else 'आज सुबह 9:00 बजे' }}
-        <span class="live-dot"></span> Live
+    <!-- Last Updated & Status Bar -->
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem;">
+        <div class="market-update-bar fade-in-up" style="margin-bottom:0;">
+            <i class="fa-solid fa-clock"></i> अंतिम अपडेट: {{ last_updated if last_updated else 'आज' }}
+            <span class="live-dot"></span> Live
+            <span style="margin-left:0.5rem; color:rgba(255,255,255,0.3);">|</span>
+            <span style="color:var(--color-primary); font-weight:600;"><i class="fa-solid fa-building-wheat"></i> {{ prices|length }} मंडियां उपलब्ध</span>
+        </div>
+        <div class="mkt-source-tag">
+            <i class="fa-solid fa-shield-halved" style="color:var(--color-primary);"></i> स्रोत: APMC Mandi Network &amp; Agmarknet
+        </div>
     </div>
 
     <!-- Price Cards Grid -->
@@ -37,15 +150,20 @@
         {% for crop in prices %}
         <div class="price-card {% if crop.is_best %}price-card-best{% endif %}">
             {% if crop.is_best %}
-            <div class="best-price-badge"><i class="fa-solid fa-trophy"></i> Best Price</div>
+            <div class="best-price-badge"><i class="fa-solid fa-tags"></i> Best Price (सबसे कम भाव: ₹{{ crop.price }})</div>
             {% endif %}
+            
             <div class="price-card-header">
                 <div class="crop-emoji">{{ crop.emoji }}</div>
                 <div>
                     <h3 class="crop-name">{{ crop.name }}</h3>
-                    <span class="crop-market">{{ crop.market }}, {{ crop.state }}</span>
+                    <span class="crop-market">
+                        <i class="fa-solid fa-location-dot" style="color:var(--color-primary); font-size:0.75rem;"></i> 
+                        {{ crop.market }}{% if crop.district and crop.district not in crop.market %}, {{ crop.district }}{% endif %}, {{ crop.state }}
+                    </span>
                 </div>
             </div>
+
             <div class="price-main">
                 <span class="price-value">₹{{ crop.price }}</span>
                 <span class="price-unit">/क्विंटल</span>
@@ -53,52 +171,51 @@
                     {{ '↑' if crop.change > 0 else '↓' if crop.change < 0 else '→' }} {{ crop.change|abs }}%
                 </span>
             </div>
-            <div class="price-meta-row">
-                <span>Min: ₹{{ crop.min_price }}</span>
-                <span>Max: ₹{{ crop.max_price }}</span>
-                <span>MSP: ₹{{ crop.msp }}</span>
+
+            <!-- Price Range & Bar -->
+            <div class="mkt-range-row" style="margin-top:0.25rem;">
+                <div class="mkt-range-bar-wrap">
+                    <span class="mkt-range-min">न्यूनतम: ₹{{ crop.min_price }}</span>
+                    <div class="mkt-range-bar">
+                        {% set range_span = (crop.max_price - crop.min_price) if crop.max_price > crop.min_price else 1 %}
+                        {% set fill_pct = (((crop.price - crop.min_price) / range_span) * 100)|round|int %}
+                        <div class="mkt-range-fill" style="width: {{ [10, [fill_pct, 100]|min]|max }}%;"></div>
+                    </div>
+                    <span class="mkt-range-max">अधिकतम: ₹{{ crop.max_price }}</span>
+                </div>
             </div>
-            <div class="price-mini-trend">
-                <canvas id="trendChart_{{ loop.index }}" height="50"></canvas>
+
+            <!-- MSP & Metadata -->
+            <div class="price-meta-row" style="margin-top:0.5rem; padding-top:0.5rem; border-top:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center;">
+                {% if crop.msp and crop.msp > 0 %}
+                <div>
+                    <span style="font-size:0.75rem; color:rgba(255,255,255,0.5);">सरकारी MSP:</span>
+                    <strong style="color:#F3F4F6; font-size:0.8rem;">₹{{ crop.msp }}</strong>
+                </div>
+                <div>
+                    {% if crop.price >= crop.msp %}
+                    <span class="mkt-badge-msp-good"><i class="fa-solid fa-arrow-trend-up"></i> MSP से +₹{{ crop.price - crop.msp }} अधिक</span>
+                    {% else %}
+                    <span class="mkt-badge-msp-low"><i class="fa-solid fa-arrow-trend-down"></i> MSP से ₹{{ crop.msp - crop.price }} कम</span>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div>
+                    <span style="font-size:0.75rem; color:rgba(255,255,255,0.5);">बाज़ार स्थिति:</span>
+                    <strong style="color:#34D399; font-size:0.8rem;">नियमित आवक</strong>
+                </div>
+                <span class="mkt-badge-msp-good"><i class="fa-solid fa-check"></i> दैनिक मंडी भाव</span>
+                {% endif %}
             </div>
         </div>
         {% endfor %}
         {% else %}
-        <!-- Demo fallback cards -->
-        {% set demo_prices = [
-            {'name':'गेहूं','emoji':'🌾','market':'Lucknow','state':'UP','price':2150,'min_price':2100,'max_price':2200,'msp':2275,'change':3,'is_best':false},
-            {'name':'धान','emoji':'🌾','market':'Patna','state':'Bihar','price':2050,'min_price':2000,'max_price':2100,'msp':2183,'change':-1,'is_best':false},
-            {'name':'मक्का','emoji':'🌽','market':'Bhopal','state':'MP','price':1850,'min_price':1800,'max_price':1920,'msp':1962,'change':5,'is_best':true},
-            {'name':'सरसों','emoji':'🌻','market':'Jaipur','state':'RJ','price':5200,'min_price':5100,'max_price':5400,'msp':5650,'change':2,'is_best':false},
-            {'name':'चना','emoji':'🟡','market':'Indore','state':'MP','price':5100,'min_price':5000,'max_price':5250,'msp':5440,'change':-2,'is_best':false},
-            {'name':'प्याज','emoji':'🧅','market':'Nasik','state':'MH','price':1200,'min_price':1100,'max_price':1350,'msp':0,'change':8,'is_best':false}
-        ] %}
-        {% for crop in demo_prices %}
-        <div class="price-card {% if crop.is_best %}price-card-best{% endif %}">
-            {% if crop.is_best %}
-            <div class="best-price-badge"><i class="fa-solid fa-trophy"></i> Best Price</div>
-            {% endif %}
-            <div class="price-card-header">
-                <div class="crop-emoji">{{ crop.emoji }}</div>
-                <div>
-                    <h3 class="crop-name">{{ crop.name }}</h3>
-                    <span class="crop-market">{{ crop.market }}, {{ crop.state }}</span>
-                </div>
-            </div>
-            <div class="price-main">
-                <span class="price-value">₹{{ crop.price }}</span>
-                <span class="price-unit">/क्विंटल</span>
-                <span class="price-change {{ 'price-up' if crop.change > 0 else 'price-down' }}">
-                    {{ '↑' if crop.change > 0 else '↓' }} {{ crop.change|abs }}%
-                </span>
-            </div>
-            <div class="price-meta-row">
-                <span>Min: ₹{{ crop.min_price }}</span>
-                <span>Max: ₹{{ crop.max_price }}</span>
-                {% if crop.msp %}<span>MSP: ₹{{ crop.msp }}</span>{% endif %}
-            </div>
+        <div style="grid-column: 1 / -1; text-align:center; padding:3rem; background:rgba(17,24,39,0.6); border-radius:var(--radius-lg); border:1px solid rgba(255,255,255,0.08);">
+            <div style="font-size:2.5rem; margin-bottom:1rem;">🌾</div>
+            <h3 style="color:#F3F4F6; margin-bottom:0.5rem;">कोई परिणाम नहीं मिला</h3>
+            <p style="color:rgba(255,255,255,0.6); font-size:0.9rem; margin-bottom:1.5rem;">कृपया अन्य फसल या राज्य का चयन करें।</p>
+            <a href="{{ url_for('market') }}" class="btn-krishi-primary" style="text-decoration:none; display:inline-block; padding:0.6rem 1.5rem;">सभी मंडियां देखें</a>
         </div>
-        {% endfor %}
         {% endif %}
     </div>
 </div>

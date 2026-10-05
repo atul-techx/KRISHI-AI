@@ -168,6 +168,7 @@
 .severity-high { background: var(--color-danger-light); color: var(--color-danger); }
 .severity-medium { background: var(--color-warning-light); color: #E65100; }
 .severity-low { background: var(--color-success-light); color: var(--color-success); }
+.severity-none { background: #DCFCE7; color: #15803D; font-weight: 700; border: 1px solid rgba(21, 128, 61, 0.25); }
 
 /* Confidence */
 .confidence-section { margin-bottom: 1.25rem; }

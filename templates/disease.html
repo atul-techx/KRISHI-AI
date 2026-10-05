@@ -79,7 +79,13 @@
                     <div>
                         <h2 class="result-disease-name">{{ result.disease }}</h2>
                     </div>
-                    <div class="severity-badge severity-{{ result.severity|lower }}">{{ result.severity }}</div>
+                    <div class="severity-badge severity-{{ result.severity|lower }}">
+                        {% if result.severity == 'None' or 'healthy' in result.disease|lower %}
+                        स्वस्थ (Healthy)
+                        {% else %}
+                        {{ result.severity }}
+                        {% endif %}
+                    </div>
                 </div>
 
                 {% if result.uploaded_image_url %}

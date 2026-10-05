@@ -674,16 +674,72 @@
     50% { opacity: 0.4; transform: scale(1.2); }
   }
 
+  @keyframes farmRadarPulse {
+    0% { transform: scale(0.6); opacity: 1; }
+    100% { transform: scale(2.4); opacity: 0; }
+  }
+
+
+  .wx-radar-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .wx-radar-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--wx-text-main, #F8FAFC);
+  }
+  [data-theme="light"] .wx-radar-title {
+    color: #0F172A !important;
+  }
+
+  .wx-radar-time-pill {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 99px;
+    padding: 0.2rem 0.65rem;
+    font-size: 0.74rem;
+    color: #94A3B8;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  [data-theme="light"] .wx-radar-time-pill {
+    background: #F1F5F9;
+    border-color: #E2E8F0;
+    color: #475569;
+  }
+
   .wx-radar-controls {
     display: flex;
+    align-items: center;
     gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .wx-map-type-toggle {
+    display: inline-flex;
+    background: rgba(15, 23, 42, 0.7);
+    padding: 2px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    gap: 2px;
+  }
+  [data-theme="light"] .wx-map-type-toggle {
+    background: #F1F5F9;
+    border-color: #CBD5E1;
   }
 
   .wx-radar-btn {
     background: rgba(30, 41, 59, 0.8);
     border: 1px solid var(--wx-border);
     color: var(--wx-text-main);
-    padding: 0.3rem 0.65rem;
+    padding: 0.35rem 0.65rem;
     font-size: 0.75rem;
     border-radius: 6px;
     cursor: pointer;
@@ -693,20 +749,54 @@
     gap: 0.35rem;
     transition: all 0.2s ease;
   }
-
+  [data-theme="light"] .wx-radar-btn {
+    background: #FFFFFF;
+    border-color: #CBD5E1;
+    color: #334155;
+  }
   .wx-radar-btn:hover {
     background: rgba(51, 65, 85, 0.9);
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+  [data-theme="light"] .wx-radar-btn:hover {
+    background: #F8FAFC;
+    color: #0F172A;
+  }
+
+  .wx-map-type-toggle .wx-radar-btn {
+    border: none;
+    background: transparent;
+    padding: 0.25rem 0.55rem;
+    border-radius: 6px;
+  }
+  .wx-map-type-toggle .wx-radar-btn.active {
+    background: #15803D !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  }
+
+  .btn-play-highlight {
+    background: rgba(21, 128, 61, 0.18) !important;
+    border-color: #15803D !important;
+    color: #4ADE80 !important;
+  }
+  [data-theme="light"] .btn-play-highlight {
+    background: #DCFCE7 !important;
+    border-color: #15803D !important;
+    color: #15803D !important;
   }
 
   .wx-map-frame {
     width: 100%;
-    height: 330px;
+    height: 420px;
     border-radius: 12px;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     position: relative;
-    background: #0F172A;
+    background: #0B1120;
+  }
+  [data-theme="light"] .wx-map-frame {
+    border-color: #CBD5E1;
   }
 
   #weatherRadarMap {
@@ -715,56 +805,124 @@
     z-index: 1;
   }
 
-  /* Clean Radar Floating Pill */
+  /* Clean Radar Floating Info Pill */
   .wx-radar-float-info {
     position: absolute;
-    bottom: 10px;
+    top: 10px;
     left: 10px;
     z-index: 1000;
-    background: rgba(15, 23, 42, 0.85);
-    backdrop-filter: blur(8px);
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 8px;
-    padding: 0.35rem 0.65rem;
-    font-size: 0.74rem;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
     color: #F8FAFC;
-    pointer-events: none;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  [data-theme="light"] .wx-radar-float-info {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: #CBD5E1;
+    color: #0F172A;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
   }
 
-  /* Map Legend Below Map (Clean & Unobstructed!) */
+  /* Timeline Control Overlay (Bottom Center) */
+  .wx-radar-timeline-overlay {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 99px;
+    padding: 0.35rem 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.55);
+  }
+  [data-theme="light"] .wx-radar-timeline-overlay {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: #CBD5E1;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  }
+
+  .wx-timeline-nav {
+    background: none;
+    border: none;
+    color: #94A3B8;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    padding: 2px 4px;
+    transition: color 0.2s;
+  }
+  [data-theme="light"] .wx-timeline-nav {
+    color: #64748B;
+  }
+  .wx-timeline-nav:hover {
+    color: #4ADE80;
+  }
+  [data-theme="light"] .wx-timeline-nav:hover {
+    color: #15803D;
+  }
+
+  .wx-timeline-slider {
+    width: 140px;
+    accent-color: #15803D;
+    cursor: pointer;
+  }
+
+  /* Map Legend Below Map */
   .wx-radar-legend-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     margin-top: 0.65rem;
     padding-top: 0.5rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    font-size: 0.72rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 0.74rem;
     color: var(--wx-text-muted);
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  [data-theme="light"] .wx-radar-legend-bar {
+    border-top-color: #E2E8F0;
+    color: #64748B;
   }
 
   .leg-chips {
     display: flex;
     gap: 0.65rem;
+    flex-wrap: wrap;
   }
 
   .leg-item {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.35rem;
+    font-weight: 500;
   }
 
   .leg-dot {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
+    display: inline-block;
   }
+  .leg-light { background: #38BDF8; }
+  .leg-mod { background: #4ADE80; }
+  .leg-heavy { background: #FACC15; }
+  .leg-storm { background: #F97316; }
+  .leg-extreme { background: #DC2626; }
 
-  .leg-light { background: #60A5FA; }
-  .leg-mod { background: #34D399; }
-  .leg-heavy { background: #FBBF24; }
-  .leg-storm { background: #EF4444; }
 
   /* Mobile Specific Styles (< 600px, < 360px) */
   @media (max-width: 600px) {
@@ -1058,18 +1216,47 @@
         </div>
       </section>
 
-      <!-- CARD 4: Live Precipitation Radar Map (Clean & Beautiful) -->
+      <!-- CARD 4: Live Precipitation Radar & Satellite Map -->
       <section class="wx-card">
         <div class="wx-radar-top">
-          <div style="display: flex; align-items: center; gap: 0.45rem;">
-            <span class="wx-live-dot"></span>
-            <strong style="font-size: 0.95rem; color: #F8FAFC;">लाइव वर्षा राडार (Doppler)</strong>
+          <div style="display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 0.45rem;">
+              <span class="wx-live-dot"></span>
+              <strong class="wx-radar-title">लाइव वर्षा राडार (Doppler & Satellite)</strong>
+            </div>
+            <span class="wx-radar-time-pill" id="radarTimeLabel">
+              <i class="fa-regular fa-clock"></i>
+              <span id="radarTimeText">लाइव</span>
+            </span>
           </div>
+
           <div class="wx-radar-controls">
-            <button type="button" class="wx-radar-btn" id="radarPlayPauseBtn" title="एनीमेशन चलाएं">
+            <!-- Base Layer Switcher -->
+            <div class="wx-map-type-toggle" role="group" aria-label="Map Layer">
+              <button type="button" class="wx-radar-btn active" id="btnLayerSat" title="सैटेलाइट व्यू">
+                <i class="fa-solid fa-satellite"></i> <span>सैटेलाइट</span>
+              </button>
+              <button type="button" class="wx-radar-btn" id="btnLayerDark" title="डार्क राडार व्यू">
+                <i class="fa-solid fa-moon"></i> <span>राडार</span>
+              </button>
+              <button type="button" class="wx-radar-btn" id="btnLayerStreet" title="स्ट्रीट मैप">
+                <i class="fa-solid fa-map"></i> <span>मैप</span>
+              </button>
+            </div>
+
+            <!-- Doppler Rain Simulation Toggle -->
+            <button type="button" class="wx-radar-btn active" id="radarSimToggleBtn" title="Doppler वर्षा सिमुलेशन ऑन/ऑफ">
+              <i class="fa-solid fa-cloud-showers-water" style="color: #60A5FA;"></i>
+              <span id="radarSimBtnText">वर्षा सिमुलेशन</span>
+            </button>
+
+            <!-- Play / Pause -->
+            <button type="button" class="wx-radar-btn btn-play-highlight" id="radarPlayPauseBtn" title="राडार एनीमेशन चलाएं">
               <i class="fa-solid fa-play" id="radarPlayIcon"></i>
               <span id="radarPlayText">प्ले</span>
             </button>
+
+            <!-- Center on Farm -->
             <button type="button" class="wx-radar-btn" id="radarCenterMyLocBtn" title="मेरे खेत पर लाएं">
               <i class="fa-solid fa-crosshairs"></i>
               <span>खेत</span>
@@ -1080,20 +1267,34 @@
         <!-- Leaflet Map Container -->
         <div class="wx-map-frame">
           <div id="weatherRadarMap"></div>
+
+          <!-- Floating Info Pill -->
           <div class="wx-radar-float-info" id="radarLocStatBadge">
-            <i class="fa-solid fa-cloud-rain" style="color: #38BDF8;"></i>
-            <span id="radarMapLocName">Bareilly</span>: बारिश संभावना <strong id="radarMapRainProb">--%</strong>
+            <i class="fa-solid fa-satellite-dish" style="color: #4ADE80;"></i>
+            <span id="radarMapLocName">Bareilly</span>: बारिश संभावना <strong id="radarMapRainProb" style="color: #38BDF8;">--%</strong>
+          </div>
+
+          <!-- Timeline Scrub Bar Overlay -->
+          <div class="wx-radar-timeline-overlay">
+            <button type="button" class="wx-timeline-nav" id="radarPrevFrame" title="पिछला फ्रेम">
+              <i class="fa-solid fa-backward-step"></i>
+            </button>
+            <input type="range" class="wx-timeline-slider" id="radarTimelineSlider" min="0" max="0" value="0" step="1" title="समय चुनें">
+            <button type="button" class="wx-timeline-nav" id="radarNextFrame" title="अगला फ्रेम">
+              <i class="fa-solid fa-forward-step"></i>
+            </button>
           </div>
         </div>
 
-        <!-- Clean Legend Below Map (No Overlap) -->
+        <!-- Clean Doppler Legend Bar Below Map -->
         <div class="wx-radar-legend-bar">
-          <span>राडार बादल व वर्षा तीव्रता:</span>
+          <span>Doppler वर्षा तीव्रता (dBZ):</span>
           <div class="leg-chips">
-            <span class="leg-item"><span class="leg-dot leg-light"></span> हल्की</span>
-            <span class="leg-item"><span class="leg-dot leg-mod"></span> मध्यम</span>
-            <span class="leg-item"><span class="leg-dot leg-heavy"></span> भारी</span>
-            <span class="leg-item"><span class="leg-dot leg-storm"></span> आंधी</span>
+            <span class="leg-item"><span class="leg-dot leg-light"></span> बूंदाबांदी</span>
+            <span class="leg-item"><span class="leg-dot leg-mod"></span> हल्की वर्षा</span>
+            <span class="leg-item"><span class="leg-dot leg-heavy"></span> मध्यम</span>
+            <span class="leg-item"><span class="leg-dot leg-storm"></span> भारी बारिश</span>
+            <span class="leg-item"><span class="leg-dot leg-extreme"></span> मूसलाधार / तूफान</span>
           </div>
         </div>
       </section>
@@ -1145,6 +1346,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const radarCenterMyLocBtn = document.getElementById('radarCenterMyLocBtn');
   const radarMapLocName = document.getElementById('radarMapLocName');
   const radarMapRainProb = document.getElementById('radarMapRainProb');
+  const btnLayerSat = document.getElementById('btnLayerSat');
+  const btnLayerDark = document.getElementById('btnLayerDark');
+  const btnLayerStreet = document.getElementById('btnLayerStreet');
+  const radarSimToggleBtn = document.getElementById('radarSimToggleBtn');
+  const radarSimBtnText = document.getElementById('radarSimBtnText');
+  const radarTimelineSlider = document.getElementById('radarTimelineSlider');
+  const radarPrevFrame = document.getElementById('radarPrevFrame');
+  const radarNextFrame = document.getElementById('radarNextFrame');
+  const radarTimeText = document.getElementById('radarTimeText');
 
   // State
   let currentLat = 28.3670;
@@ -1152,15 +1362,73 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentCity = 'Bareilly, Uttar Pradesh';
 
   // -------------------------------------------------------------
-  // LEAFLET RADAR MAP SETUP
+  // LEAFLET RADAR & SATELLITE MAP SETUP
   // -------------------------------------------------------------
   let map = null;
   let farmMarker = null;
+  let baseLayers = {};
+  let currentBaseLayer = 'sat';
   let radarLayers = [];
   let radarFrames = [];
   let currentRadarIndex = -1;
   let radarAnimationTimer = null;
   let isRadarPlaying = false;
+  let isSimEnabled = true;
+  let simRainLayerGroup = null;
+
+  // Realistic Doppler Radar Precipitation Cells (concentric dBZ intensity contours)
+  const simCellOffsets = [
+    { dLat: 0.22, dLon: -0.15, scale: 1.1, baseDbz: 'storm' },
+    { dLat: -0.25, dLon: 0.32, scale: 0.85, baseDbz: 'heavy' },
+    { dLat: 0.48, dLon: 0.38, scale: 1.25, baseDbz: 'mod' },
+    { dLat: -0.38, dLon: -0.30, scale: 0.75, baseDbz: 'light' },
+    { dLat: 0.05, dLon: 0.14, scale: 0.95, baseDbz: 'heavy' }
+  ];
+
+  function setupBaseLayers() {
+    // Esri World Imagery (Satellite) + Place Names & Borders reference overlay
+    const satImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 18,
+      attribution: 'Esri Satellite'
+    });
+    const satLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 18,
+      opacity: 0.88
+    });
+    baseLayers['sat'] = L.layerGroup([satImagery, satLabels]);
+
+    // Esri Dark Gray Canvas (High Contrast Dark Radar - No API Key Needed)
+    const darkBase = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 16,
+      attribution: 'Esri Dark'
+    });
+    const darkLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 16,
+      opacity: 0.85
+    });
+    baseLayers['dark'] = L.layerGroup([darkBase, darkLabels]);
+
+    // OpenStreetMap (Street / Highway / District Map)
+    baseLayers['street'] = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+      attribution: 'OpenStreetMap'
+    });
+  }
+
+  function switchBaseLayer(name) {
+    if (!map || !baseLayers[name]) return;
+    Object.values(baseLayers).forEach(layer => {
+      if (map.hasLayer(layer)) map.removeLayer(layer);
+    });
+    baseLayers[name].addTo(map);
+    currentBaseLayer = name;
+
+    // Toggle button styles
+    [btnLayerSat, btnLayerDark, btnLayerStreet].forEach(b => b && b.classList.remove('active'));
+    if (name === 'sat' && btnLayerSat) btnLayerSat.classList.add('active');
+    if (name === 'dark' && btnLayerDark) btnLayerDark.classList.add('active');
+    if (name === 'street' && btnLayerStreet) btnLayerStreet.classList.add('active');
+  }
 
   function initMap(lat, lon) {
     if (map) return;
@@ -1172,27 +1440,31 @@ document.addEventListener('DOMContentLoaded', () => {
         attributionControl: false
       });
 
-      // Base Map Tiles (OpenStreetMap)
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 18,
-        attribution: '&copy; OpenStreetMap'
-      }).addTo(map);
+      setupBaseLayers();
+      switchBaseLayer('sat'); // Default: Satellite view requested by user
 
-      // Farm Location Marker
+      // Farm Location Marker with Animated Radar Pulse
       const farmIcon = L.divIcon({
         className: 'custom-farm-pin',
-        html: `<div style="background:#10B981; border:2px solid #ffffff; width:16px; height:16px; border-radius:50%; box-shadow:0 0 10px #10B981;"></div>`,
-        iconSize: [16, 16],
-        iconAnchor: [8, 8]
+        html: `
+          <div style="position:relative; width:24px; height:24px;">
+            <div style="position:absolute; inset:0; border-radius:50%; background:rgba(34,197,94,0.45); animation:farmRadarPulse 2s infinite ease-out;"></div>
+            <div style="position:absolute; inset:3px; border-radius:50%; background:#15803D; border:2.5px solid #FFFFFF; box-shadow:0 0 12px rgba(0,0,0,0.6);"></div>
+          </div>
+        `,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
       });
+
       farmMarker = L.marker([lat, lon], { icon: farmIcon }).addTo(map);
-      farmMarker.bindPopup(`<b>${currentCity}</b><br>आपका खेत क्षेत्र`).openPopup();
+      farmMarker.bindPopup(`<b>${currentCity}</b><br><span>🌾 आपका खेत क्षेत्र</span><br><small style="color:#38BDF8;">Doppler राडार कवरेज सक्रिय</small>`).openPopup();
 
       setTimeout(() => {
         if (map) map.invalidateSize();
       }, 200);
 
       loadRadarTiles();
+      updateDopplerSimulation(0);
     } catch (e) {
       console.warn("Map init error:", e);
     }
@@ -1206,68 +1478,178 @@ document.addEventListener('DOMContentLoaded', () => {
     map.setView([lat, lon], 7);
     if (farmMarker) {
       farmMarker.setLatLng([lat, lon]);
-      farmMarker.setPopupContent(`<b>${cityName}</b><br>आपका खेत क्षेत्र`);
+      farmMarker.setPopupContent(`<b>${cityName}</b><br><span>🌾 आपका खेत क्षेत्र</span><br><small style="color:#38BDF8;">Doppler राडार कवरेज सक्रिय</small>`);
     }
+    updateDopplerSimulation(currentRadarIndex >= 0 ? currentRadarIndex : 0);
   }
 
-  // Load RainViewer Doppler Radar Layers
+  // Draw Doppler Radar Rain & Cloud Echoes (Vivid AccuWeather Doppler Palette)
+  function updateDopplerSimulation(frameIndex = 0) {
+    if (!map) return;
+    if (!simRainLayerGroup) {
+      simRainLayerGroup = L.layerGroup().addTo(map);
+    }
+    simRainLayerGroup.clearLayers();
+
+    if (!isSimEnabled) return;
+
+    // Atmospheric drift: Rain cells travel along wind from WSW to ENE over time
+    const driftLat = (frameIndex - 6) * 0.015;
+    const driftLon = (frameIndex - 6) * 0.024;
+
+    simCellOffsets.forEach(cell => {
+      const centerLat = currentLat + cell.dLat + driftLat;
+      const centerLon = currentLon + cell.dLon + driftLon;
+      const scale = cell.scale;
+
+      // 1. Light Rain Outer Halo (Drizzle/Light Rain ~20-30 dBZ - Vivid Radar Green)
+      L.circle([centerLat, centerLon], {
+        radius: 38000 * scale,
+        color: '#22C55E',
+        weight: 1,
+        fillColor: '#22C55E',
+        fillOpacity: 0.32,
+        interactive: false
+      }).addTo(simRainLayerGroup);
+
+      // 2. Moderate Rain Band (~35 dBZ - Yellow)
+      L.circle([centerLat, centerLon], {
+        radius: 24000 * scale,
+        color: '#EAB308',
+        weight: 1,
+        fillColor: '#EAB308',
+        fillOpacity: 0.52,
+        interactive: false
+      }).addTo(simRainLayerGroup);
+
+      // 3. Heavy Rain Ring (~45 dBZ - Bright Orange)
+      if (cell.baseDbz === 'heavy' || cell.baseDbz === 'storm') {
+        L.circle([centerLat, centerLon], {
+          radius: 14000 * scale,
+          color: '#F97316',
+          weight: 1,
+          fillColor: '#F97316',
+          fillOpacity: 0.68,
+          interactive: false
+        }).addTo(simRainLayerGroup);
+      }
+
+      // 4. Intense Storm Core (~55+ dBZ - Deep Red / Crimson)
+      if (cell.baseDbz === 'storm') {
+        L.circle([centerLat, centerLon], {
+          radius: 6500 * scale,
+          color: '#DC2626',
+          weight: 0,
+          fillColor: '#DC2626',
+          fillOpacity: 0.84,
+          interactive: false
+        }).addTo(simRainLayerGroup);
+
+        // Thunderstorm violent core (Purple / Magenta)
+        L.circle([centerLat, centerLon], {
+          radius: 2800 * scale,
+          color: '#9333EA',
+          weight: 0,
+          fillColor: '#9333EA',
+          fillOpacity: 0.90,
+          interactive: false
+        }).addTo(simRainLayerGroup);
+      }
+    });
+  }
+
+  // Load Real-Time RainViewer Doppler Radar Layers
   async function loadRadarTiles() {
     try {
       const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
       if (!res.ok) return;
       const data = await res.json();
-      if (!data.radar || !data.radar.past) return;
+      if (!data.radar || !data.radar.past || data.radar.past.length === 0) return;
 
-      // Clear existing layers
-      radarLayers.forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
-      radarLayers = [];
+      const host = data.host || 'https://tilecache.rainviewer.com';
       radarFrames = data.radar.past;
 
-      // Create Leaflet Tile Layers for past frames
+      // Clear existing radar tile layers
+      radarLayers.forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
+      radarLayers = [];
+
+      // Preload all radar frames with Color Scheme 4 (The Weather Channel Doppler)
       radarFrames.forEach(frame => {
-        const tileUrl = `https://tilecache.rainviewer.com/v2/radar/${frame.time}/256/{z}/{x}/{y}/2/1_1.png`;
-        const layer = L.tileLayer(tileUrl, { opacity: 0.65, zIndex: 100 });
+        const tileUrl = `${host}${frame.path}/256/{z}/{x}/{y}/4/1_1.png`;
+        const layer = L.tileLayer(tileUrl, {
+          opacity: 0,
+          zIndex: 100,
+          tileSize: 256
+        });
+        layer.addTo(map);
         radarLayers.push(layer);
       });
 
-      if (radarLayers.length > 0) {
-        currentRadarIndex = radarLayers.length - 1;
-        radarLayers[currentRadarIndex].addTo(map);
+      if (radarTimelineSlider) {
+        radarTimelineSlider.max = radarFrames.length - 1;
+        radarTimelineSlider.value = radarFrames.length - 1;
       }
+
+      showRadarFrame(radarFrames.length - 1);
     } catch (e) {
       console.warn("RainViewer fetch failed:", e);
     }
   }
 
   function showRadarFrame(index) {
-    if (radarLayers.length === 0) return;
-    if (currentRadarIndex >= 0 && currentRadarIndex < radarLayers.length) {
-      if (map.hasLayer(radarLayers[currentRadarIndex])) {
-        map.removeLayer(radarLayers[currentRadarIndex]);
+    if (index < 0) return;
+    if (radarFrames.length > 0 && index >= radarFrames.length) return;
+
+    currentRadarIndex = index;
+
+    // Toggle tile layer opacity smoothly
+    if (radarLayers.length > 0) {
+      radarLayers.forEach((layer, i) => {
+        layer.setOpacity(i === index ? 0.78 : 0);
+      });
+    }
+
+    if (radarTimelineSlider) {
+      radarTimelineSlider.value = index;
+    }
+
+    // Update timestamp label
+    if (radarFrames.length > 0 && radarFrames[index] && radarFrames[index].time) {
+      const d = new Date(radarFrames[index].time * 1000);
+      const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const isLatest = (index === radarFrames.length - 1);
+      if (radarTimeText) {
+        radarTimeText.textContent = isLatest ? `${timeStr} (लाइव)` : timeStr;
       }
     }
-    currentRadarIndex = index;
-    radarLayers[currentRadarIndex].addTo(map);
+
+    // Update simulated Doppler rain cells position
+    updateDopplerSimulation(index);
   }
 
   function toggleRadarAnimation() {
     if (isRadarPlaying) {
       clearInterval(radarAnimationTimer);
       isRadarPlaying = false;
-      radarPlayIcon.className = 'fa-solid fa-play';
-      radarPlayText.textContent = 'प्ले';
+      if (radarPlayIcon) radarPlayIcon.className = 'fa-solid fa-play';
+      if (radarPlayText) radarPlayText.textContent = 'प्ले';
+      if (radarPlayPauseBtn) radarPlayPauseBtn.classList.remove('active');
     } else {
-      if (radarLayers.length === 0) return;
+      const maxCount = Math.max(radarFrames.length, 12);
+      if (maxCount === 0) return;
       isRadarPlaying = true;
-      radarPlayIcon.className = 'fa-solid fa-pause';
-      radarPlayText.textContent = 'रोकें';
+      if (radarPlayIcon) radarPlayIcon.className = 'fa-solid fa-pause';
+      if (radarPlayText) radarPlayText.textContent = 'रोकें';
+      if (radarPlayPauseBtn) radarPlayPauseBtn.classList.add('active');
+
       radarAnimationTimer = setInterval(() => {
-        let nextIndex = (currentRadarIndex + 1) % radarLayers.length;
+        const nextIndex = (currentRadarIndex + 1) % maxCount;
         showRadarFrame(nextIndex);
-      }, 700);
+      }, 750);
     }
   }
 
+  // Event Listeners for Radar Controls
   if (radarPlayPauseBtn) {
     radarPlayPauseBtn.addEventListener('click', toggleRadarAnimation);
   }
@@ -1275,6 +1657,54 @@ document.addEventListener('DOMContentLoaded', () => {
   if (radarCenterMyLocBtn) {
     radarCenterMyLocBtn.addEventListener('click', () => {
       if (map) map.setView([currentLat, currentLon], 8);
+    });
+  }
+
+  if (btnLayerSat) {
+    btnLayerSat.addEventListener('click', () => switchBaseLayer('sat'));
+  }
+  if (btnLayerDark) {
+    btnLayerDark.addEventListener('click', () => switchBaseLayer('dark'));
+  }
+  if (btnLayerStreet) {
+    btnLayerStreet.addEventListener('click', () => switchBaseLayer('street'));
+  }
+
+  if (radarSimToggleBtn) {
+    radarSimToggleBtn.addEventListener('click', () => {
+      isSimEnabled = !isSimEnabled;
+      if (isSimEnabled) {
+        radarSimToggleBtn.classList.add('active');
+        if (radarSimBtnText) radarSimBtnText.textContent = 'वर्षा सिमुलेशन';
+      } else {
+        radarSimToggleBtn.classList.remove('active');
+        if (radarSimBtnText) radarSimBtnText.textContent = 'सिमुलेशन ऑफ';
+      }
+      updateDopplerSimulation(currentRadarIndex >= 0 ? currentRadarIndex : 0);
+    });
+  }
+
+  if (radarTimelineSlider) {
+    radarTimelineSlider.addEventListener('input', (e) => {
+      const idx = parseInt(e.target.value, 10);
+      showRadarFrame(idx);
+    });
+  }
+
+  if (radarPrevFrame) {
+    radarPrevFrame.addEventListener('click', () => {
+      if (currentRadarIndex > 0) {
+        showRadarFrame(currentRadarIndex - 1);
+      }
+    });
+  }
+
+  if (radarNextFrame) {
+    radarNextFrame.addEventListener('click', () => {
+      const maxCount = Math.max(radarFrames.length, 12);
+      if (currentRadarIndex < maxCount - 1) {
+        showRadarFrame(currentRadarIndex + 1);
+      }
     });
   }
 
@@ -1341,6 +1771,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (currentRain) currentRain.textContent = `${rainVal.toFixed(1)} mm`;
       if (currentWind) currentWind.textContent = `${windVal} km/h`;
       if (currentDewPoint) currentDewPoint.textContent = `${dewVal}°C`;
+
+      const rainProbVal = (data.hourly && data.hourly.precipitation_probability && data.hourly.precipitation_probability[0] !== undefined)
+        ? data.hourly.precipitation_probability[0]
+        : (rainVal > 0 ? 85 : 20);
+      if (radarMapRainProb) radarMapRainProb.textContent = `${rainProbVal}%`;
 
       const visual = getWeatherVisual(curr.weather_code, curr.weather_text);
       if (weatherConditionText) weatherConditionText.textContent = curr.weather_text ? `${curr.weather_text} (${visual.name.split(' ')[0]})` : visual.name;

@@ -138,75 +138,102 @@ def _predict_crop_disease_cv(image_path, user_crop=""):
     if not matched_candidates:
         matched_candidates = list(treatment_dict.keys())
 
-    # Read image and analyze color features
+    # Read image and analyze color features with foreground segmentation
     img = cv2.imread(image_path)
     if img is None:
         raise ValueError("Could not read image file.")
-    img_resized = cv2.resize(img, (224, 224))
+    img_resized = cv2.resize(img, (256, 256))
     hsv = cv2.cvtColor(img_resized, cv2.COLOR_BGR2HSV)
 
-    # Hue mask channels
+    # Hue, Saturation, Value channels
     h = hsv[:, :, 0]
     s = hsv[:, :, 1]
     v = hsv[:, :, 2]
+    total_pixels = 256 * 256
 
-    total_pixels = 224 * 224
-    green_mask = (h >= 35) & (h <= 85) & (s > 40)
-    yellow_mask = (h >= 18) & (h < 35) & (s > 45) & (v > 50)
-    brown_rust_mask = ((h < 18) | (h > 170)) & (s > 50) & (v > 40) & (v < 180)
-    white_mold_mask = (s < 35) & (v > 185)
+    # Robust leaf foreground mask (isolates leaf from white/dark/neutral backgrounds)
+    leaf_mask = (
+        # Natural green foliage
+        ((h >= 26) & (h <= 92) & (s > 25) & (v > 25)) |
+        # Chlorosis / yellow leaf tissue
+        ((h >= 16) & (h < 26) & (s > 35) & (v > 45)) |
+        # Necrotic / brown / rust spots on leaf
+        (((h < 16) | (h > 165)) & (s > 30) & (v > 25) & (v < 200))
+    )
 
-    green_ratio = np.sum(green_mask) / total_pixels
-    yellow_ratio = np.sum(yellow_mask) / total_pixels
-    brown_ratio = np.sum(brown_rust_mask) / total_pixels
-    white_ratio = np.sum(white_mold_mask) / total_pixels
+    leaf_pixels = int(np.sum(leaf_mask))
+    if leaf_pixels < int(0.06 * total_pixels):
+        return {
+            "error": "फ़ोटो में पत्ती की पहचान नहीं हो सकी। कृपया केवल पौधे या फसल की पत्ती को केंद्र में रखकर साफ़ फ़ोटो अपलोड करें।"
+        }
 
-    # Match best disease category based on optical evidence
+    # Analyze optical symptoms STRICTLY inside the leaf tissue (excluding background)
+    green_in_leaf = float(np.sum((h >= 32) & (h <= 88) & (s > 35) & leaf_mask)) / leaf_pixels
+    yellow_in_leaf = float(np.sum((h >= 16) & (h < 32) & (s > 40) & (v > 50) & leaf_mask)) / leaf_pixels
+    brown_in_leaf = float(np.sum(((h < 16) | (h > 165)) & (s > 35) & (v > 30) & (v < 185) & leaf_mask)) / leaf_pixels
+    white_in_leaf = float(np.sum((s < 30) & (v > 200) & leaf_mask)) / leaf_pixels
+    diseased_ratio = yellow_in_leaf + brown_in_leaf + white_in_leaf
+
+    # 1. HEALTHY PLANT: When the leaf is overwhelmingly green with minimal or no lesions
+    if green_in_leaf >= 0.82 and diseased_ratio < 0.15:
+        confidence = min(98.8, max(92.5, round(green_in_leaf * 100.0, 1)))
+        c_name = user_crop or "Crop"
+        return {
+            "disease": "Healthy Plant (स्वस्थ पौधा)",
+            "crop": c_name,
+            "confidence": confidence,
+            "severity": "None",
+            "treatment": [
+                "1️⃣ पौधा पूर्णतः स्वस्थ है, पत्तियों पर कोई रोग या संक्रमण नहीं है।",
+                "2️⃣ किसी भी रासायनिक कीटनाशक या फफूंदनाशक का अनावश्यक छिड़काव न करें।",
+                "3️⃣ खेत में नियमित निरीक्षण, उचित जल-निकासी और संतुलित जैविक खाद जारी रखें।"
+            ],
+            "prevention": "संतुलित पोषण, उचित धूप और नियमित निगरानी बनाए रखें।",
+            "cause": "स्वस्थ और रोगमुक्त पत्ती"
+        }
+
+    # 2. Match best disease category based on optical evidence ON THE LEAF
     selected_disease = None
-    if white_ratio > 0.12:
+    if white_in_leaf > 0.06:
         mildew_candidates = [c for c in matched_candidates if "mildew" in c.lower() or "mold" in c.lower()]
         if mildew_candidates:
             selected_disease = mildew_candidates[0]
 
-    if not selected_disease and yellow_ratio > 0.14:
+    if not selected_disease and yellow_in_leaf > 0.12:
         yellow_candidates = [c for c in matched_candidates if "yellow" in c.lower() or "mosaic" in c.lower() or "tungro" in c.lower() or "chlorosis" in c.lower()]
         if yellow_candidates:
             selected_disease = yellow_candidates[0]
 
-    if not selected_disease and brown_ratio > 0.08:
+    if not selected_disease and brown_in_leaf > 0.07:
         blight_candidates = [c for c in matched_candidates if "blight" in c.lower() or "rust" in c.lower() or "scab" in c.lower() or "rot" in c.lower() or "spot" in c.lower()]
         if blight_candidates:
             selected_disease = blight_candidates[0]
 
-    if not selected_disease and green_ratio > 0.65 and brown_ratio < 0.05 and yellow_ratio < 0.05:
-        healthy_candidates = [c for c in matched_candidates if "healthy" in c.lower()]
-        if healthy_candidates:
-            selected_disease = healthy_candidates[0]
-
     if not selected_disease:
-        selected_disease = matched_candidates[0]
+        # Fallback to general matched candidate
+        disease_only_candidates = [c for c in matched_candidates if "healthy" not in c.lower()]
+        selected_disease = disease_only_candidates[0] if disease_only_candidates else matched_candidates[0]
 
     # Calculate confidence based on symptom contrast
-    confidence = min(96.8, max(85.2, round(84.0 + (brown_ratio + yellow_ratio + white_ratio) * 45.0, 1)))
-    if "healthy" in selected_disease.lower():
-        confidence = min(97.5, max(88.0, round(green_ratio * 100.0, 1)))
+    confidence = min(96.5, max(82.0, round(80.0 + diseased_ratio * 40.0, 1)))
 
     parts = selected_disease.split('___')
     c_name = parts[0].replace('_', ' ') if len(parts) > 1 else (user_crop or "Crop")
     d_name = parts[1].replace('_', ' ') if len(parts) > 1 else selected_disease
-    
+
     treatment_text = treatment_dict.get(selected_disease, "")
     treatment_steps = [step.strip() for step in treatment_text.split('\n') if step.strip()]
 
-    is_healthy = "healthy" in selected_disease.lower()
+    severity = "High" if (brown_in_leaf > 0.25 or yellow_in_leaf > 0.30) else ("Medium" if diseased_ratio > 0.18 else "Low")
+
     return {
         "disease": d_name,
         "crop": c_name,
         "confidence": confidence,
-        "severity": "None" if is_healthy else ("High" if brown_ratio > 0.25 else "Medium"),
+        "severity": severity,
         "treatment": treatment_steps,
-        "prevention": "फसल चक्र अपनाएं, प्रमाणित बीज उपयोग करें और जल-जमाव से बचें।" if not is_healthy else "संतुलित पोषण और नियमित निरीक्षण जारी रखें।",
-        "cause": "स्वस्थ पत्ती" if is_healthy else ("फंगल संक्रमण या नमी के कारण धब्बे" if brown_ratio > yellow_ratio else "विषाणु या पोषक तत्वों की कमी")
+        "prevention": "फसल चक्र अपनाएं, प्रमाणित बीज उपयोग करें और जल-जमाव से बचें।",
+        "cause": "फंगल संक्रमण या नमी के कारण धब्बे" if brown_in_leaf > yellow_in_leaf else "विषाणु या पोषक तत्वों की कमी"
     }
 
 def is_low_memory_env():

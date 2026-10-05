@@ -824,24 +824,27 @@ body {
 
 .kai-footer-watermark {
     position: absolute;
-    bottom: -15px;
+    bottom: 5px;
     left: 50%;
     transform: translateX(-50%);
     font-family: var(--font-display, 'Outfit', sans-serif);
-    font-size: clamp(5rem, 15vw, 13rem);
+    font-size: clamp(2.5rem, 9.2vw, 8.5rem);
     font-weight: 900;
-    letter-spacing: 0.12em;
-    color: rgba(255, 255, 255, 0.035);
+    letter-spacing: 0.06em;
+    color: rgba(255, 255, 255, 0.045);
     user-select: none;
     pointer-events: none;
     white-space: nowrap;
     z-index: 0;
     line-height: 1;
     text-transform: uppercase;
+    width: auto;
+    max-width: 95vw;
+    text-align: center;
 }
 
 [data-theme="light"] .kai-footer-watermark {
-    color: rgba(255, 255, 255, 0.04);
+    color: rgba(0, 0, 0, 0.04);
 }
 
 .kai-footer-container {

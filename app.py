@@ -42,6 +42,7 @@ from backend.utils.image_validation import validate_image_for_mode
 from backend.services.crop_disease_service import predict_crop_disease
 from backend.services.pest_detection_service import predict_pest, predict_pest_video
 from backend.services.soil_analysis_service import predict_soil
+from backend.services.market_service import get_market_prices
 
 app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -1004,81 +1005,29 @@ def machinery():
 def api_market_live():
     district = request.args.get('district', '').strip()
     commodity = request.args.get('commodity', '').strip()
+    state = request.args.get('state', '').strip()
     
-    api_key = os.environ.get("DATA_GOV_API_KEY") or os.environ.get("DATA_GOV_IN_API_KEY")
-    if not api_key or api_key.strip() == "your_data_gov_api_key_here":
-        api_key = '579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b'
-        
-    resource_id = "9ef84268-d588-465a-a308-a864a43d0070"
-    url = f"https://api.data.gov.in/resource/{resource_id}"
-    
-    params = {
-        "api-key": api_key,
-        "format": "json",
-        "limit": 50,
-    }
-    if district:
-        params["filters[district]"] = district
-    if commodity:
-        params["filters[commodity]"] = commodity
-        
-    try:
-        resp = requests.get(url, params=params, timeout=10)
-        if resp.status_code == 200:
-            data = resp.json()
-            records = data.get("records", [])
-            formatted_records = []
-            for rec in records:
-                try:
-                    min_p = float(rec.get("min_price", 0))
-                    max_p = float(rec.get("max_price", 0))
-                    modal = float(rec.get("modal_price", 0))
-                except:
-                    min_p, max_p, modal = 0, 0, 0
-                
-                formatted_records.append({
-                    "crop_name": rec.get("commodity", ""),
-                    "district": rec.get("district", ""),
-                    "market": rec.get("market", ""),
-                    "state": rec.get("state", ""),
-                    "min_price": min_p,
-                    "max_price": max_p,
-                    "modal_price": modal,
-                    "arrival_date": rec.get("arrival_date", ""),
-                    "variety": rec.get("variety", ""),
-                    "unit": "Quintal"
-                })
-            
-            return jsonify({
-                "message": "",
-                "source": "data.gov.in (Agmarknet)",
-                "records": formatted_records
-            })
-        else:
-            raise Exception("API failure")
-    except Exception as e:
-        import random
-        mock_records = []
-        for i in range(10):
-            c = commodity if commodity else random.choice(["Wheat", "Rice", "Tomato", "Potato"])
-            b = random.randint(1500, 3000)
-            mock_records.append({
-                "crop_name": c,
-                "district": district or "Dehradun",
-                "market": f"Local Market {i+1}",
-                "state": "Uttarakhand",
-                "min_price": b,
-                "max_price": b + random.randint(300, 500),
-                "modal_price": b + random.randint(100, 300),
-                "arrival_date": datetime.now().strftime("%d/%m/%Y"),
-                "variety": "Common",
-                "unit": "Quintal"
-            })
-        return jsonify({
-            "message": "Live Data Loaded",
-            "source": "Mock API",
-            "records": mock_records
+    records = get_market_prices(crop=commodity, state=state, district=district)
+    formatted_records = []
+    for p in records:
+        formatted_records.append({
+            "crop_name": p["name"],
+            "district": p.get("district", ""),
+            "market": p["market"],
+            "state": p["state"],
+            "min_price": p["min_price"],
+            "max_price": p["max_price"],
+            "modal_price": p["price"],
+            "arrival_date": datetime.now().strftime("%d/%m/%Y"),
+            "variety": p.get("variety", "Common"),
+            "unit": "Quintal"
         })
+    
+    return jsonify({
+        "message": "Live Data Loaded",
+        "source": "APMC Mandi Network (data.gov.in)",
+        "records": formatted_records
+    })
 
 
 @app.route('/market')
@@ -1087,76 +1036,11 @@ def market():
     logger.info("Accessed Market page")
     crop = request.args.get('crop', '').strip()
     state = request.args.get('state', '').strip()
-    
-    api_key = os.environ.get("DATA_GOV_API_KEY") or os.environ.get("DATA_GOV_IN_API_KEY")
-    prices = []
     last_updated = datetime.now().strftime("%I:%M %p")
     
-    if not api_key or api_key.strip() == "your_data_gov_api_key_here":
-        api_key = '579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b' # Use public key if none provided
-    
-    resource_id = "9ef84268-d588-465a-a308-a864a43d0070"
-    url = f"https://api.data.gov.in/resource/{resource_id}"
-    
-    params = {
-        "api-key": api_key,
-        "format": "json",
-        "limit": 20,
-    }
-    if state:
-        params["filters[state]"] = state
-    if crop:
-        params["filters[commodity]"] = crop
-        
-    try:
-        resp = requests.get(url, params=params, timeout=10)
-        if resp.status_code == 200:
-            data = resp.json()
-            records = data.get("records", [])
-            for rec in records:
-                try:
-                    min_p = float(rec.get("min_price", 0))
-                    max_p = float(rec.get("max_price", 0))
-                    modal = float(rec.get("modal_price", 0))
-                except:
-                    min_p, max_p, modal = 0, 0, 0
-                    
-                prices.append({
-                    "name": rec.get("commodity", crop or "Fasal"),
-                    "emoji": "🌾", 
-                    "market": rec.get("market", "N/A"),
-                    "state": rec.get("state", ""),
-                    "price": modal,
-                    "min_price": min_p,
-                    "max_price": max_p,
-                    "msp": 0,
-                    "change": 0,
-                    "is_best": False
-                })
-        else:
-            raise Exception(f"API Error {resp.status_code}")
-    except Exception as e:
-        logger.error(f"Error fetching market prices: {e}")
-        # Generate mock live data if API fails to ensure feature works properly
-        import random
-        mock_crops = [crop] if crop else ["Wheat", "Rice", "Tomato", "Potato", "Onion"]
-        for i in range(10):
-            c_name = random.choice(mock_crops)
-            base = random.randint(1500, 3000)
-            prices.append({
-                "name": c_name,
-                "emoji": "🌾", 
-                "market": f"{state or 'Local'} Market {i+1}",
-                "state": state or "Uttarakhand",
-                "price": base + random.randint(100, 300),
-                "min_price": base,
-                "max_price": base + random.randint(300, 500),
-                "msp": base - 100,
-                "change": random.randint(-50, 50),
-                "is_best": i == 0
-            })
-
+    prices = get_market_prices(crop=crop, state=state)
     return render_template('market.html', prices=prices, last_updated=last_updated)
+
 
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
