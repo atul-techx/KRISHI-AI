@@ -811,50 +811,96 @@ body {
 }
 
 /* ═════════════════════════════════════════════════════════════
-   8. FOOTER SECTION
+   8. FOOTER SECTION & MONUMENTAL BRAND SHOWCASE
    ═════════════════════════════════════════════════════════════ */
 .kai-footer {
     position: relative;
     overflow: hidden;
-    background-color: #04140C !important;
+    background: radial-gradient(circle at 50% 100%, #062316 0%, #03140C 50%, #020B06 100%) !important;
     color: #F8FAFC !important;
-    padding: 4rem 1.5rem 2rem;
-    border-top: 1px solid rgba(52, 211, 153, 0.15);
-}
-
-.kai-footer-watermark {
-    position: absolute;
-    bottom: 0px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-family: var(--font-display, 'Outfit', sans-serif);
-    font-size: clamp(3.5rem, 11vw, 9.5rem);
-    font-weight: 900;
-    letter-spacing: 0.08em;
-    color: rgba(255, 255, 255, 0.045);
-    -webkit-text-stroke: 1.5px rgba(52, 211, 153, 0.16);
-    user-select: none;
-    pointer-events: none;
-    white-space: nowrap;
-    z-index: 0;
-    line-height: 1;
-    text-transform: uppercase;
-    width: auto;
-    max-width: 95vw;
-    text-align: center;
-}
-
-[data-theme="light"] .kai-footer-watermark {
-    color: rgba(255, 255, 255, 0.045);
-    -webkit-text-stroke: 1.5px rgba(52, 211, 153, 0.16);
+    padding: 4.5rem 1.5rem 2.5rem;
+    border-top: 1px solid rgba(52, 211, 153, 0.2);
 }
 
 .kai-footer-container {
-    max-width: 1060px;
+    max-width: 1080px;
     margin: 0 auto;
     padding: 0 1rem;
     position: relative;
+    z-index: 2;
+}
+
+/* Monumental Typographic Brand Showcase */
+.kai-footer-brand-showcase {
+    position: relative;
+    width: 100%;
+    margin: 1.5rem 0 2rem;
+    padding: 1.5rem 0 0.5rem;
+    text-align: center;
+    border-top: 1px solid rgba(52, 211, 153, 0.12);
+    overflow: hidden;
+}
+
+.kai-brand-wordmark-container {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.kai-brand-ambient-glow {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 65%;
+    max-width: 650px;
+    height: 100px;
+    background: radial-gradient(ellipse, rgba(52, 211, 153, 0.18) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%);
+    filter: blur(28px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.kai-brand-wordmark {
+    display: block;
+    position: relative;
     z-index: 1;
+    font-family: var(--font-display, 'Outfit', 'Inter', -apple-system, sans-serif);
+    font-size: clamp(3.2rem, 11.5vw, 8.8rem);
+    font-weight: 900;
+    letter-spacing: clamp(0.08em, 1.8vw, 0.18em);
+    line-height: 0.95;
+    text-transform: uppercase;
+    white-space: nowrap;
+    user-select: none;
+    pointer-events: none;
+    
+    /* Luxury translucent gradient fill with delicate glow and stroke */
+    background: linear-gradient(180deg, 
+        rgba(255, 255, 255, 0.35) 0%, 
+        rgba(52, 211, 153, 0.40) 40%, 
+        rgba(16, 185, 129, 0.15) 75%, 
+        transparent 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 1.2px rgba(52, 211, 153, 0.35);
+    filter: drop-shadow(0 2px 20px rgba(52, 211, 153, 0.18));
+}
+
+.kai-brand-subtag {
+    display: inline-block;
+    position: relative;
+    z-index: 1;
+    font-size: clamp(0.68rem, 1.3vw, 0.85rem);
+    font-weight: 700;
+    letter-spacing: 0.32em;
+    color: rgba(52, 211, 153, 0.65);
+    text-transform: uppercase;
+    margin-top: 0.75rem;
+    user-select: none;
 }
 
 .kai-footer-top {
@@ -1415,9 +1461,6 @@ body {
          7. MEGA FOOTER SECTION
          ══════════════════════════════════════════════════════════ -->
     <footer class="kai-footer" id="contact">
-        <!-- Giant Background Typography Watermark -->
-        <div class="kai-footer-watermark">KRISHI AI</div>
-
         <div class="kai-footer-container">
             <!-- Newsletter Bar -->
             <div class="kai-newsletter-box">
@@ -1482,6 +1525,15 @@ body {
                         <li><a href="#highlights" class="kai-footer-link">Core Tech Innovation</a></li>
                         <li><a href="#contact" class="kai-footer-link">Architecture: Edge AI + Flask</a></li>
                     </ul>
+                </div>
+            </div>
+
+            <!-- Monumental Typographic Brand Showcase -->
+            <div class="kai-footer-brand-showcase">
+                <div class="kai-brand-wordmark-container">
+                    <div class="kai-brand-ambient-glow"></div>
+                    <span class="kai-brand-wordmark">KRISHI AI</span>
+                    <span class="kai-brand-subtag">SMART AGRI-TECH PLATFORM · BHARAT 2026</span>
                 </div>
             </div>
 
